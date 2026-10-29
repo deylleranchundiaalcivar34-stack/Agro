@@ -1,3 +1,12 @@
+# ============================================
+# SEGURIDAD - Agro+ Project
+# ============================================
+# Variables de entorno - NUNCA subir al repositorio
+.env
+.env.local
+.env.production
+.env.staging
+
 # Miscellaneous
 *.class
 *.log
