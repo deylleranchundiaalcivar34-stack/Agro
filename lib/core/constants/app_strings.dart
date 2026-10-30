@@ -3,7 +3,7 @@
 abstract class AppStrings {
   // --- App ---
   static const String appName = 'Agro+';
-  static const String appTagline = 'Del campo a tu mesa';
+  static const String appTagline = 'DEL CAMPO A TU MANO';
 
   // --- Auth ---
   static const String login = 'Iniciar sesión';

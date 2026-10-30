@@ -1,117 +1,135 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
-import '../../../../core/constants/app_routes.dart';
-import '../../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../core/constants/app_colors.dart';
+import '../../core/constants/app_routes.dart';
+import '../../core/constants/app_strings.dart';
+import '../auth/presentation/viewmodels/auth_viewmodel.dart';
 
-/// Pantalla de bienvenida inicial que redirige automáticamente
-/// según el estado de autenticación del usuario.
+/// Brand sequence displayed after native launch and before login/home.
 class SplashView extends StatefulWidget {
   const SplashView({super.key});
-
   @override
   State<SplashView> createState() => _SplashViewState();
 }
 
-class _SplashViewState extends State<SplashView>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _fadeAnimation;
-  late Animation<double> _scaleAnimation;
+class _SplashViewState extends State<SplashView> {
+  bool _brandGreen = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      duration: const Duration(milliseconds: 1200),
-      vsync: this,
-    );
-
-    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeIn),
-    );
-    _scaleAnimation = Tween<double>(begin: 0.8, end: 1.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.elasticOut),
-    );
-
-    _controller.forward();
-    _navigate();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 140));
+      if (mounted) setState(() => _brandGreen = true);
+    });
+    _finishSplash();
   }
 
-  Future<void> _navigate() async {
-    // Espera la animación más un pequeño delay de branding
-    await Future.delayed(const Duration(milliseconds: 2000));
+  Future<void> _finishSplash() async {
+    await Future<void>.delayed(const Duration(milliseconds: 2300));
     if (!mounted) return;
-
-    final authViewModel = context.read<AuthViewModel>();
-    if (authViewModel.isAuthenticated) {
-      context.go(AppRoutes.home);
-    } else {
-      context.go(AppRoutes.login);
-    }
+    final auth = context.read<AuthViewModel>();
+    context.go(auth.isAuthenticated ? AppRoutes.home : AppRoutes.login);
   }
 
   @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFF2E7D32),
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: ScaleTransition(
-            scale: _scaleAnimation,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                  child: const Icon(
-                    Icons.eco,
-                    size: 60,
-                    color: Color(0xFF2E7D32),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                const Text(
-                  'Agro+',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 40,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 2,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Del campo a tu mesa',
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 16,
-                    letterSpacing: 1,
-                  ),
-                ),
-                const SizedBox(height: 48),
-                const CircularProgressIndicator(
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  strokeWidth: 2,
-                ),
-              ],
-            ),
-          ),
+  Widget build(BuildContext context) => Scaffold(
+    body: AnimatedContainer(
+      duration: const Duration(milliseconds: 700),
+      curve: Curves.easeInOutCubic,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: _brandGreen
+              ? const [AppColors.primary, AppColors.primaryDark]
+              : const [AppColors.surface, AppColors.surface],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
         ),
       ),
-    );
-  }
+      child: SafeArea(
+        child: Column(
+          children: [
+            const Spacer(flex: 3),
+            RepaintBoundary(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(24),
+                    child: Image.asset(
+                      'assets/images/logotipo_oficial.png',
+                      width: 112,
+                      height: 112,
+                      fit: BoxFit.contain,
+                      cacheWidth: 224,
+                      filterQuality: FilterQuality.medium,
+                    ),
+                  ),
+                )
+                .animate()
+                .fadeIn(duration: 380.ms, curve: Curves.easeOutCubic)
+                .scale(
+                  begin: const Offset(.88, .88),
+                  end: const Offset(1, 1),
+                  duration: 380.ms,
+                  curve: Curves.easeOutCubic,
+                ),
+            const SizedBox(height: 20),
+            Text(
+                  'Agro+',
+                  style: GoogleFonts.plusJakartaSans(
+                    color: AppColors.surface,
+                    fontSize: 42,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -1,
+                  ),
+                )
+                .animate(delay: 420.ms)
+                .fadeIn(duration: 300.ms)
+                .slideY(begin: .08, end: 0),
+            const SizedBox(height: 10),
+            Text(
+                  AppStrings.appTagline,
+                  style: GoogleFonts.inter(
+                    color: AppColors.surface.withValues(alpha: .92),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                  ),
+                )
+                .animate(delay: 580.ms)
+                .fadeIn(duration: 280.ms)
+                .slideY(begin: .06, end: 0),
+            const Spacer(flex: 2),
+            SizedBox(
+              width: 152,
+              child: Column(
+                children: [
+                  Text(
+                    'Cargando…',
+                    style: GoogleFonts.inter(
+                      color: AppColors.surface.withValues(alpha: .86),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(99),
+                    child: const LinearProgressIndicator(
+                      minHeight: 4,
+                      backgroundColor: AppColors.primaryLight,
+                      valueColor: AlwaysStoppedAnimation(AppColors.surface),
+                    ),
+                  ),
+                ],
+              ),
+            ).animate(delay: 820.ms).fadeIn(duration: 240.ms),
+            const SizedBox(height: 40),
+          ],
+        ),
+      ),
+    ),
+  );
 }

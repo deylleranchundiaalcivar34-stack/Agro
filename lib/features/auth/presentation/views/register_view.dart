@@ -1,350 +1,492 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../viewmodels/auth_viewmodel.dart';
 
-/// Vista de registro con selección de rol (Productor / Comprador).
+/// A compact two-step public registration flow. Each step fits a phone screen
+/// before the keyboard is opened, so scrolling is a fallback rather than the UI.
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
-
   @override
   State<RegisterView> createState() => _RegisterViewState();
 }
 
 class _RegisterViewState extends State<RegisterView> {
   final _formKey = GlobalKey<FormState>();
-  final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
-  final _passwordController = TextEditingController();
-  final _confirmPasswordController = TextEditingController();
-  bool _obscurePassword = true;
-  bool _obscureConfirm = true;
+  final _name = TextEditingController();
+  final _email = TextEditingController();
+  final _password = TextEditingController();
+  final _confirmation = TextEditingController();
+  final _company = TextEditingController();
+  int _step = 0;
+  bool _showPassword = false;
+  bool _showConfirmation = false;
 
   @override
   void dispose() {
-    _nameController.dispose();
-    _emailController.dispose();
-    _passwordController.dispose();
-    _confirmPasswordController.dispose();
+    _name.dispose();
+    _email.dispose();
+    _password.dispose();
+    _confirmation.dispose();
+    _company.dispose();
     super.dispose();
   }
 
-  Future<void> _handleRegister() async {
+  bool _validateFirstStep() =>
+      _name.text.trim().isNotEmpty && _validEmail(_email.text);
+
+  void togglePasswordVisibility() {
+    setState(() => _showPassword = !_showPassword);
+  }
+
+  void toggleConfirmationVisibility() {
+    setState(() => _showConfirmation = !_showConfirmation);
+  }
+
+  void returnToIdentityStep() {
+    setState(() => _step = 0);
+  }
+
+  Future<void> _next() async {
+    if (!_validateFirstStep()) {
+      _formKey.currentState!.validate();
+      return;
+    }
+    setState(() => _step = 1);
+  }
+
+  Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-
-    final viewModel = context.read<AuthViewModel>();
-    final success = await viewModel.signUp(
-      email: _emailController.text,
-      password: _passwordController.text,
-      fullName: _nameController.text,
-      role: viewModel.selectedRole,
+    FocusScope.of(context).unfocus();
+    final auth = context.read<AuthViewModel>();
+    final created = await auth.signUp(
+      email: _email.text,
+      password: _password.text,
+      fullName: _name.text,
+      role: auth.selectedRole,
+      companyName: _company.text,
     );
-
     if (!mounted) return;
-
-    if (success) {
-      // Si la sesión ya está activa → Home. Si no → Confirmar email.
-      if (viewModel.isAuthenticated) {
-        context.go(AppRoutes.home);
-      } else {
-        _showConfirmationDialog();
-      }
+    if (created && auth.isAuthenticated) {
+      context.go(AppRoutes.home);
+    } else if (created) {
+      _confirmationDialog();
     } else {
-      _showErrorSnackbar(viewModel.errorMessage ?? AppStrings.genericError);
+      _showError(auth.errorMessage ?? 'No se pudo crear la cuenta.');
     }
   }
 
-  void _showErrorSnackbar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(message),
-        backgroundColor: AppColors.error,
-        behavior: SnackBarBehavior.floating,
+  void _showError(String message) => ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text(message),
+      behavior: SnackBarBehavior.floating,
+      backgroundColor: AppColors.error,
+    ),
+  );
+  void _confirmationDialog() => showDialog<void>(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text('Revisa tu correo'),
+      content: const Text(
+        'Enviamos un enlace para confirmar tu cuenta antes de ingresar.',
       ),
-    );
-  }
-
-  void _showConfirmationDialog() {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => AlertDialog(
-        title: const Row(
-          children: [
-            Icon(Icons.mark_email_read, color: AppColors.primary),
-            SizedBox(width: 8),
-            Text('¡Cuenta creada!'),
-          ],
+      actions: [
+        TextButton(
+          onPressed: () => context.go(AppRoutes.login),
+          child: const Text('Entendido'),
         ),
-        content: const Text(
-          'Te enviamos un correo de confirmación. '
-          'Por favor revisa tu bandeja de entrada y activa tu cuenta antes de iniciar sesión.',
-        ),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              Navigator.of(ctx).pop();
-              context.go(AppRoutes.login);
-            },
-            child: const Text('Ir al Login'),
-          ),
-        ],
-      ),
-    );
-  }
+      ],
+    ),
+  );
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: AppColors.textPrimary),
-          onPressed: () => context.go(AppRoutes.login),
-        ),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
-          child: Form(
-            key: _formKey,
+  Widget build(BuildContext context) => Scaffold(
+    backgroundColor: AppColors.primary,
+    body: SafeArea(
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // ── Título ──
-                Text(
-                  'Crea tu cuenta',
-                  style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
-                      ),
+                _Header(
+                  step: _step,
+                  onBack: _step == 1
+                      ? () => setState(() => _step = 0)
+                      : () => context.go(AppRoutes.login),
                 ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Únete a la comunidad agrícola',
-                  style: TextStyle(color: AppColors.textSecondary),
-                ),
-                const SizedBox(height: 28),
-
-                // ── Nombre completo ──
-                TextFormField(
-                  controller: _nameController,
-                  textCapitalization: TextCapitalization.words,
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.fullName,
-                    prefixIcon: Icon(Icons.person_outlined),
-                  ),
-                  validator: (v) => (v == null || v.isEmpty)
-                      ? AppStrings.fieldRequired
-                      : null,
-                ),
-                const SizedBox(height: 16),
-
-                // ── Email ──
-                TextFormField(
-                  controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
-                  autocorrect: false,
-                  decoration: const InputDecoration(
-                    labelText: AppStrings.email,
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return AppStrings.fieldRequired;
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(v)) {
-                      return AppStrings.emailInvalid;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // ── Contraseña ──
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: _obscurePassword,
-                  decoration: InputDecoration(
-                    labelText: AppStrings.password,
-                    prefixIcon: const Icon(Icons.lock_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined),
-                      onPressed: () =>
-                          setState(() => _obscurePassword = !_obscurePassword),
-                    ),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return AppStrings.fieldRequired;
-                    if (v.length < 6) return AppStrings.passwordMin;
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16),
-
-                // ── Confirmar contraseña ──
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: _obscureConfirm,
-                  decoration: InputDecoration(
-                    labelText: AppStrings.confirmPassword,
-                    prefixIcon: const Icon(Icons.lock_outlined),
-                    suffixIcon: IconButton(
-                      icon: Icon(_obscureConfirm
-                          ? Icons.visibility_outlined
-                          : Icons.visibility_off_outlined),
-                      onPressed: () =>
-                          setState(() => _obscureConfirm = !_obscureConfirm),
-                    ),
-                  ),
-                  validator: (v) {
-                    if (v == null || v.isEmpty) return AppStrings.fieldRequired;
-                    if (v != _passwordController.text) {
-                      return AppStrings.passwordsNoMatch;
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // ── Selección de rol ──
-                Text(
-                  AppStrings.selectRole,
-                  style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                        color: AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                ),
-                const SizedBox(height: 12),
-                Consumer<AuthViewModel>(
-                  builder: (context, viewModel, _) {
-                    return Row(
-                      children: [
-                        _RoleChip(
-                          label: AppStrings.roleProducer,
-                          icon: Icons.agriculture,
-                          role: UserRole.producer,
-                          selectedRole: viewModel.selectedRole,
-                          onTap: () => viewModel.setRole(UserRole.producer),
+                Transform.translate(
+                  offset: const Offset(0, -14),
+                  child: _FormSheet(
+                    minHeight: constraints.maxHeight - 142,
+                    child: Form(
+                      key: _formKey,
+                      child: AnimatedSwitcher(
+                        duration: const Duration(milliseconds: 220),
+                        transitionBuilder: (child, animation) => FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(
+                            position: Tween<Offset>(
+                              begin: const Offset(.04, 0),
+                              end: Offset.zero,
+                            ).animate(animation),
+                            child: child,
+                          ),
                         ),
-                        const SizedBox(width: 12),
-                        _RoleChip(
-                          label: AppStrings.roleBuyer,
-                          icon: Icons.shopping_basket_outlined,
-                          role: UserRole.buyer,
-                          selectedRole: viewModel.selectedRole,
-                          onTap: () => viewModel.setRole(UserRole.buyer),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-                const SizedBox(height: 32),
-
-                // ── Botón registrar ──
-                Consumer<AuthViewModel>(
-                  builder: (context, viewModel, _) {
-                    return ElevatedButton(
-                      onPressed: viewModel.isLoading ? null : _handleRegister,
-                      child: viewModel.isLoading
-                          ? const SizedBox(
-                              height: 22,
-                              width: 22,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                valueColor:
-                                    AlwaysStoppedAnimation<Color>(Colors.white),
+                        child: _step == 0
+                            ? _IdentityStep(key: const ValueKey(0), state: this)
+                            : _SecurityStep(
+                                key: const ValueKey(1),
+                                state: this,
                               ),
-                            )
-                          : const Text(AppStrings.register),
-                    );
-                  },
-                ),
-                const SizedBox(height: 24),
-
-                // ── Ya tengo cuenta ──
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const Text(
-                      AppStrings.alreadyAccount,
-                      style: TextStyle(color: AppColors.textSecondary),
+                      ),
                     ),
-                    TextButton(
-                      onPressed: () => context.go(AppRoutes.login),
-                      child: const Text(AppStrings.login),
-                    ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 16),
               ],
             ),
           ),
         ),
       ),
-    );
-  }
+    ),
+  );
 }
 
-// -----------------------------------------------------------------------------
-// Widget auxiliar: chip de selección de rol
-// -----------------------------------------------------------------------------
-class _RoleChip extends StatelessWidget {
-  final String label;
-  final IconData icon;
-  final UserRole role;
-  final UserRole selectedRole;
-  final VoidCallback onTap;
+class _Header extends StatelessWidget {
+  const _Header({required this.step, required this.onBack});
+  final int step;
+  final VoidCallback onBack;
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 158,
+    child: Stack(
+      children: [
+        Positioned(
+          top: 4,
+          left: 8,
+          child: IconButton(
+            tooltip: step == 0
+                ? 'Volver al inicio de sesión'
+                : 'Volver al paso anterior',
+            onPressed: onBack,
+            icon: const Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: AppColors.surface,
+            ),
+          ),
+        ),
+        Positioned(
+          left: 24,
+          right: 24,
+          bottom: 24,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                step == 0 ? 'Crea tu cuenta' : 'Protege tu cuenta',
+                style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+                  color: AppColors.surface,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                step == 0
+                    ? 'Elige tu perfil y tus datos básicos.'
+                    : 'Un último paso y estarás listo.',
+                style: Theme.of(context).textTheme.bodyMedium
+                    ?.copyWith(color: AppColors.surface),
+              ),
+            ],
+          ),
+        ),
+      ],
+    ),
+  );
+}
 
-  const _RoleChip({
-    required this.label,
-    required this.icon,
+class _FormSheet extends StatelessWidget {
+  const _FormSheet({required this.minHeight, required this.child});
+  final double minHeight;
+  final Widget child;
+  @override
+  Widget build(BuildContext context) => Container(
+    width: double.infinity,
+    constraints: BoxConstraints(minHeight: minHeight),
+    padding: const EdgeInsets.fromLTRB(24, 20, 24, 24),
+    decoration: const BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+    ),
+    child: Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 430),
+        child: child,
+      ),
+    ),
+  );
+}
+
+class _IdentityStep extends StatelessWidget {
+  const _IdentityStep({super.key, required this.state});
+  final _RegisterViewState state;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      const _Progress(active: 0),
+      const SizedBox(height: 20),
+      Text(
+        '¿Cómo usarás Agro+?',
+        style: Theme.of(context).textTheme.titleLarge
+            ?.copyWith(fontWeight: FontWeight.w800),
+      ),
+      const SizedBox(height: 6),
+      Text(
+        'Solo se muestran perfiles disponibles para registro público.',
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: AppColors.textSecondary),
+      ),
+      const SizedBox(height: 16),
+      Consumer<AuthViewModel>(
+        builder: (context, auth, _) => Row(
+          children: [
+            Expanded(
+              child: _RoleCard(
+                role: UserRole.producer,
+                selected: auth.selectedRole,
+                icon: Icons.agriculture_outlined,
+                title: 'Productor',
+                subtitle: 'Publico mis lotes',
+                onTap: () => auth.setRole(UserRole.producer),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: _RoleCard(
+                role: UserRole.buyer,
+                selected: auth.selectedRole,
+                icon: Icons.shopping_basket_outlined,
+                title: 'Comprador',
+                subtitle: 'Encuentro preventas',
+                onTap: () => auth.setRole(UserRole.buyer),
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 20),
+      const _Label('Nombre completo'),
+      const SizedBox(height: 6),
+      TextFormField(
+        controller: state._name,
+        textCapitalization: TextCapitalization.words,
+        textInputAction: TextInputAction.next,
+        decoration: _field('Nombre y apellido', Icons.person_outline_rounded),
+        validator: state._required,
+      ),
+      const SizedBox(height: 14),
+      const _Label('Correo electrónico'),
+      const SizedBox(height: 6),
+      TextFormField(
+        controller: state._email,
+        keyboardType: TextInputType.emailAddress,
+        textInputAction: TextInputAction.done,
+        decoration: _field('ejemplo@agro.com', Icons.mail_outline_rounded),
+        validator: state._emailValidator,
+      ),
+      const SizedBox(height: 24),
+      FilledButton(onPressed: state._next, child: const Text('Continuar')),
+      const SizedBox(height: 8),
+      TextButton(
+        onPressed: () => context.go(AppRoutes.login),
+        child: const Text('Ya tengo una cuenta'),
+      ),
+    ],
+  ).animate().fadeIn(duration: 220.ms).slideY(begin: .025, end: 0);
+}
+
+class _SecurityStep extends StatelessWidget {
+  const _SecurityStep({super.key, required this.state});
+  final _RegisterViewState state;
+  @override
+  Widget build(BuildContext context) => Column(
+    crossAxisAlignment: CrossAxisAlignment.stretch,
+    children: [
+      const _Progress(active: 1),
+      const SizedBox(height: 20),
+      Text(
+        'Crea una contraseña',
+        style: Theme.of(context).textTheme.titleLarge
+            ?.copyWith(fontWeight: FontWeight.w800),
+      ),
+      const SizedBox(height: 6),
+      Text(
+        'Tu empresa o finca es opcional.',
+        style: Theme.of(context).textTheme.bodySmall
+            ?.copyWith(color: AppColors.textSecondary),
+      ),
+      const SizedBox(height: 20),
+      const _Label('Contraseña'),
+      const SizedBox(height: 6),
+      TextFormField(
+        controller: state._password,
+        obscureText: !state._showPassword,
+        textInputAction: TextInputAction.next,
+        decoration: _passwordField(
+          'Mínimo 6 caracteres',
+          state._showPassword,
+          state.togglePasswordVisibility,
+        ),
+        validator: state._passwordValidator,
+      ),
+      const SizedBox(height: 14),
+      const _Label('Confirmar contraseña'),
+      const SizedBox(height: 6),
+      TextFormField(
+        controller: state._confirmation,
+        obscureText: !state._showConfirmation,
+        textInputAction: TextInputAction.next,
+        decoration: _passwordField(
+          'Repite tu contraseña',
+          state._showConfirmation,
+          state.toggleConfirmationVisibility,
+        ),
+        validator: (value) => value == state._password.text
+            ? null
+            : 'Las contraseñas no coinciden.',
+      ),
+      const SizedBox(height: 14),
+      Consumer<AuthViewModel>(
+        builder: (context, auth, _) => Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _Label(
+              auth.selectedRole == UserRole.producer
+                  ? 'Finca o empresa (opcional)'
+                  : 'Empresa o negocio (opcional)',
+            ),
+            const SizedBox(height: 6),
+            TextFormField(
+              controller: state._company,
+              textCapitalization: TextCapitalization.words,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => state._submit(),
+              decoration: _field(
+                'Ej. Finca La Esperanza',
+                Icons.business_outlined,
+              ),
+            ),
+          ],
+        ),
+      ),
+      const SizedBox(height: 24),
+      Consumer<AuthViewModel>(
+        builder: (context, auth, _) => FilledButton(
+          onPressed: auth.isLoading ? null : state._submit,
+          child: auth.isLoading
+              ? const SizedBox.square(
+                  dimension: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.surface,
+                  ),
+                )
+              : const Text('Crear cuenta'),
+        ),
+      ),
+      const SizedBox(height: 8),
+      TextButton(
+        onPressed: state.returnToIdentityStep,
+        child: const Text('Volver'),
+      ),
+    ],
+  ).animate().fadeIn(duration: 220.ms).slideY(begin: .025, end: 0);
+}
+
+class _Progress extends StatelessWidget {
+  const _Progress({required this.active});
+  final int active;
+  @override
+  Widget build(BuildContext context) => Row(
+    children: List.generate(
+      2,
+      (i) => Expanded(
+        child: Container(
+          height: 4,
+          margin: EdgeInsets.only(right: i == 0 ? 8 : 0),
+          decoration: BoxDecoration(
+            color: i <= active ? AppColors.primary : AppColors.divider,
+            borderRadius: BorderRadius.circular(4),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _RoleCard extends StatelessWidget {
+  const _RoleCard({
     required this.role,
-    required this.selectedRole,
+    required this.selected,
+    required this.icon,
+    required this.title,
+    required this.subtitle,
     required this.onTap,
   });
-
-  bool get _isSelected => role == selectedRole;
-
+  final UserRole role;
+  final UserRole selected;
+  final IconData icon;
+  final String title;
+  final String subtitle;
+  final VoidCallback onTap;
   @override
   Widget build(BuildContext context) {
-    return Expanded(
-      child: GestureDetector(
+    final active = role == selected;
+    return Semantics(
+      button: true,
+      selected: active,
+      label: 'Seleccionar $title',
+      child: InkWell(
         onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 200),
-          padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 8),
+          duration: const Duration(milliseconds: 180),
+          height: 108,
+          padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color:
-                _isSelected ? AppColors.primary : AppColors.primarySurface,
-            borderRadius: BorderRadius.circular(12),
+            color: active ? AppColors.primarySurface : AppColors.background,
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: _isSelected
-                  ? AppColors.primary
-                  : AppColors.divider,
-              width: 2,
+              color: active ? AppColors.primary : AppColors.inputBorder,
+              width: active ? 2 : 1,
             ),
           ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Icon(
                 icon,
-                size: 28,
-                color: _isSelected ? Colors.white : AppColors.primary,
+                color: active ? AppColors.primary : AppColors.textSecondary,
               ),
-              const SizedBox(height: 6),
+              const Spacer(),
               Text(
-                label,
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: _isSelected ? Colors.white : AppColors.primary,
+                title,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: active ? AppColors.primaryDark : AppColors.textPrimary,
                 ),
+              ),
+              const SizedBox(height: 2),
+              Text(
+                subtitle,
+                style: Theme.of(context).textTheme.bodySmall
+                    ?.copyWith(color: AppColors.textSecondary),
               ),
             ],
           ),
@@ -354,3 +496,51 @@ class _RoleChip extends StatelessWidget {
   }
 }
 
+class _Label extends StatelessWidget {
+  const _Label(this.text);
+  final String text;
+  @override
+  Widget build(BuildContext context) => Text(
+    text,
+    style: Theme.of(context).textTheme.bodyMedium
+        ?.copyWith(fontWeight: FontWeight.w700),
+  );
+}
+
+InputDecoration _field(String hint, IconData icon) => InputDecoration(
+  hintText: hint,
+  prefixIcon: Icon(icon),
+  filled: true,
+  fillColor: AppColors.background,
+  border: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(14),
+    borderSide: const BorderSide(color: AppColors.inputBorder),
+  ),
+  enabledBorder: OutlineInputBorder(
+    borderRadius: BorderRadius.circular(14),
+    borderSide: const BorderSide(color: AppColors.inputBorder),
+  ),
+);
+InputDecoration _passwordField(String hint, bool visible, VoidCallback onTap) =>
+    _field(hint, Icons.lock_outline_rounded).copyWith(
+      suffixIcon: IconButton(
+        tooltip: visible ? 'Ocultar contraseña' : 'Mostrar contraseña',
+        onPressed: onTap,
+        icon: Icon(
+          visible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+        ),
+      ),
+    );
+
+extension on _RegisterViewState {
+  String? _required(String? value) => value == null || value.trim().isEmpty
+      ? 'Este campo es obligatorio.'
+      : null;
+  String? _emailValidator(String? value) =>
+      _validEmail(value ?? '') ? null : 'Ingresa un correo válido.';
+  String? _passwordValidator(String? value) =>
+      value != null && value.length >= 6 ? null : 'Usa al menos 6 caracteres.';
+}
+
+bool _validEmail(String value) =>
+    RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value.trim());

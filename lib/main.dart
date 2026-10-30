@@ -5,7 +5,10 @@ import 'package:provider/provider.dart';
 
 import 'app.dart';
 import 'core/network/supabase_service.dart';
+import 'features/auth/data/repositories/profile_repository.dart';
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import 'features/products/data/repositories/products_repository.dart';
+import 'features/products/presentation/viewmodels/products_viewmodel.dart';
 
 Future<void> main() async {
   // Garantiza que los bindings de Flutter están listos antes de cualquier
@@ -29,8 +32,21 @@ Future<void> main() async {
     MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => AuthViewModel(
-            supabaseService: SupabaseService(),
+          create: (_) {
+            final supabaseService = SupabaseService();
+            return AuthViewModel(
+              supabaseService: supabaseService,
+              profileRepository: ProfileRepository(
+                supabaseService: supabaseService,
+              ),
+            );
+          },
+        ),
+        ChangeNotifierProvider(
+          create: (_) => ProductsViewModel(
+            productsRepository: ProductsRepository(
+              supabaseService: SupabaseService(),
+            ),
           ),
         ),
       ],

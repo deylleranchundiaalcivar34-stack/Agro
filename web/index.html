@@ -18,7 +18,7 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="Agro+ conecta el campo con compradores reales.">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
@@ -29,10 +29,23 @@
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>proyecto_agro</title>
+  <title>Agro+</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    html, body { height: 100%; margin: 0; background: #2E7D32; }
+    #agro-loader { position: fixed; inset: 0; z-index: 9999; display: grid; place-content: center; gap: 16px; justify-items: center; color: white; font-family: Arial, sans-serif; background: linear-gradient(180deg, #2E7D32, #1B5E20); transition: opacity 180ms ease; }
+    #agro-loader__mark { width: 84px; height: 84px; display: grid; place-items: center; overflow: hidden; border-radius: 24px; background: #fff; box-shadow: 0 12px 30px rgba(0,0,0,.20); }
+    #agro-loader__mark img { width: 64px; height: 64px; object-fit: contain; }
+    #agro-loader__title { font-weight: 800; font-size: 30px; }
+    #agro-loader__subtitle { font-size: 14px; opacity: .9; }
+  </style>
 </head>
 <body>
+  <div id="agro-loader" aria-label="Cargando Agro+">
+    <div id="agro-loader__mark"><img src="assets/assets/images/logotipo_oficial.png" alt="Agro+"></div>
+    <div id="agro-loader__title">Agro+</div>
+    <div id="agro-loader__subtitle">DEL CAMPO A TU MANO</div>
+  </div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -42,5 +55,13 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var loader = document.getElementById('agro-loader');
+      if (!loader) return;
+      loader.style.opacity = '0';
+      setTimeout(function () { loader.remove(); }, 180);
+    });
+  </script>
 </body>
 </html>
