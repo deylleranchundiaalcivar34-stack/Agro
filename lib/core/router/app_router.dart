@@ -26,11 +26,12 @@ import '../../features/main/presentation/views/main_navigation_view.dart';
 /// - Transiciones suaves de pantalla.
 class AppRouter {
   final AuthViewModel authViewModel;
+  final String initialLocation;
 
-  AppRouter({required this.authViewModel});
+  AppRouter({required this.authViewModel, required this.initialLocation});
 
   late final GoRouter router = GoRouter(
-    initialLocation: AppRoutes.splash,
+    initialLocation: initialLocation,
     debugLogDiagnostics: false,
 
     redirect: (BuildContext context, GoRouterState state) {

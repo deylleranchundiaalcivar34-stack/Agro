@@ -16,6 +16,7 @@ class NavigationItemData {
     required this.activeIcon,
   });
 }
+
 /// Vista contenedora de navegación principal (MainNavigationView) de Agro+.
 ///
 /// Implementa:
@@ -27,10 +28,7 @@ class NavigationItemData {
 class MainNavigationView extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
-  const MainNavigationView({
-    super.key,
-    required this.navigationShell,
-  });
+  const MainNavigationView({super.key, required this.navigationShell});
 
   static const List<NavigationItemData> _items = [
     NavigationItemData(
@@ -78,9 +76,7 @@ class MainNavigationView extends StatelessWidget {
           // ─────────────────────────────────────────────────────────────
           // 1. CUERPO DE LA RAMA ACTIVA (StatefulShellRoute / IndexedStack)
           // ─────────────────────────────────────────────────────────────
-          Positioned.fill(
-            child: navigationShell,
-          ),
+          Positioned.fill(child: navigationShell),
 
           // ─────────────────────────────────────────────────────────────
           // 2. BARRA DE NAVEGACIÓN FLOTANTE (ESTILO PASTILLA CIRCULAR 100)
@@ -93,7 +89,7 @@ class MainNavigationView extends StatelessWidget {
               child: Padding(
                 padding: const EdgeInsets.only(left: 18, right: 18, bottom: 14),
                 child: Container(
-                  height: 68,
+                  height: 72,
                   decoration: BoxDecoration(
                     color: Colors.white, // Blanco puro
                     borderRadius: BorderRadius.circular(100), // Pastilla
@@ -119,8 +115,8 @@ class MainNavigationView extends StatelessWidget {
                   child: LayoutBuilder(
                     builder: (context, constraints) {
                       final itemWidth = constraints.maxWidth / _items.length;
-                      final indicatorWidth = itemWidth - 8;
-                      const indicatorHeight = 54.0;
+                      final indicatorWidth = itemWidth - 4;
+                      const indicatorHeight = 58.0;
 
                       return Stack(
                         alignment: Alignment.centerLeft,
@@ -130,9 +126,10 @@ class MainNavigationView extends StatelessWidget {
                           // ─────────────────────────────────────────────
                           AnimatedPositioned(
                             duration: const Duration(milliseconds: 320),
-                            curve: Curves.easeOutBack, // Animación elástica fluida
-                            left: (currentIndex * itemWidth) + 4,
-                            top: 6,
+                            curve:
+                                Curves.easeOutBack, // Animación elástica fluida
+                            left: (currentIndex * itemWidth) + 2,
+                            top: 7,
                             width: indicatorWidth,
                             height: indicatorHeight,
                             child: Container(
@@ -141,7 +138,9 @@ class MainNavigationView extends StatelessWidget {
                                 borderRadius: BorderRadius.circular(100),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: AppColors.primary.withValues(alpha: 0.30),
+                                    color: AppColors.primary.withValues(
+                                      alpha: 0.30,
+                                    ),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -180,6 +179,7 @@ class MainNavigationView extends StatelessWidget {
     );
   }
 }
+
 /// Widget individual para cada botón de la barra de navegación con micro-interacción.
 class _NavBarItemWidget extends StatefulWidget {
   final NavigationItemData data;
@@ -211,7 +211,7 @@ class _NavBarItemWidgetState extends State<_NavBarItemWidget> {
       onTap: widget.onTap,
       child: Center(
         child: AnimatedScale(
-          scale: _isPressed ? 0.94 : (isSelected ? 1.04 : 1.0),
+          scale: _isPressed ? 0.96 : 1.0,
           duration: const Duration(milliseconds: 120),
           curve: Curves.easeOut,
           child: Column(
@@ -220,23 +220,28 @@ class _NavBarItemWidgetState extends State<_NavBarItemWidget> {
             children: [
               Icon(
                 isSelected ? widget.data.activeIcon : widget.data.icon,
-                size: 22,
+                size: 20,
                 // Blanco si está sobre el resaltador; gris #9E9E9E si está inactivo
                 color: isSelected ? Colors.white : const Color(0xFF9E9E9E),
               ),
-              const SizedBox(height: 3),
-              AnimatedDefaultTextStyle(
-                duration: const Duration(milliseconds: 200),
-                style: GoogleFonts.inter(
-                  fontSize: 10,
-                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
-                  color: isSelected ? Colors.white : const Color(0xFF9E9E9E),
-                  letterSpacing: 0.1,
-                ),
-                child: Text(
-                  widget.data.label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
+              const SizedBox(height: 2),
+              SizedBox(
+                width: 48,
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: AnimatedDefaultTextStyle(
+                    duration: const Duration(milliseconds: 200),
+                    style: GoogleFonts.inter(
+                      fontSize: 9,
+                      fontWeight: isSelected
+                          ? FontWeight.w700
+                          : FontWeight.w500,
+                      color: isSelected
+                          ? Colors.white
+                          : const Color(0xFF9E9E9E),
+                    ),
+                    child: Text(widget.data.label, maxLines: 1),
+                  ),
                 ),
               ),
             ],

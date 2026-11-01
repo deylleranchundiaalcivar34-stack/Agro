@@ -54,6 +54,7 @@ class AuthViewModel extends ChangeNotifier {
   final SupabaseService _supabaseService;
   final ProfileRepository _profileRepository;
   late final StreamSubscription<AuthState> _authSubscription;
+  late final Future<void> initialLoad;
 
   AuthViewModel({
     required SupabaseService supabaseService,
@@ -68,8 +69,9 @@ class AuthViewModel extends ChangeNotifier {
     final currentUser = _supabaseService.currentUser;
     if (currentUser == null) {
       _status = AuthStatus.unauthenticated;
+      initialLoad = Future<void>.value();
     } else {
-      _hydrateAuthenticatedUser(currentUser);
+      initialLoad = _hydrateAuthenticatedUser(currentUser);
     }
   }
 

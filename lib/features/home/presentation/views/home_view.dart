@@ -43,140 +43,148 @@ class _HomeViewContent extends StatelessWidget {
         child: RefreshIndicator(
           color: AppColors.primary,
           onRefresh: viewModel.refresh,
-          child: SingleChildScrollView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(24, 20, 24, 110), // Padding general de 24px
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // ─────────────────────────────────────────────────────────
-                // 1. CABECERA: SALUDO DINÁMICO (IZQ) + AVATAR CIRCULAR (DER)
-                // ─────────────────────────────────────────────────────────
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '¡Hola, ${authViewModel.displayName}! 👋',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: GoogleFonts.plusJakartaSans(
-                              fontSize: 22,
-                              fontWeight: FontWeight.w800,
-                              color: AppColors.textPrimary,
-                              letterSpacing: -0.4,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            '¿Qué deseas gestionar hoy?',
-                            style: GoogleFonts.inter(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: AppColors.textSecondary,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 14),
-
-                    // Avatar circular de perfil en la esquina superior derecha
-                    GestureDetector(
-                      onTap: () => context.go(AppRoutes.profile),
-                      child: Container(
-                        width: 50,
-                        height: 50,
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          border: Border.all(
-                            color: AppColors.primary.withValues(alpha: 0.20),
-                            width: 1.8,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.04),
-                              blurRadius: 10,
-                              offset: const Offset(0, 3),
-                            ),
-                          ],
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          authViewModel.userInitial,
+          child: ListView(
+            physics: const BouncingScrollPhysics(
+              parent: AlwaysScrollableScrollPhysics(),
+            ),
+            padding: const EdgeInsets.fromLTRB(
+              24,
+              20,
+              24,
+              110,
+            ), // Padding general de 24px
+            children: [
+              // ─────────────────────────────────────────────────────────
+              // 1. CABECERA: SALUDO DINÁMICO (IZQ) + AVATAR CIRCULAR (DER)
+              // ─────────────────────────────────────────────────────────
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '¡Hola, ${authViewModel.displayName}! 👋',
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 19,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.primary,
+                            color: AppColors.textPrimary,
+                            letterSpacing: -0.4,
                           ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '¿Qué deseas gestionar hoy?',
+                          style: GoogleFonts.inter(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+
+                  // Avatar circular de perfil en la esquina superior derecha
+                  GestureDetector(
+                    onTap: () => context.go(AppRoutes.profile),
+                    child: Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppColors.primary.withValues(alpha: 0.20),
+                          width: 1.8,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      alignment: Alignment.center,
+                      child: Text(
+                        authViewModel.userInitial,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 19,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.primary,
                         ),
                       ),
                     ),
-                  ],
-                ).animate().fadeIn(duration: 400.ms),
-
-                const SizedBox(height: 24),
-
-                // ─────────────────────────────────────────────────────────
-                // 2. CONTENEDOR INICIAL: TARJETA FLOTANTE (circular(24))
-                // ─────────────────────────────────────────────────────────
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(22),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(24), // circular(24)
-                    border: Border.all(
-                      color: AppColors.divider.withValues(alpha: 0.40),
-                      width: 1,
-                    ),
-                    boxShadow: [
-                      // Sombra muy suave sin elevación nativa
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.04),
-                        blurRadius: 20,
-                        spreadRadius: 0,
-                        offset: const Offset(0, 6),
-                      ),
-                    ],
                   ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Row(
-                            children: [
-                              Container(
-                                width: 36,
-                                height: 36,
-                                decoration: BoxDecoration(
-                                  color: AppColors.primarySurface,
-                                  borderRadius: BorderRadius.circular(10),
-                                ),
-                                child: const Icon(
-                                  Icons.eco_rounded,
-                                  color: AppColors.primary,
-                                  size: 20,
-                                ),
+                ],
+              ).animate().fadeIn(duration: 400.ms),
+
+              const SizedBox(height: 24),
+
+              // ─────────────────────────────────────────────────────────
+              // 2. CONTENEDOR INICIAL: TARJETA FLOTANTE (circular(24))
+              // ─────────────────────────────────────────────────────────
+              Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(22),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24), // circular(24)
+                      border: Border.all(
+                        color: AppColors.divider.withValues(alpha: 0.40),
+                        width: 1,
+                      ),
+                      boxShadow: [
+                        // Sombra muy suave sin elevación nativa
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.04),
+                          blurRadius: 20,
+                          spreadRadius: 0,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 36,
+                              height: 36,
+                              decoration: BoxDecoration(
+                                color: AppColors.primarySurface,
+                                borderRadius: BorderRadius.circular(10),
                               ),
-                              const SizedBox(width: 10),
-                              Text(
+                              child: const Icon(
+                                Icons.eco_rounded,
+                                color: AppColors.primary,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
                                 'Resumen Agrícola',
+                                maxLines: 2,
                                 style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 16,
+                                  fontSize: 15,
                                   fontWeight: FontWeight.w700,
                                   color: AppColors.textPrimary,
                                 ),
                               ),
-                            ],
-                          ),
-                          Container(
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: Container(
                             padding: const EdgeInsets.symmetric(
                               horizontal: 10,
                               vertical: 4,
@@ -186,112 +194,126 @@ class _HomeViewContent extends StatelessWidget {
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Text(
-                              'En Tiempo Real',
+                              viewModel.summaryLabel,
                               style: GoogleFonts.inter(
-                                fontSize: 11,
+                                fontSize: 10,
                                 fontWeight: FontWeight.w700,
                                 color: AppColors.primary,
                               ),
                             ),
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
+                        ),
+                        const SizedBox(height: 16),
 
-                      // Métricas / accesos del contenedor
-                      Row(
-                        children: List.generate(viewModel.metrics.length, (index) {
-                          final metric = viewModel.metrics[index];
-                          final isLast = index == viewModel.metrics.length - 1;
+                        // Métricas / accesos del contenedor
+                        LayoutBuilder(
+                          builder: (context, constraints) {
+                            final compact = constraints.maxWidth < 420;
+                            final columns = compact ? 2 : 3;
+                            final itemWidth =
+                                (constraints.maxWidth - (columns - 1) * 8) /
+                                columns;
+                            return Wrap(
+                              spacing: 8,
+                              runSpacing: 8,
+                              children: List.generate(
+                                viewModel.metrics.length,
+                                (index) {
+                                  final metric = viewModel.metrics[index];
+                                  final isLast =
+                                      index == viewModel.metrics.length - 1;
 
-                          return Expanded(
-                            child: Container(
-                              margin: EdgeInsets.only(right: isLast ? 0 : 8),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: AppColors.background,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    metric.label,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w500,
-                                      color: AppColors.textSecondary,
+                                  return SizedBox(
+                                    width: compact && isLast
+                                        ? constraints.maxWidth
+                                        : itemWidth,
+                                    child: Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 10,
+                                        vertical: 12,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: AppColors.background,
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            metric.label,
+                                            maxLines: 2,
+                                            style: GoogleFonts.inter(
+                                              fontSize: 10.5,
+                                              fontWeight: FontWeight.w500,
+                                              color: AppColors.textSecondary,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            metric.value,
+                                            maxLines: 1,
+                                            overflow: TextOverflow.visible,
+                                            style: GoogleFonts.plusJakartaSans(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.w800,
+                                              color: AppColors.textPrimary,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 2),
+                                          Text(
+                                            metric.change,
+                                            maxLines: 2,
+                                            style: GoogleFonts.inter(
+                                              fontSize: 10.5,
+                                              fontWeight: FontWeight.w600,
+                                              color: AppColors.primary,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
                                     ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    metric.value,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.plusJakartaSans(
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: AppColors.textPrimary,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    metric.change,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: GoogleFonts.inter(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w600,
-                                      color: AppColors.primary,
-                                    ),
-                                  ),
-                                ],
+                                  );
+                                },
                               ),
-                            ),
-                          );
-                        }),
-                      ),
-                    ],
-                  ),
-                )
-                    .animate(delay: 150.ms)
-                    .fadeIn(duration: 450.ms)
-                    .slideY(begin: 0.08, end: 0, curve: Curves.easeOut),
+                            );
+                          },
+                        ),
+                      ],
+                    ),
+                  )
+                  .animate(delay: 150.ms)
+                  .fadeIn(duration: 450.ms)
+                  .slideY(begin: 0.08, end: 0, curve: Curves.easeOut),
 
-                const SizedBox(height: 26),
+              const SizedBox(height: 26),
 
-                // ─────────────────────────────────────────────────────────
-                // 3. TARJETA HERO PREVENTA (FASE 0)
-                // ─────────────────────────────────────────────────────────
-                _buildHeroBanner(context)
-                    .animate(delay: 250.ms)
-                    .fadeIn(duration: 450.ms),
+              // ─────────────────────────────────────────────────────────
+              // 3. TARJETA HERO PREVENTA (FASE 0)
+              // ─────────────────────────────────────────────────────────
+              _buildHeroBanner(context)
+                  .animate(delay: 250.ms)
+                  .fadeIn(duration: 450.ms),
 
-                const SizedBox(height: 26),
+              const SizedBox(height: 26),
 
-                // ─────────────────────────────────────────────────────────
-                // 4. ACCESOS RÁPIDOS PRINCIPALES
-                // ─────────────────────────────────────────────────────────
-                Text(
-                  'Acciones Inmediatas',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
+              // ─────────────────────────────────────────────────────────
+              // 4. ACCESOS RÁPIDOS PRINCIPALES
+              // ─────────────────────────────────────────────────────────
+              Text(
+                'Acciones Inmediatas',
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  color: AppColors.textPrimary,
                 ),
-                const SizedBox(height: 14),
+              ),
+              const SizedBox(height: 14),
 
-                _buildQuickActionCards(context)
-                    .animate(delay: 350.ms)
-                    .fadeIn(duration: 450.ms),
-              ],
-            ),
+              _buildQuickActionCards(context)
+                  .animate(delay: 350.ms)
+                  .fadeIn(duration: 450.ms),
+            ],
           ),
         ),
       ),
@@ -304,10 +326,7 @@ class _HomeViewContent extends StatelessWidget {
       padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [
-            AppColors.primary,
-            AppColors.primaryDark,
-          ],
+          colors: [AppColors.primary, AppColors.primaryDark],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
@@ -327,7 +346,10 @@ class _HomeViewContent extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: Colors.white.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(8),
@@ -342,7 +364,11 @@ class _HomeViewContent extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(Icons.bolt_rounded, color: Colors.amberAccent, size: 22),
+              const Icon(
+                Icons.bolt_rounded,
+                color: Colors.amberAccent,
+                size: 22,
+              ),
             ],
           ),
           const SizedBox(height: 12),
@@ -426,73 +452,77 @@ class _HomeViewContent extends StatelessWidget {
       },
     ];
 
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: items.length,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 14,
-        mainAxisSpacing: 14,
-        childAspectRatio: 1.4,
-      ),
-      itemBuilder: (context, index) {
-        final item = items[index];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final cardWidth = (constraints.maxWidth - 14) / 2;
+        return Wrap(
+          spacing: 14,
+          runSpacing: 14,
+          children: List.generate(items.length, (index) {
+            final item = items[index];
 
-        return GestureDetector(
-          onTap: () => context.go(item['route'] as String),
-          child: Container(
-            padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(
-                color: AppColors.divider.withValues(alpha: 0.4),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.035),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
+            return SizedBox(
+              width: cardWidth,
+              height: cardWidth / 1.4,
+              child: GestureDetector(
+                onTap: () => context.go(item['route'] as String),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: (item['color'] as Color).withValues(alpha: 0.12),
-                    borderRadius: BorderRadius.circular(12),
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: AppColors.divider.withValues(alpha: 0.4),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.035),
+                        blurRadius: 14,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  child: Icon(
-                    item['icon'] as IconData,
-                    color: item['color'] as Color,
-                    size: 20,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: (item['color'] as Color).withValues(
+                            alpha: 0.12,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          item['icon'] as IconData,
+                          color: item['color'] as Color,
+                          size: 20,
+                        ),
+                      ),
+                      const Spacer(),
+                      Text(
+                        item['title'] as String,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        item['subtitle'] as String,
+                        style: GoogleFonts.inter(
+                          fontSize: 11,
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  item['title'] as String,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  item['subtitle'] as String,
-                  style: GoogleFonts.inter(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
-            ),
-          ),
+              ),
+            );
+          }),
         );
       },
     );

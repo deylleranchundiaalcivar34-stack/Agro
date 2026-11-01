@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -68,116 +67,130 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
           return RefreshIndicator(
             onRefresh: () => vm.loadCatalogue(force: true),
             color: AppColors.primary,
-            child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 16, 20, 112),
-              physics: const AlwaysScrollableScrollPhysics(),
-              children: [
-                TextField(
-                  onChanged: (value) => setState(() => _query = value),
-                  decoration: InputDecoration(
-                    hintText: 'Buscar por producto o categoría',
-                    prefixIcon: const Icon(Icons.search_rounded),
-                    filled: true,
-                    fillColor: AppColors.surface,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      borderSide: const BorderSide(color: AppColors.divider),
-                    ),
-                  ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: CustomScrollView(
+                physics: const BouncingScrollPhysics(
+                  parent: AlwaysScrollableScrollPhysics(),
                 ),
-                const SizedBox(height: 16),
-                SizedBox(
-                  height: 40,
-                  child: ListView(
-                    scrollDirection: Axis.horizontal,
-                    children: [
-                      _Chip(
-                        label: 'Todos',
-                        selected: _category == null,
-                        onTap: () => setState(() => _category = null),
-                      ),
-                      ...vm.categories.map(
-                        (c) => Padding(
-                          padding: const EdgeInsets.only(left: 8),
-                          child: _Chip(
-                            label: c.name,
-                            selected: _category == c.name,
-                            onTap: () => setState(() => _category = c.name),
+                slivers: [
+                  const SliverToBoxAdapter(child: SizedBox(height: 16)),
+                  SliverToBoxAdapter(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        TextField(
+                          onChanged: (value) => setState(() => _query = value),
+                          decoration: InputDecoration(
+                            hintText: 'Buscar por producto o categoría',
+                            prefixIcon: const Icon(Icons.search_rounded),
+                            filled: true,
+                            fillColor: AppColors.surface,
+                            border: OutlineInputBorder(
+                              borderRadius: BorderRadius.circular(16),
+                              borderSide: const BorderSide(
+                                color: AppColors.divider,
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Lotes en preventa',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 40,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              _Chip(
+                                label: 'Todos',
+                                selected: _category == null,
+                                onTap: () => setState(() => _category = null),
+                              ),
+                              ...vm.categories.map(
+                                (c) => Padding(
+                                  padding: const EdgeInsets.only(left: 8),
+                                  child: _Chip(
+                                    label: c.name,
+                                    selected: _category == c.name,
+                                    onTap: () =>
+                                        setState(() => _category = c.name),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
+                        const SizedBox(height: 24),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                'Lotes en preventa',
+                                style: GoogleFonts.plusJakartaSans(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            if (vm.catalogueStatus == ProductsStatus.ready)
+                              Text(
+                                '${products.length} lotes',
+                                style: GoogleFonts.inter(
+                                  color: AppColors.textSecondary,
+                                ),
+                              ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                      ],
+                    ),
+                  ),
+                  if (vm.catalogueStatus == ProductsStatus.loading)
+                    const SliverToBoxAdapter(child: _Skeleton())
+                  else if (vm.catalogueStatus == ProductsStatus.error)
+                    SliverToBoxAdapter(
+                      child: _State(
+                        icon: Icons.cloud_off_outlined,
+                        title: 'No se pudo cargar el catálogo',
+                        text: 'Comprueba tu conexión e inténtalo de nuevo.',
+                        action: FilledButton(
+                          onPressed: () => vm.loadCatalogue(force: true),
+                          child: const Text('Reintentar'),
+                        ),
+                      ),
+                    )
+                  else if (products.isEmpty)
+                    SliverToBoxAdapter(
+                      child: _State(
+                        icon: _query.isNotEmpty || _category != null
+                            ? Icons.search_off_rounded
+                            : Icons.inventory_2_outlined,
+                        title: _query.isNotEmpty || _category != null
+                            ? 'No encontramos resultados'
+                            : 'Aún no hay preventas',
+                        text: producer
+                            ? 'Publica el primer lote real cuando esté listo.'
+                            : 'Cuando un productor publique un lote aparecerá aquí.',
+                      ),
+                    )
+                  else
+                    SliverGrid.builder(
+                      itemCount: products.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                            childAspectRatio: .70,
+                          ),
+                      itemBuilder: (_, index) => _Card(
+                        product: products[index],
+                        onTap: () =>
+                            context.go('/products/${products[index].id}'),
                       ),
                     ),
-                    if (vm.catalogueStatus == ProductsStatus.ready)
-                      Text(
-                        '${products.length} lotes',
-                        style: GoogleFonts.inter(
-                          color: AppColors.textSecondary,
-                        ),
-                      ),
-                  ],
-                ),
-                const SizedBox(height: 14),
-                if (vm.catalogueStatus == ProductsStatus.loading)
-                  const _Skeleton()
-                else if (vm.catalogueStatus == ProductsStatus.error)
-                  _State(
-                    icon: Icons.cloud_off_outlined,
-                    title: 'No se pudo cargar el catálogo',
-                    text: 'Comprueba tu conexión e inténtalo de nuevo.',
-                    action: FilledButton(
-                      onPressed: () => vm.loadCatalogue(force: true),
-                      child: const Text('Reintentar'),
-                    ),
-                  )
-                else if (products.isEmpty)
-                  _State(
-                    icon: _query.isNotEmpty || _category != null
-                        ? Icons.search_off_rounded
-                        : Icons.inventory_2_outlined,
-                    title: _query.isNotEmpty || _category != null
-                        ? 'No encontramos resultados'
-                        : 'Aún no hay preventas',
-                    text: producer
-                        ? 'Publica el primer lote real cuando esté listo.'
-                        : 'Cuando un productor publique un lote aparecerá aquí.',
-                  )
-                else
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    itemCount: products.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                          childAspectRatio: .70,
-                        ),
-                    itemBuilder: (_, index) =>
-                        _Card(
-                              product: products[index],
-                              onTap: () =>
-                                  context.go('/products/${products[index].id}'),
-                            )
-                            .animate(delay: Duration(milliseconds: 40 * index))
-                            .fadeIn(duration: 220.ms)
-                            .slideY(begin: .04, end: 0, duration: 220.ms),
-                  ),
-              ],
+                  const SliverToBoxAdapter(child: SizedBox(height: 112)),
+                ],
+              ),
             ),
           );
         },

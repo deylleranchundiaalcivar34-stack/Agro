@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'core/router/app_router.dart';
+import 'core/constants/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
 
@@ -26,7 +27,12 @@ class _AgroAppState extends State<AgroApp> {
     // Accedemos al AuthViewModel sin escuchar (listen: false) porque
     // estamos en initState, no en build.
     final authViewModel = context.read<AuthViewModel>();
-    _appRouter = AppRouter(authViewModel: authViewModel);
+    _appRouter = AppRouter(
+      authViewModel: authViewModel,
+      initialLocation: authViewModel.isAuthenticated
+          ? AppRoutes.home
+          : AppRoutes.login,
+    );
   }
 
   @override
@@ -40,4 +46,3 @@ class _AgroAppState extends State<AgroApp> {
     );
   }
 }
-
