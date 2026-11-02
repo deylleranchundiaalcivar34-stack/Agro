@@ -8,6 +8,8 @@ abstract class AppRoutes {
   static const String login = '/auth/login';
   static const String register = '/auth/register';
   static const String profileSelection = '/auth/profile-selection';
+  static const String forgotPassword = '/auth/forgot-password';
+  static const String resetPassword = '/auth/reset-password';
 
   // Principal
   static const String home = '/home';

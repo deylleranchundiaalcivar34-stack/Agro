@@ -241,7 +241,30 @@ class _LoginViewState extends State<LoginView> {
                                               ? 'Ingresa una contraseña válida.'
                                               : null,
                                         ),
-                                        const SizedBox(height: 28),
+                                        const SizedBox(height: 8),
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: TextButton(
+                                            onPressed: () => context.go(
+                                              AppRoutes.forgotPassword,
+                                            ),
+                                            style: TextButton.styleFrom(
+                                              padding: EdgeInsets.zero,
+                                              minimumSize: const Size(50, 30),
+                                              tapTargetSize:
+                                                  MaterialTapTargetSize.shrinkWrap,
+                                            ),
+                                            child: Text(
+                                              AppStrings.forgotPassword,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 20),
                                         Consumer<AuthViewModel>(
                                           builder: (context, auth, _) =>
                                               FilledButton(
