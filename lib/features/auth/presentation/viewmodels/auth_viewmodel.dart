@@ -209,6 +209,49 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  /// Envía un correo con el enlace para restablecer la contraseña.
+  Future<bool> resetPasswordForEmail(String email) async {
+    _setLoading();
+    try {
+      await _supabaseService.client.auth.resetPasswordForEmail(
+        email.trim(),
+        redirectTo: kIsWeb ? null : 'io.supabase.agro://reset-callback/',
+      );
+      _setStatus(AuthStatus.unauthenticated);
+      _errorMessage = null;
+      return true;
+    } on AuthException catch (e) {
+      _setError(_mapAuthError(e.message));
+      return false;
+    } catch (_) {
+      _setError('Error al enviar el correo de recuperación. Intenta nuevamente.');
+      return false;
+    }
+  }
+
+  /// Actualiza la contraseña del usuario en Supabase Auth.
+  Future<bool> updatePassword(String newPassword) async {
+    _setLoading();
+    try {
+      final response = await _supabaseService.client.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+      if (response.user != null) {
+        _errorMessage = null;
+        _setStatus(AuthStatus.unauthenticated);
+        return true;
+      }
+      _setError('No se pudo actualizar la contraseña.');
+      return false;
+    } on AuthException catch (e) {
+      _setError(_mapAuthError(e.message));
+      return false;
+    } catch (_) {
+      _setError('Error al actualizar la contraseña.');
+      return false;
+    }
+  }
+
   /// Limpia el mensaje de error (útil al navegar entre pantallas).
   void clearError() {
     _errorMessage = null;

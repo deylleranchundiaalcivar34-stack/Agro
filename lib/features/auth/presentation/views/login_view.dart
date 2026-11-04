@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -8,6 +8,7 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../widgets/recaptcha_widget.dart';
 
 /// Single sign-in surface. Administrative access verifies an existing role;
 /// it never creates or elevates a user from the client.
@@ -23,7 +24,9 @@ class _LoginViewState extends State<LoginView> {
   final _formKey = GlobalKey<FormState>();
   final _email = TextEditingController();
   final _password = TextEditingController();
+  final _captchaKey = GlobalKey<RecaptchaWidgetState>();
   bool _obscurePassword = true;
+  bool _isCaptchaVerified = false;
 
   @override
   void dispose() {
@@ -34,6 +37,10 @@ class _LoginViewState extends State<LoginView> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!_isCaptchaVerified) {
+      _showMessage('Por favor, confirma que no eres un robot.');
+      return;
+    }
     FocusScope.of(context).unfocus();
     final auth = context.read<AuthViewModel>();
     final signedIn = await auth.signIn(
@@ -43,6 +50,8 @@ class _LoginViewState extends State<LoginView> {
     if (!mounted) return;
 
     if (!signedIn) {
+      setState(() => _isCaptchaVerified = false);
+      _captchaKey.currentState?.reset();
       _showMessage(auth.errorMessage ?? 'No se pudo iniciar sesión.');
       return;
     }
@@ -241,11 +250,43 @@ class _LoginViewState extends State<LoginView> {
                                               ? 'Ingresa una contraseña válida.'
                                               : null,
                                         ),
-                                        const SizedBox(height: 28),
+                                        const SizedBox(height: 8),
+                                        Align(
+                                          alignment: Alignment.centerRight,
+                                          child: TextButton(
+                                            onPressed: () => context.go(
+                                              AppRoutes.forgotPassword,
+                                            ),
+                                            style: TextButton.styleFrom(
+                                              padding: EdgeInsets.zero,
+                                              minimumSize: const Size(50, 30),
+                                              tapTargetSize:
+                                                  MaterialTapTargetSize.shrinkWrap,
+                                            ),
+                                            child: Text(
+                                              AppStrings.forgotPassword,
+                                              style: GoogleFonts.inter(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w600,
+                                                color: AppColors.primary,
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Center(
+                                          child: RecaptchaWidget(
+                                            key: _captchaKey,
+                                            onVerified: (verified) => setState(
+                                              () => _isCaptchaVerified = verified,
+                                            ),
+                                          ),
+                                        ),
+                                        const SizedBox(height: 20),
                                         Consumer<AuthViewModel>(
                                           builder: (context, auth, _) =>
                                               FilledButton(
-                                                onPressed: auth.isLoading
+                                                onPressed: (auth.isLoading || !_isCaptchaVerified)
                                                     ? null
                                                     : _submit,
                                                 child: auth.isLoading

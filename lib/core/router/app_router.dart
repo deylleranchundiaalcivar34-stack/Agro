@@ -6,6 +6,8 @@ import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../features/auth/presentation/views/login_view.dart';
 import '../../features/auth/presentation/views/register_view.dart';
 import '../../features/auth/presentation/views/profile_selection_view.dart';
+import '../../features/auth/presentation/views/forgot_password_view.dart';
+import '../../features/auth/presentation/views/reset_password_view.dart';
 import '../../features/home/presentation/views/home_view.dart';
 import '../../features/products/presentation/views/products_catalog_view.dart';
 import '../../features/products/presentation/views/product_detail_view.dart';
@@ -42,6 +44,8 @@ class AppRouter {
         AppRoutes.login,
         AppRoutes.register,
         AppRoutes.profileSelection,
+        AppRoutes.forgotPassword,
+        AppRoutes.resetPassword,
         AppRoutes.splash,
       ];
 
@@ -97,6 +101,16 @@ class AppRouter {
         path: AppRoutes.profileSelection,
         pageBuilder: (context, state) =>
             _slideTransition(state: state, child: const ProfileSelectionView()),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        pageBuilder: (context, state) =>
+            _slideTransition(state: state, child: const ForgotPasswordView()),
+      ),
+      GoRoute(
+        path: AppRoutes.resetPassword,
+        pageBuilder: (context, state) =>
+            _slideTransition(state: state, child: const ResetPasswordView()),
       ),
 
       // -----------------------------------------------------------------------

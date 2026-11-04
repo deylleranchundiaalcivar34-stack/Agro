@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../widgets/recaptcha_widget.dart';
 
 /// A compact two-step public registration flow. Each step fits a phone screen
 /// before the keyboard is opened, so scrolling is a fallback rather than the UI.
@@ -25,6 +26,12 @@ class _RegisterViewState extends State<RegisterView> {
   int _step = 0;
   bool _showPassword = false;
   bool _showConfirmation = false;
+  final _captchaKey = GlobalKey<RecaptchaWidgetState>();
+  bool _isCaptchaVerified = false;
+
+  void setCaptchaVerified(bool verified) {
+    setState(() => _isCaptchaVerified = verified);
+  }
 
   @override
   void dispose() {
@@ -61,6 +68,10 @@ class _RegisterViewState extends State<RegisterView> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
+    if (!_isCaptchaVerified) {
+      _showError('Por favor, confirma que no eres un robot.');
+      return;
+    }
     FocusScope.of(context).unfocus();
     final auth = context.read<AuthViewModel>();
     final created = await auth.signUp(
@@ -76,6 +87,8 @@ class _RegisterViewState extends State<RegisterView> {
     } else if (created) {
       _confirmationDialog();
     } else {
+      setState(() => _isCaptchaVerified = false);
+      _captchaKey.currentState?.reset();
       _showError(auth.errorMessage ?? 'No se pudo crear la cuenta.');
     }
   }
@@ -385,10 +398,19 @@ class _SecurityStep extends StatelessWidget {
           ],
         ),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 16),
+      Center(
+        child: RecaptchaWidget(
+          key: state._captchaKey,
+          onVerified: state.setCaptchaVerified,
+        ),
+      ),
+      const SizedBox(height: 20),
       Consumer<AuthViewModel>(
         builder: (context, auth, _) => FilledButton(
-          onPressed: auth.isLoading ? null : state._submit,
+          onPressed: (auth.isLoading || !state._isCaptchaVerified)
+              ? null
+              : state._submit,
           child: auth.isLoading
               ? const SizedBox.square(
                   dimension: 20,
