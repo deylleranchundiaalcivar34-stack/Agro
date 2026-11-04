@@ -2,13 +2,26 @@ import '../../../../core/network/supabase_service.dart';
 import '../models/agricultural_category.dart';
 import '../models/agricultural_product.dart';
 
+import 'package:image_picker/image_picker.dart';
+
+import '../services/product_storage_service.dart';
+
+class ProductPublicationException implements Exception {
+  const ProductPublicationException(this.message, {this.productId});
+  final String message;
+  final String? productId;
+}
+
 /// Source of truth for the Phase 0 catalogue and buyer pre-order interest.
 /// Views do not communicate with Supabase directly.
 class ProductsRepository {
-  ProductsRepository({required SupabaseService supabaseService})
-    : _supabaseService = supabaseService;
+  ProductsRepository({
+    required this._supabaseService,
+    ProductStorageService? storageService,
+  }) : _storageService = storageService ?? ProductStorageService();
 
   final SupabaseService _supabaseService;
+  final ProductStorageService _storageService;
 
   static const _productSelect = '''
     id_producto, id_productor, id_categoria, id_fase_actual,
@@ -55,27 +68,75 @@ class ProductsRepository {
     required double quantity,
     required double price,
     DateTime? estimatedHarvestDate,
+    XFile? image,
   }) async {
     final userId = _requireUserId();
+
+    // Identificar la fase de preventa.
     final phase = await _supabaseService.client
         .from('fases_comercializacion')
         .select('id_fase')
         .eq('nombre_fase', 'Preventa')
         .single();
 
-    await _supabaseService.client.from('productos').insert({
-      'id_productor': userId,
-      'id_categoria': categoryId,
-      'id_fase_actual': phase['id_fase'],
-      'nombre_producto': name.trim(),
-      'cantidad_disponible': quantity,
-      'precio_unitario': price,
-      'fecha_estimada_cosecha': estimatedHarvestDate
-          ?.toIso8601String()
-          .split('T')
-          .first,
-      'estado_publicacion': true,
-    });
+    // Subir la fotografía a Cloudinary, si se seleccionó una.
+    String? imageUrl;
+
+    if (image != null) {
+      try {
+        imageUrl = await _storageService.subirImagen(image);
+      } on ProductUploadException {
+        rethrow;
+      } catch (_) {
+        throw const ProductUploadException(
+          'No se pudo subir la fotografía. Revisa tu conexión e intenta de nuevo.',
+        );
+      }
+    }
+
+    // Registrar el producto y recuperar su identificador.
+    late String productId;
+    try {
+      final product = await _supabaseService.client
+          .from('productos')
+          .insert({
+            'id_productor': userId,
+            'id_categoria': categoryId,
+            'id_fase_actual': phase['id_fase'],
+            'nombre_producto': name.trim(),
+            'cantidad_disponible': quantity,
+            'precio_unitario': price,
+            'fecha_estimada_cosecha': estimatedHarvestDate
+                ?.toIso8601String()
+                .split('T')
+                .first,
+            'estado_publicacion': true,
+          })
+          .select('id_producto')
+          .single();
+
+      productId = product['id_producto'].toString();
+    } catch (_) {
+      throw const ProductPublicationException(
+        'No se pudo confirmar la creación del producto. Revisa tus publicaciones antes de reintentar.',
+      );
+    }
+
+    // Asociar la fotografía al producto en Supabase.
+    if (imageUrl != null) {
+      try {
+        await _supabaseService.client.from('fotografias_producto').insert({
+          'id_producto': productId,
+          'url_fotografia': imageUrl,
+        });
+      } catch (_) {
+        throw ProductPublicationException(
+          'El producto se guardó, pero no se pudo confirmar la asociación de la fotografía. '
+          'Revisa la publicación antes de reintentar.',
+          productId: productId,
+        );
+      }
+    }
   }
 
   Future<void> registerInterest({

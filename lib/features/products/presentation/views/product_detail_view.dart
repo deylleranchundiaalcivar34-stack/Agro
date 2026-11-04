@@ -29,13 +29,15 @@ class _ProductDetailViewState extends State<ProductDetailView> {
     body: FutureBuilder<AgriculturalProduct?>(
       future: _product,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done)
+        if (snapshot.connectionState != ConnectionState.done) {
           return const Center(
             child: CircularProgressIndicator(color: AppColors.primary),
           );
+        }
         final product = snapshot.data;
-        if (snapshot.hasError || product == null)
+        if (snapshot.hasError || product == null) {
           return const Center(child: Text('Este lote no está disponible.'));
+        }
         return _Detail(product: product);
       },
     ),

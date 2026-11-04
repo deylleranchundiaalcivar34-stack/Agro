@@ -1,14 +1,15 @@
 import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../data/models/agricultural_category.dart';
 import '../../data/models/agricultural_product.dart';
 import '../../data/repositories/products_repository.dart';
+import '../../data/services/product_storage_service.dart';
 
 enum ProductsStatus { idle, loading, ready, error }
 
 class ProductsViewModel extends ChangeNotifier {
-  ProductsViewModel({required ProductsRepository productsRepository})
-    : _productsRepository = productsRepository;
+  ProductsViewModel({required this._productsRepository});
 
   final ProductsRepository _productsRepository;
 
@@ -16,18 +17,21 @@ class ProductsViewModel extends ChangeNotifier {
   List<AgriculturalProduct> _products = const [];
   List<AgriculturalCategory> _categories = const [];
   String? _errorMessage;
+  String? _publicationWarning;
   bool _isSubmitting = false;
 
   ProductsStatus get catalogueStatus => _catalogueStatus;
   List<AgriculturalProduct> get products => _products;
   List<AgriculturalCategory> get categories => _categories;
   String? get errorMessage => _errorMessage;
+  String? get publicationWarning => _publicationWarning;
   bool get isSubmitting => _isSubmitting;
 
   Future<void> loadCatalogue({bool force = false}) async {
     if (_catalogueStatus == ProductsStatus.loading ||
-        (!force && _catalogueStatus == ProductsStatus.ready))
+        (!force && _catalogueStatus == ProductsStatus.ready)) {
       return;
+    }
     _catalogueStatus = ProductsStatus.loading;
     _errorMessage = null;
     notifyListeners();
@@ -48,17 +52,21 @@ class ProductsViewModel extends ChangeNotifier {
 
   Future<bool> createPreorderProduct({
     required String name,
+    XFile? image,
     required int categoryId,
     required double quantity,
     required double price,
     DateTime? estimatedHarvestDate,
   }) async {
+    if (_isSubmitting) return false;
+    _publicationWarning = null;
     _isSubmitting = true;
     _errorMessage = null;
     notifyListeners();
     try {
       await _productsRepository.createPreorderProduct(
         name: name,
+        image: image,
         categoryId: categoryId,
         quantity: quantity,
         price: price,
@@ -66,6 +74,17 @@ class ProductsViewModel extends ChangeNotifier {
       );
       await loadCatalogue(force: true);
       return true;
+    } on ProductUploadException catch (error) {
+      _errorMessage = error.message;
+      return false;
+    } on ProductPublicationException catch (error) {
+      if (error.productId != null) {
+        await loadCatalogue(force: true);
+        _publicationWarning = error.message;
+        return true;
+      }
+      _errorMessage = error.message;
+      return false;
     } catch (_) {
       _errorMessage = 'No se pudo publicar la preventa. Intenta de nuevo.';
       return false;
