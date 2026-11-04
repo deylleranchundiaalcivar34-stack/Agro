@@ -19,13 +19,6 @@ import '../../features/profile/presentation/views/profile_view.dart';
 import '../../features/splash/splash_view.dart';
 import '../../features/main/presentation/views/main_navigation_view.dart';
 
-/// Router principal de la aplicación usando GoRouter.
-///
-/// Maneja:
-/// - Redirección automática según estado de sesión (Auth Guard).
-/// - [StatefulShellRoute.indexedStack] para persistir el estado de cada vista sin reconstruirlas.
-/// - Barra de navegación flotante centrada (BorderRadius.circular(100)).
-/// - Transiciones suaves de pantalla.
 class AppRouter {
   final AuthViewModel authViewModel;
   final String initialLocation;
@@ -53,12 +46,10 @@ class AppRouter {
         (route) => location.startsWith(route),
       );
 
-      // Si no está autenticado y no es pública -> ir a Login
       if (!isAuthenticated && !isPublicRoute) {
         return AppRoutes.login;
       }
 
-      // Si está autenticado e intenta ir a Login o Register -> ir a Home
       if (isAuthenticated &&
           ((location == AppRoutes.login &&
                   state.uri.queryParameters['mode'] != 'admin') ||
@@ -72,17 +63,11 @@ class AppRouter {
     refreshListenable: authViewModel,
 
     routes: [
-      // -----------------------------------------------------------------------
-      // Splash (carga inicial con animación armónica del logo)
-      // -----------------------------------------------------------------------
       GoRoute(
         path: AppRoutes.splash,
         builder: (context, state) => const SplashView(),
       ),
 
-      // -----------------------------------------------------------------------
-      // Autenticación (Split-screen con cabecera curva ondulada)
-      // -----------------------------------------------------------------------
       GoRoute(
         path: AppRoutes.login,
         pageBuilder: (context, state) => _fadeTransition(
@@ -113,15 +98,11 @@ class AppRouter {
             _slideTransition(state: state, child: const ResetPasswordView()),
       ),
 
-      // -----------------------------------------------------------------------
-      // Shell persistente con IndexedStack (No reconstruye vistas al navegar)
-      // -----------------------------------------------------------------------
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return MainNavigationView(navigationShell: navigationShell);
         },
         branches: [
-          // Rama 0: Inicio
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -131,7 +112,6 @@ class AppRouter {
             ],
           ),
 
-          // Rama 1: Catálogo de Productos
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -159,7 +139,6 @@ class AppRouter {
             ],
           ),
 
-          // Rama 2: Mapa de Productores
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -169,7 +148,6 @@ class AppRouter {
             ],
           ),
 
-          // Rama 3: Chat y Mensajería
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -190,7 +168,6 @@ class AppRouter {
             ],
           ),
 
-          // Rama 4: Perfil de Usuario
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -204,7 +181,7 @@ class AppRouter {
     ],
 
     errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text('Página no encontrada')),
+      appBar: AppBar(title: const Text('Pagina no encontrada')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,

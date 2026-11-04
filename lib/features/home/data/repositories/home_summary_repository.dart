@@ -1,6 +1,5 @@
 import '../../../../../core/network/supabase_service.dart';
 
-/// Conteos visibles en el resumen del catálogo; no son datos de ejemplo.
 class HomeSummary {
   const HomeSummary({
     required this.availableLots,
@@ -18,7 +17,6 @@ class HomeSummaryRepository {
 
   final SupabaseService supabaseService;
 
-  /// Tres peticiones HEAD: el teléfono recibe conteos, no listas completas.
   Future<HomeSummary> load() async {
     final client = supabaseService.client;
     final sevenDaysAgo = DateTime.now()

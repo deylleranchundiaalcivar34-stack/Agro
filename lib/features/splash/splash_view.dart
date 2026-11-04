@@ -8,7 +8,6 @@ import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_strings.dart';
 import '../auth/presentation/viewmodels/auth_viewmodel.dart';
 
-/// Brand sequence displayed after native launch and before login/home.
 class SplashView extends StatefulWidget {
   const SplashView({super.key, this.autoNavigate = true});
 

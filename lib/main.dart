@@ -15,8 +15,6 @@ import 'features/products/presentation/viewmodels/products_viewmodel.dart';
 import 'features/splash/splash_view.dart';
 
 Future<void> main() async {
-  // Garantiza que los bindings de Flutter están listos antes de cualquier
-  // operación asíncrona (plugins, canales nativos, etc.)
   WidgetsFlutterBinding.ensureInitialized();
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
@@ -27,7 +25,6 @@ Future<void> main() async {
     ),
   );
 
-  // Dibuja el primer frame mientras se inicializan los servicios.
   runApp(const _AgroBootstrap());
 }
 

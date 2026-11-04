@@ -8,8 +8,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../viewmodels/auth_viewmodel.dart';
 
-/// Vista para solicitar la recuperación de contraseña por correo electrónico.
-/// Conecta con Supabase Auth a través de [AuthViewModel.resetPasswordForEmail].
 class ForgotPasswordView extends StatefulWidget {
   const ForgotPasswordView({super.key});
 
@@ -64,7 +62,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
               constraints: BoxConstraints(minHeight: constraints.maxHeight),
               child: Column(
                 children: [
-                  // Cabecera verde con botón de volver y logotipo/icono
                   SizedBox(
                     height: headerHeight,
                     child: Stack(
@@ -73,7 +70,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                           top: 8,
                           left: 8,
                           child: IconButton(
-                            tooltip: 'Volver al inicio de sesión',
+                            tooltip: 'Volver al inicio de sesion',
                             onPressed: () => context.go(AppRoutes.login),
                             icon: const Icon(
                               Icons.arrow_back_ios_new_rounded,
@@ -86,24 +83,26 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Container(
-                                width: 68,
-                                height: 68,
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface.withValues(alpha: 0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.lock_reset_rounded,
-                                  size: 38,
-                                  color: AppColors.surface,
-                                ),
-                              )
+                                    width: 68,
+                                    height: 68,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.lock_reset_rounded,
+                                      size: 38,
+                                      color: AppColors.surface,
+                                    ),
+                                  )
                                   .animate()
                                   .fadeIn(duration: 260.ms)
                                   .scale(begin: const Offset(.9, .9)),
                               const SizedBox(height: 12),
                               Text(
-                                'Recuperar contraseña',
+                                'Recuperar contrasena',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: AppColors.surface,
                                   fontSize: 24,
@@ -114,7 +113,9 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                               Text(
                                 'Te ayudaremos a restablecer tu acceso',
                                 style: GoogleFonts.inter(
-                                  color: AppColors.surface.withValues(alpha: 0.9),
+                                  color: AppColors.surface.withValues(
+                                    alpha: 0.9,
+                                  ),
                                   fontSize: 13,
                                 ),
                               ).animate(delay: 130.ms).fadeIn(duration: 220.ms),
@@ -125,7 +126,6 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                     ),
                   ),
 
-                  // Tarjeta inferior curva blanca
                   Transform.translate(
                     offset: const Offset(0, -20),
                     child: Container(
@@ -166,27 +166,22 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
-            'Ingresa tu correo electrónico',
-            style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            'Ingresa tu correo electronico',
+            style: Theme.of(context).textTheme.titleMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           Text(
-            'Enviaremos un enlace para que puedas definir una nueva contraseña de forma segura.',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: AppColors.textSecondary,
-                  height: 1.4,
-                ),
+            'Enviaremos un enlace para que puedas definir una nueva contrasena de forma segura.',
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(color: AppColors.textSecondary, height: 1.4),
           ),
           const SizedBox(height: 24),
 
-          // Campo de correo
           Text(
-            'Correo electrónico',
-            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  fontWeight: FontWeight.w700,
-                ),
+            'Correo electronico',
+            style: Theme.of(context).textTheme.bodyMedium
+                ?.copyWith(fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 8),
           TextFormField(
@@ -209,20 +204,22 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.inputFocused, width: 2),
+                borderSide: const BorderSide(
+                  color: AppColors.inputFocused,
+                  width: 2,
+                ),
               ),
             ),
             validator: (value) {
               final email = value?.trim() ?? '';
-              if (email.isEmpty) return 'Ingresa tu correo electrónico.';
+              if (email.isEmpty) return 'Ingresa tu correo electronico.';
               return RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)
                   ? null
-                  : 'Ingresa un correo electrónico válido.';
+                  : 'Ingresa un correo electronico valido.';
             },
           ),
           const SizedBox(height: 28),
 
-          // Botón de enviar
           Consumer<AuthViewModel>(
             builder: (context, auth, _) => FilledButton(
               onPressed: auth.isLoading ? null : _submit,
@@ -234,15 +231,14 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                         color: AppColors.surface,
                       ),
                     )
-                  : const Text('Enviar enlace de recuperación'),
+                  : const Text('Enviar enlace de recuperacion'),
             ),
           ),
           const SizedBox(height: 16),
 
-          // Botón volver
           OutlinedButton(
             onPressed: () => context.go(AppRoutes.login),
-            child: const Text('Volver al inicio de sesión'),
+            child: const Text('Volver al inicio de sesion'),
           ),
         ],
       ),
@@ -282,7 +278,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Hemos enviado un correo a:\n${_emailController.text}\n\nSigue las instrucciones del enlace recibido para actualizar tu contraseña.',
+          'Hemos enviado un correo a:\n${_emailController.text}\n\nSigue las instrucciones del enlace recibido para actualizar tu contrasena.',
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
             fontSize: 14,
@@ -293,12 +289,12 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
         const SizedBox(height: 32),
         FilledButton(
           onPressed: () => context.go(AppRoutes.login),
-          child: const Text('Volver al inicio de sesión'),
+          child: const Text('Volver al inicio de sesion'),
         ),
         const SizedBox(height: 12),
         TextButton(
           onPressed: () => setState(() => _emailSent = false),
-          child: const Text('¿No te llegó el correo? Reintentar'),
+          child: const Text('¿No te llego el correo? Reintentar'),
         ),
       ],
     ).animate().fadeIn(duration: 260.ms).scale(begin: const Offset(0.96, 0.96));

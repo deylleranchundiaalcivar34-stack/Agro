@@ -37,7 +37,7 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'Preventa agrícola',
+          'Preventa agricola',
           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
         ),
         actions: [
@@ -45,7 +45,7 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
             onPressed: () =>
                 context.read<ProductsViewModel>().loadCatalogue(force: true),
             icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Actualizar catálogo',
+            tooltip: 'Actualizar catalogo',
           ),
         ],
       ),
@@ -82,7 +82,7 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                         TextField(
                           onChanged: (value) => setState(() => _query = value),
                           decoration: InputDecoration(
-                            hintText: 'Buscar por producto o categoría',
+                            hintText: 'Buscar por producto o categoria',
                             prefixIcon: const Icon(Icons.search_rounded),
                             filled: true,
                             fillColor: AppColors.surface,
@@ -150,8 +150,8 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                     SliverToBoxAdapter(
                       child: _State(
                         icon: Icons.cloud_off_outlined,
-                        title: 'No se pudo cargar el catálogo',
-                        text: 'Comprueba tu conexión e inténtalo de nuevo.',
+                        title: 'No se pudo cargar el catalogo',
+                        text: 'Comprueba tu conexion e intentalo de nuevo.',
                         action: FilledButton(
                           onPressed: () => vm.loadCatalogue(force: true),
                           child: const Text('Reintentar'),
@@ -166,10 +166,10 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                             : Icons.inventory_2_outlined,
                         title: _query.isNotEmpty || _category != null
                             ? 'No encontramos resultados'
-                            : 'Aún no hay preventas',
+                            : 'Aun no hay preventas',
                         text: producer
-                            ? 'Publica el primer lote real cuando esté listo.'
-                            : 'Cuando un productor publique un lote aparecerá aquí.',
+                            ? 'Publica el primer lote real cuando este listo.'
+                            : 'Cuando un productor publique un lote aparecera aqui.',
                       ),
                     )
                   else

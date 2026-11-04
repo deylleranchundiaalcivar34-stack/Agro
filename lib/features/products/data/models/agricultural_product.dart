@@ -37,7 +37,7 @@ class AgriculturalProduct {
       availableQuantity: (map['cantidad_disponible'] as num).toDouble(),
       unitPrice: (map['precio_unitario'] as num).toDouble(),
       isPublished: map['estado_publicacion'] as bool? ?? false,
-      categoryName: category?['nombre_categoria'] as String? ?? 'Sin categoría',
+      categoryName: category?['nombre_categoria'] as String? ?? 'Sin categoria',
       phaseName: phase?['nombre_fase'] as String? ?? 'Sin fase',
       estimatedHarvestDate: map['fecha_estimada_cosecha'] == null
           ? null

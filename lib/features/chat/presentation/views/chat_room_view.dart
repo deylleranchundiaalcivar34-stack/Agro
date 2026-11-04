@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Sala de chat individual entre productor y comprador.
-/// TODO (Bloque 5): Implementar mensajes en tiempo real con Supabase Realtime.
 class ChatRoomView extends StatelessWidget {
   final String roomId;
 
@@ -27,4 +25,3 @@ class ChatRoomView extends StatelessWidget {
     );
   }
 }
-

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Vista del mapa con geolocalización de productores.
-/// TODO (Bloque 4): Implementar flutter_map + geolocator + PostGIS queries.
 class MapView extends StatelessWidget {
   const MapView({super.key});
 
@@ -25,4 +23,3 @@ class MapView extends StatelessWidget {
     );
   }
 }
-

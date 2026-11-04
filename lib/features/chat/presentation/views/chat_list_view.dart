@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Lista de conversaciones de chat.
-/// TODO (Bloque 5): Implementar lista de rooms con Supabase Realtime.
 class ChatListView extends StatelessWidget {
   const ChatListView({super.key});
 
@@ -25,4 +23,3 @@ class ChatListView extends StatelessWidget {
     );
   }
 }
-

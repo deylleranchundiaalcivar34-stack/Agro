@@ -41,7 +41,7 @@ class ProductsViewModel extends ChangeNotifier {
       _catalogueStatus = ProductsStatus.ready;
     } catch (_) {
       _catalogueStatus = ProductsStatus.error;
-      _errorMessage = 'No pudimos cargar el catálogo. Revisa tu conexión.';
+      _errorMessage = 'No pudimos cargar el catalogo. Revisa tu conexion.';
     }
     notifyListeners();
   }
@@ -93,7 +93,7 @@ class ProductsViewModel extends ChangeNotifier {
       );
       return true;
     } catch (_) {
-      _errorMessage = 'No se pudo registrar tu interés. Intenta de nuevo.';
+      _errorMessage = 'No se pudo registrar tu interes. Intenta de nuevo.';
       return false;
     } finally {
       _isSubmitting = false;

@@ -1,10 +1,7 @@
 import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
-/// Widget de reCAPTCHA para Flutter (compatible con Web, Android, iOS y Desktop).
-///
-/// Proporciona la interfaz visual y la lógica del checkbox "No soy un robot",
-/// bloqueando los botones de envío hasta que el usuario resuelva el captcha.
 class RecaptchaWidget extends StatefulWidget {
   final ValueChanged<bool> onVerified;
   final Duration verificationDelay;
@@ -45,7 +42,6 @@ class RecaptchaWidgetState extends State<RecaptchaWidget>
     super.dispose();
   }
 
-  /// Reinicia el estado del captcha a no verificado.
   void reset() {
     if (mounted) {
       setState(() {
@@ -64,7 +60,6 @@ class RecaptchaWidgetState extends State<RecaptchaWidget>
       _isChecking = true;
     });
 
-    // Simula la verificación del token de desafío
     await Future.delayed(widget.verificationDelay);
 
     if (!mounted) return;
@@ -89,7 +84,9 @@ class RecaptchaWidgetState extends State<RecaptchaWidget>
         color: const Color(0xFFF9F9F9),
         borderRadius: BorderRadius.circular(4),
         border: Border.all(
-          color: _isVerified ? const Color(0xFF0F9D58) : const Color(0xFFD3D3D3),
+          color: _isVerified
+              ? const Color(0xFF0F9D58)
+              : const Color(0xFFD3D3D3),
           width: _isVerified ? 1.5 : 1.0,
         ),
         boxShadow: const [
@@ -102,7 +99,6 @@ class RecaptchaWidgetState extends State<RecaptchaWidget>
       ),
       child: Row(
         children: [
-          // Checkbox interactivo
           InkWell(
             onTap: _handleTap,
             borderRadius: BorderRadius.circular(4),
@@ -129,7 +125,6 @@ class RecaptchaWidgetState extends State<RecaptchaWidget>
 
           const Spacer(),
 
-          // Badge oficial de reCAPTCHA
           const _RecaptchaBadge(),
         ],
       ),
@@ -162,21 +157,20 @@ class RecaptchaWidgetState extends State<RecaptchaWidget>
                 ),
               )
             : _isVerified
-                ? ScaleTransition(
-                    scale: _scaleAnimation,
-                    child: const Icon(
-                      Icons.check_rounded,
-                      size: 20,
-                      color: Colors.white,
-                    ),
-                  )
-                : null,
+            ? ScaleTransition(
+                scale: _scaleAnimation,
+                child: const Icon(
+                  Icons.check_rounded,
+                  size: 20,
+                  color: Colors.white,
+                ),
+              )
+            : null,
       ),
     );
   }
 }
 
-/// Logo y marca de reCAPTCHA
 class _RecaptchaBadge extends StatelessWidget {
   const _RecaptchaBadge();
 
@@ -189,9 +183,7 @@ class _RecaptchaBadge extends StatelessWidget {
         SizedBox(
           width: 28,
           height: 28,
-          child: CustomPaint(
-            painter: _RecaptchaLogoPainter(),
-          ),
+          child: CustomPaint(painter: _RecaptchaLogoPainter()),
         ),
         const SizedBox(height: 2),
         const Text(
@@ -204,18 +196,14 @@ class _RecaptchaBadge extends StatelessWidget {
           ),
         ),
         const Text(
-          'Privacidad · Términos',
-          style: TextStyle(
-            fontSize: 7,
-            color: Color(0xFF888888),
-          ),
+          'Privacidad · Terminos',
+          style: TextStyle(fontSize: 7, color: Color(0xFF888888)),
         ),
       ],
     );
   }
 }
 
-/// Dibuja el isotipo triangular de tres flechas continuas de reCAPTCHA
 class _RecaptchaLogoPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
@@ -243,24 +231,56 @@ class _RecaptchaLogoPainter extends CustomPainter {
 
     final rect = Rect.fromCircle(center: center, radius: radius);
 
-    // 3 arcos con flechas en bucle
     const double gap = 0.45;
     const double arcLen = (2 * math.pi / 3) - gap;
 
-    // Arco 1: Azul (superior)
     canvas.drawArc(rect, -math.pi / 2, arcLen, false, paintBlue);
-    _drawArrow(canvas, center, radius, -math.pi / 2 + arcLen, const Color(0xFF1A73E8));
+    _drawArrow(
+      canvas,
+      center,
+      radius,
+      -math.pi / 2 + arcLen,
+      const Color(0xFF1A73E8),
+    );
 
-    // Arco 2: Verde (inferior derecho)
-    canvas.drawArc(rect, -math.pi / 2 + (2 * math.pi / 3), arcLen, false, paintGreen);
-    _drawArrow(canvas, center, radius, -math.pi / 2 + (2 * math.pi / 3) + arcLen, const Color(0xFF34A853));
+    canvas.drawArc(
+      rect,
+      -math.pi / 2 + (2 * math.pi / 3),
+      arcLen,
+      false,
+      paintGreen,
+    );
+    _drawArrow(
+      canvas,
+      center,
+      radius,
+      -math.pi / 2 + (2 * math.pi / 3) + arcLen,
+      const Color(0xFF34A853),
+    );
 
-    // Arco 3: Gris (inferior izquierdo)
-    canvas.drawArc(rect, -math.pi / 2 + (4 * math.pi / 3), arcLen, false, paintGray);
-    _drawArrow(canvas, center, radius, -math.pi / 2 + (4 * math.pi / 3) + arcLen, const Color(0xFF757575));
+    canvas.drawArc(
+      rect,
+      -math.pi / 2 + (4 * math.pi / 3),
+      arcLen,
+      false,
+      paintGray,
+    );
+    _drawArrow(
+      canvas,
+      center,
+      radius,
+      -math.pi / 2 + (4 * math.pi / 3) + arcLen,
+      const Color(0xFF757575),
+    );
   }
 
-  void _drawArrow(Canvas canvas, Offset center, double radius, double angle, Color color) {
+  void _drawArrow(
+    Canvas canvas,
+    Offset center,
+    double radius,
+    double angle,
+    Color color,
+  ) {
     final x = center.dx + radius * math.cos(angle);
     final y = center.dy + radius * math.sin(angle);
     final tip = Offset(x, y);

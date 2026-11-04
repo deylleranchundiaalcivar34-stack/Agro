@@ -10,13 +10,6 @@ import '../../../../core/network/supabase_service.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../viewmodels/home_viewmodel.dart';
 
-/// Pantalla de Inicio Base (HomeView) de Agro+.
-///
-/// Principios de diseño [ui-ux-pro-max] e [impeccable]:
-/// - Fondo neutro claro #F7F9F6.
-/// - Cabecera con saludo dinámico a la izquierda (Plus Jakarta Sans Bold) y avatar a la derecha.
-/// - Tarjeta flotante moderna con BorderRadius.circular(24) y sombra muy suave (sin elevación nativa).
-/// - Padding general de 24px y arquitectura MVVM limpia conectada a [HomeViewModel].
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
@@ -38,7 +31,7 @@ class _HomeViewContent extends StatelessWidget {
     final authViewModel = context.watch<AuthViewModel>();
 
     return Scaffold(
-      backgroundColor: AppColors.background, // #F7F9F6
+      backgroundColor: AppColors.background,
       body: SafeArea(
         child: RefreshIndicator(
           color: AppColors.primary,
@@ -47,16 +40,8 @@ class _HomeViewContent extends StatelessWidget {
             physics: const BouncingScrollPhysics(
               parent: AlwaysScrollableScrollPhysics(),
             ),
-            padding: const EdgeInsets.fromLTRB(
-              24,
-              20,
-              24,
-              110,
-            ), // Padding general de 24px
+            padding: const EdgeInsets.fromLTRB(24, 20, 24, 110),
             children: [
-              // ─────────────────────────────────────────────────────────
-              // 1. CABECERA: SALUDO DINÁMICO (IZQ) + AVATAR CIRCULAR (DER)
-              // ─────────────────────────────────────────────────────────
               Row(
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
@@ -77,7 +62,7 @@ class _HomeViewContent extends StatelessWidget {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          '¿Qué deseas gestionar hoy?',
+                          '¿Que deseas gestionar hoy?',
                           style: GoogleFonts.inter(
                             fontSize: 14,
                             fontWeight: FontWeight.w500,
@@ -89,7 +74,6 @@ class _HomeViewContent extends StatelessWidget {
                   ),
                   const SizedBox(width: 14),
 
-                  // Avatar circular de perfil en la esquina superior derecha
                   GestureDetector(
                     onTap: () => context.go(AppRoutes.profile),
                     child: Container(
@@ -126,21 +110,17 @@ class _HomeViewContent extends StatelessWidget {
 
               const SizedBox(height: 24),
 
-              // ─────────────────────────────────────────────────────────
-              // 2. CONTENEDOR INICIAL: TARJETA FLOTANTE (circular(24))
-              // ─────────────────────────────────────────────────────────
               Container(
                     width: double.infinity,
                     padding: const EdgeInsets.all(22),
                     decoration: BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.circular(24), // circular(24)
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(
                         color: AppColors.divider.withValues(alpha: 0.40),
                         width: 1,
                       ),
                       boxShadow: [
-                        // Sombra muy suave sin elevación nativa
                         BoxShadow(
                           color: Colors.black.withValues(alpha: 0.04),
                           blurRadius: 20,
@@ -170,7 +150,7 @@ class _HomeViewContent extends StatelessWidget {
                             const SizedBox(width: 10),
                             Expanded(
                               child: Text(
-                                'Resumen Agrícola',
+                                'Resumen Agricola',
                                 maxLines: 2,
                                 style: GoogleFonts.plusJakartaSans(
                                   fontSize: 15,
@@ -205,7 +185,6 @@ class _HomeViewContent extends StatelessWidget {
                         ),
                         const SizedBox(height: 16),
 
-                        // Métricas / accesos del contenedor
                         LayoutBuilder(
                           builder: (context, constraints) {
                             final compact = constraints.maxWidth < 420;
@@ -288,18 +267,12 @@ class _HomeViewContent extends StatelessWidget {
 
               const SizedBox(height: 26),
 
-              // ─────────────────────────────────────────────────────────
-              // 3. TARJETA HERO PREVENTA (FASE 0)
-              // ─────────────────────────────────────────────────────────
               _buildHeroBanner(context)
                   .animate(delay: 250.ms)
                   .fadeIn(duration: 450.ms),
 
               const SizedBox(height: 26),
 
-              // ─────────────────────────────────────────────────────────
-              // 4. ACCESOS RÁPIDOS PRINCIPALES
-              // ─────────────────────────────────────────────────────────
               Text(
                 'Acciones Inmediatas',
                 style: GoogleFonts.plusJakartaSans(
@@ -355,7 +328,7 @@ class _HomeViewContent extends StatelessWidget {
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
-                  '🌱 PREVENTA AGRÍCOLA',
+                  '🌱 PREVENTA AGRICOLA',
                   style: GoogleFonts.inter(
                     color: Colors.white,
                     fontSize: 10.5,
@@ -423,7 +396,7 @@ class _HomeViewContent extends StatelessWidget {
   Widget _buildQuickActionCards(BuildContext context) {
     final items = [
       {
-        'title': 'Catálogo',
+        'title': 'Catalogo',
         'subtitle': 'Lotes disponibles',
         'icon': Icons.grid_view_rounded,
         'color': AppColors.primary,
@@ -438,7 +411,7 @@ class _HomeViewContent extends StatelessWidget {
       },
       {
         'title': 'Chat Directo',
-        'subtitle': 'Mensajería activa',
+        'subtitle': 'Mensajeria activa',
         'icon': Icons.chat_bubble_rounded,
         'color': const Color(0xFFF57C00),
         'route': AppRoutes.chatList,

@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 
-/// Clipper personalizado para la cabecera curvada moderna de las pantallas de Auth.
-/// Crea una transición fluida y orgánica entre la cabecera verde y el formulario blanco.
 class CurvedHeaderClipper extends CustomClipper<Path> {
   @override
   Path getClip(Size size) {

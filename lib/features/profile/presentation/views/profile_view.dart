@@ -5,10 +5,9 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
+
 import 'package:go_router/go_router.dart';
 
-/// Vista de Perfil de Usuario en Agro+.
-/// Muestra información del usuario, rol (Productor/Comprador) y opciones de cuenta.
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
 
@@ -40,7 +39,6 @@ class ProfileView extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(20, 20, 20, 100),
         child: Column(
           children: [
-            // Tarjeta de información de usuario
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -119,9 +117,8 @@ class ProfileView extends StatelessWidget {
             ),
             const SizedBox(height: 20),
 
-            // Opciones de cuenta
             _buildSection(
-              title: 'Gestión',
+              title: 'Gestion',
               items: [
                 _OptionTile(
                   icon: Icons.inventory_2_outlined,
@@ -132,7 +129,7 @@ class ProfileView extends StatelessWidget {
                 _OptionTile(
                   icon: Icons.verified_user_outlined,
                   title: 'Certificados y Finca',
-                  subtitle: 'Documentación agrícola y ubicación',
+                  subtitle: 'Documentacion agricola y ubicacion',
                   onTap: () {},
                 ),
                 _OptionTile(
@@ -150,19 +147,19 @@ class ProfileView extends StatelessWidget {
               items: [
                 _OptionTile(
                   icon: Icons.lock_outline_rounded,
-                  title: 'Cambiar Contraseña',
+                  title: 'Cambiar Contrasena',
                   subtitle: 'Seguridad de tus credenciales',
                   onTap: () {},
                 ),
                 _OptionTile(
                   icon: Icons.help_outline_rounded,
-                  title: 'Ayuda y Soporte Técnico',
+                  title: 'Ayuda y Soporte Tecnico',
                   subtitle: 'Preguntas frecuentes y contacto',
                   onTap: () {},
                 ),
                 _OptionTile(
                   icon: Icons.logout_rounded,
-                  title: 'Cerrar Sesión',
+                  title: 'Cerrar Sesion',
                   subtitle: 'Salir de la cuenta en este dispositivo',
                   titleColor: AppColors.error,
                   onTap: () async {
@@ -180,10 +177,7 @@ class ProfileView extends StatelessWidget {
     );
   }
 
-  Widget _buildSection({
-    required String title,
-    required List<Widget> items,
-  }) {
+  Widget _buildSection({required String title, required List<Widget> items}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -202,9 +196,7 @@ class ProfileView extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.white,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(
-              color: AppColors.divider.withValues(alpha: 0.4),
-            ),
+            border: Border.all(color: AppColors.divider.withValues(alpha: 0.4)),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withValues(alpha: 0.03),
@@ -219,6 +211,7 @@ class ProfileView extends StatelessWidget {
     );
   }
 }
+
 class _OptionTile extends StatelessWidget {
   final IconData icon;
   final String title;

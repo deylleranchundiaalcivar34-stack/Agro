@@ -1,16 +1,11 @@
 import '../../../../core/network/supabase_service.dart';
 import '../models/user_profile.dart';
 
-/// Única puerta de acceso del cliente a perfiles de Agro+.
-///
-/// Las políticas RLS del proyecto garantizan que solo se pueda consultar y
-/// actualizar el perfil propio. Las asignaciones de administrador no pasan por
-/// este repositorio.
 class ProfileRepository {
   final SupabaseService _supabaseService;
 
   ProfileRepository({required SupabaseService supabaseService})
-      : this._(supabaseService);
+    : this._(supabaseService);
 
   ProfileRepository._(this._supabaseService);
 
@@ -37,7 +32,7 @@ class ProfileRepository {
     }
 
     final user = _supabaseService.currentUser;
-    if (user == null) throw StateError('No hay una sesión activa.');
+    if (user == null) throw StateError('No hay una sesion activa.');
 
     final roleData = await _supabaseService.client
         .from('tipos_usuario')

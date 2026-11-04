@@ -1,7 +1,3 @@
-/// Perfil de dominio que complementa la sesión de Supabase Auth.
-///
-/// El UUID siempre corresponde a `auth.users.id`; los permisos se obtienen
-/// desde PostgreSQL/RLS, no desde `user_metadata` editable por el cliente.
 class UserProfile {
   final String id;
   final String firstName;

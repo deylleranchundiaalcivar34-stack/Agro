@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -10,8 +10,6 @@ import '../../../../core/constants/app_strings.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../widgets/recaptcha_widget.dart';
 
-/// Single sign-in surface. Administrative access verifies an existing role;
-/// it never creates or elevates a user from the client.
 class LoginView extends StatefulWidget {
   const LoginView({super.key, this.adminOnly = false});
   final bool adminOnly;
@@ -52,7 +50,7 @@ class _LoginViewState extends State<LoginView> {
     if (!signedIn) {
       setState(() => _isCaptchaVerified = false);
       _captchaKey.currentState?.reset();
-      _showMessage(auth.errorMessage ?? 'No se pudo iniciar sesión.');
+      _showMessage(auth.errorMessage ?? 'No se pudo iniciar sesion.');
       return;
     }
     if (widget.adminOnly && auth.selectedRole != UserRole.admin) {
@@ -77,10 +75,10 @@ class _LoginViewState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     const headerHeight = 236.0;
-    final title = widget.adminOnly ? 'Acceso administrativo' : 'Iniciar sesión';
+    final title = widget.adminOnly ? 'Acceso administrativo' : 'Iniciar sesion';
     final subtitle = widget.adminOnly
         ? 'Ingresa con la cuenta asignada por Agro+'
-        : 'Ingresa con tu correo y contraseña';
+        : 'Ingresa con tu correo y contrasena';
     return Scaffold(
       backgroundColor: AppColors.primary,
       body: SafeArea(
@@ -202,7 +200,7 @@ class _LoginViewState extends State<LoginView> {
                                               ),
                                         ),
                                         const SizedBox(height: 28),
-                                        _Label('Correo electrónico'),
+                                        _Label('Correo electronico'),
                                         const SizedBox(height: 8),
                                         TextFormField(
                                           controller: _email,
@@ -216,7 +214,7 @@ class _LoginViewState extends State<LoginView> {
                                           validator: _emailValidator,
                                         ),
                                         const SizedBox(height: 16),
-                                        _Label('Contraseña'),
+                                        _Label('Contrasena'),
                                         const SizedBox(height: 8),
                                         TextFormField(
                                           controller: _password,
@@ -230,8 +228,8 @@ class _LoginViewState extends State<LoginView> {
                                               ).copyWith(
                                                 suffixIcon: IconButton(
                                                   tooltip: _obscurePassword
-                                                      ? 'Mostrar contraseña'
-                                                      : 'Ocultar contraseña',
+                                                      ? 'Mostrar contrasena'
+                                                      : 'Ocultar contrasena',
                                                   onPressed: () => setState(
                                                     () => _obscurePassword =
                                                         !_obscurePassword,
@@ -247,7 +245,7 @@ class _LoginViewState extends State<LoginView> {
                                               ),
                                           validator: (value) =>
                                               value == null || value.length < 6
-                                              ? 'Ingresa una contraseña válida.'
+                                              ? 'Ingresa una contrasena valida.'
                                               : null,
                                         ),
                                         const SizedBox(height: 8),
@@ -261,7 +259,8 @@ class _LoginViewState extends State<LoginView> {
                                               padding: EdgeInsets.zero,
                                               minimumSize: const Size(50, 30),
                                               tapTargetSize:
-                                                  MaterialTapTargetSize.shrinkWrap,
+                                                  MaterialTapTargetSize
+                                                      .shrinkWrap,
                                             ),
                                             child: Text(
                                               AppStrings.forgotPassword,
@@ -278,7 +277,8 @@ class _LoginViewState extends State<LoginView> {
                                           child: RecaptchaWidget(
                                             key: _captchaKey,
                                             onVerified: (verified) => setState(
-                                              () => _isCaptchaVerified = verified,
+                                              () =>
+                                                  _isCaptchaVerified = verified,
                                             ),
                                           ),
                                         ),
@@ -286,7 +286,9 @@ class _LoginViewState extends State<LoginView> {
                                         Consumer<AuthViewModel>(
                                           builder: (context, auth, _) =>
                                               FilledButton(
-                                                onPressed: (auth.isLoading || !_isCaptchaVerified)
+                                                onPressed:
+                                                    (auth.isLoading ||
+                                                        !_isCaptchaVerified)
                                                     ? null
                                                     : _submit,
                                                 child: auth.isLoading
@@ -341,7 +343,7 @@ class _LoginViewState extends State<LoginView> {
                                             onPressed: () =>
                                                 context.go(AppRoutes.login),
                                             child: const Text(
-                                              'Volver al inicio de sesión',
+                                              'Volver al inicio de sesion',
                                             ),
                                           ),
                                       ],
@@ -382,7 +384,7 @@ class _LoginViewState extends State<LoginView> {
     final email = value?.trim() ?? '';
     return RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)
         ? null
-        : 'Ingresa un correo válido.';
+        : 'Ingresa un correo valido.';
   }
 }
 

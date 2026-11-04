@@ -4,7 +4,6 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../../../../core/constants/app_colors.dart';
 
-/// Elemento descriptor para cada pestaña de la barra de navegación flotante.
 class NavigationItemData {
   final String label;
   final IconData icon;
@@ -17,14 +16,6 @@ class NavigationItemData {
   });
 }
 
-/// Vista contenedora de navegación principal (MainNavigationView) de Agro+.
-///
-/// Implementa:
-/// - [StatefulNavigationShell] para persistencia de estado (no reconstruye vistas).
-/// - Barra de navegación flotante con forma de pastilla (BorderRadius.circular(100)).
-/// - Fondo blanco puro con sombra difuminada (alpha 0.05).
-/// - Animación de Slider elástica ('impeccable') con resaltador #2E7D32.
-/// - Íconos inactivos grises (#9E9E9E) e ícono activo en blanco puro sobre el resaltador.
 class MainNavigationView extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
 
@@ -37,7 +28,7 @@ class MainNavigationView extends StatelessWidget {
       activeIcon: Icons.home_rounded,
     ),
     NavigationItemData(
-      label: 'Catálogo',
+      label: 'Catalogo',
       icon: Icons.grid_view_outlined,
       activeIcon: Icons.grid_view_rounded,
     ),
@@ -73,14 +64,8 @@ class MainNavigationView extends StatelessWidget {
       backgroundColor: AppColors.background,
       body: Stack(
         children: [
-          // ─────────────────────────────────────────────────────────────
-          // 1. CUERPO DE LA RAMA ACTIVA (StatefulShellRoute / IndexedStack)
-          // ─────────────────────────────────────────────────────────────
           Positioned.fill(child: navigationShell),
 
-          // ─────────────────────────────────────────────────────────────
-          // 2. BARRA DE NAVEGACIÓN FLOTANTE (ESTILO PASTILLA CIRCULAR 100)
-          // ─────────────────────────────────────────────────────────────
           Positioned(
             left: 0,
             right: 0,
@@ -91,14 +76,13 @@ class MainNavigationView extends StatelessWidget {
                 child: Container(
                   height: 72,
                   decoration: BoxDecoration(
-                    color: Colors.white, // Blanco puro
-                    borderRadius: BorderRadius.circular(100), // Pastilla
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(100),
                     border: Border.all(
                       color: AppColors.divider.withValues(alpha: 0.35),
                       width: 1,
                     ),
                     boxShadow: [
-                      // Sombra difuminada elegante de diseño Prime
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 28,
@@ -121,20 +105,16 @@ class MainNavigationView extends StatelessWidget {
                       return Stack(
                         alignment: Alignment.centerLeft,
                         children: [
-                          // ─────────────────────────────────────────────
-                          // SLIDER / RESALTADOR ELÁSTICO COLOR #2E7D32
-                          // ─────────────────────────────────────────────
                           AnimatedPositioned(
                             duration: const Duration(milliseconds: 320),
-                            curve:
-                                Curves.easeOutBack, // Animación elástica fluida
+                            curve: Curves.easeOutBack,
                             left: (currentIndex * itemWidth) + 2,
                             top: 7,
                             width: indicatorWidth,
                             height: indicatorHeight,
                             child: Container(
                               decoration: BoxDecoration(
-                                color: AppColors.primary, // #2E7D32
+                                color: AppColors.primary,
                                 borderRadius: BorderRadius.circular(100),
                                 boxShadow: [
                                   BoxShadow(
@@ -149,9 +129,6 @@ class MainNavigationView extends StatelessWidget {
                             ),
                           ),
 
-                          // ─────────────────────────────────────────────
-                          // ÍTEMS INTERACTIVOS DE LA BARRA
-                          // ─────────────────────────────────────────────
                           Row(
                             children: List.generate(_items.length, (index) {
                               final item = _items[index];
@@ -180,7 +157,6 @@ class MainNavigationView extends StatelessWidget {
   }
 }
 
-/// Widget individual para cada botón de la barra de navegación con micro-interacción.
 class _NavBarItemWidget extends StatefulWidget {
   final NavigationItemData data;
   final bool isSelected;
@@ -221,7 +197,6 @@ class _NavBarItemWidgetState extends State<_NavBarItemWidget> {
               Icon(
                 isSelected ? widget.data.activeIcon : widget.data.icon,
                 size: 20,
-                // Blanco si está sobre el resaltador; gris #9E9E9E si está inactivo
                 color: isSelected ? Colors.white : const Color(0xFF9E9E9E),
               ),
               const SizedBox(height: 2),

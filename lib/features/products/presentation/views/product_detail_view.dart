@@ -35,7 +35,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
           );
         final product = snapshot.data;
         if (snapshot.hasError || product == null)
-          return const Center(child: Text('Este lote no está disponible.'));
+          return const Center(child: Text('Este lote no esta disponible.'));
         return _Detail(product: product);
       },
     ),
@@ -112,17 +112,17 @@ class _Detail extends StatelessWidget {
           const SizedBox(height: 28),
           if (owner)
             const _Notice(
-              text: 'Esta es tu publicación. Los intereses de compradores se guardan de forma privada.',
+              text: 'Esta es tu publicacion. Los intereses de compradores se guardan de forma privada.',
             )
           else if (role == UserRole.buyer)
             FilledButton.icon(
               onPressed: () => _interestSheet(context),
               icon: const Icon(Icons.handshake_outlined),
-              label: const Text('Registrar interés'),
+              label: const Text('Registrar interes'),
             )
           else
             const _Notice(
-              text: 'El registro de interés está disponible para cuentas compradoras.',
+              text: 'El registro de interes esta disponible para cuentas compradoras.',
             ),
         ],
       ),
@@ -150,7 +150,7 @@ class _Detail extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Interés de preventa',
+                'Interes de preventa',
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
@@ -158,7 +158,7 @@ class _Detail extends StatelessWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                'Indica la cantidad que te interesaría adquirir de ${product.name}.',
+                'Indica la cantidad que te interesaria adquirir de ${product.name}.',
                 style: GoogleFonts.inter(color: AppColors.textSecondary),
               ),
               const SizedBox(height: 18),
@@ -196,7 +196,7 @@ class _Detail extends StatelessWidget {
                             Navigator.pop(sheet);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
-                                content: Text('Tu interés fue registrado.'),
+                                content: Text('Tu interes fue registrado.'),
                               ),
                             );
                           } else {
@@ -210,7 +210,7 @@ class _Detail extends StatelessWidget {
                           }
                         },
                   child: Text(
-                    vm.isSubmitting ? 'Guardando...' : 'Confirmar interés',
+                    vm.isSubmitting ? 'Guardando...' : 'Confirmar interes',
                   ),
                 ),
               ),

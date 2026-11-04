@@ -3,7 +3,6 @@ import 'package:flutter/foundation.dart';
 import '../../../../core/network/supabase_service.dart';
 import '../../data/repositories/home_summary_repository.dart';
 
-/// Modelo ligero para métricas o accesos rápidos de la pantalla de inicio.
 class HomeMetricItem {
   final String label;
   final String value;
@@ -18,7 +17,6 @@ class HomeMetricItem {
   });
 }
 
-/// ViewModel para la pantalla de inicio (HomeView) bajo arquitectura MVVM.
 class HomeViewModel extends ChangeNotifier {
   final SupabaseService supabaseService;
   final Future<HomeSummary> Function() _summaryLoader;
@@ -45,11 +43,10 @@ class HomeViewModel extends ChangeNotifier {
   String get summaryLabel => _isLoading
       ? 'Actualizando'
       : _errorMessage != null
-      ? 'Sin conexión'
-      : 'Datos del catálogo';
+      ? 'Sin conexion'
+      : 'Datos del catalogo';
   List<HomeMetricItem> get metrics => _metrics;
 
-  /// Obtiene el nombre del usuario actual para el saludo dinámico.
   String get userName {
     final user = supabaseService.currentUser;
     final metadataName = user?.userMetadata?['full_name'] as String?;
@@ -59,17 +56,15 @@ class HomeViewModel extends ChangeNotifier {
     return 'Productor';
   }
 
-  /// Retorna la primera letra del usuario para el avatar circular.
   String get userInitial {
     final name = userName;
     return name.isNotEmpty ? name[0].toUpperCase() : 'A';
   }
 
-  /// Saludo dinámico según la hora del día.
   String get dynamicGreeting {
     final hour = DateTime.now().hour;
     if (hour < 12) {
-      return '¡Buenos días!';
+      return '¡Buenos dias!';
     } else if (hour < 18) {
       return '¡Buenas tardes!';
     } else {
@@ -77,7 +72,6 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  /// Carga inicial o refresco de métricas agrícolas.
   Future<void> refresh() {
     if (_pendingRefresh != null) return _pendingRefresh!;
     late final Future<void> request;
@@ -100,17 +94,17 @@ class HomeViewModel extends ChangeNotifier {
         HomeMetricItem(
           label: 'Lotes disponibles',
           value: '${summary.availableLots}',
-          change: 'En el catálogo',
+          change: 'En el catalogo',
           isPositive: true,
         ),
         HomeMetricItem(
-          label: 'Nuevos en 7 días',
+          label: 'Nuevos en 7 dias',
           value: '${summary.recentLots}',
           change: 'Publicados recientemente',
           isPositive: true,
         ),
         HomeMetricItem(
-          label: 'Categorías agrícolas',
+          label: 'Categorias agricolas',
           value: '${summary.categories}',
           change: 'Para explorar',
           isPositive: true,
@@ -128,7 +122,7 @@ class HomeViewModel extends ChangeNotifier {
     }
   }
 
-  void _loadInitialData({String message = 'Consultando catálogo'}) {
+  void _loadInitialData({String message = 'Consultando catalogo'}) {
     _metrics = [
       HomeMetricItem(
         label: 'Lotes disponibles',
@@ -137,13 +131,13 @@ class HomeViewModel extends ChangeNotifier {
         isPositive: true,
       ),
       HomeMetricItem(
-        label: 'Nuevos en 7 días',
+        label: 'Nuevos en 7 dias',
         value: '—',
         change: message,
         isPositive: true,
       ),
       HomeMetricItem(
-        label: 'Categorías agrícolas',
+        label: 'Categorias agricolas',
         value: '—',
         change: message,
         isPositive: true,

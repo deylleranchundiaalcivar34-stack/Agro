@@ -8,7 +8,6 @@ import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../viewmodels/auth_viewmodel.dart';
 
-/// Vista para establecer una nueva contraseña tras pulsar el enlace de recuperación.
 class ResetPasswordView extends StatefulWidget {
   const ResetPasswordView({super.key});
 
@@ -42,7 +41,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('¡Contraseña actualizada con éxito! Inicia sesión.'),
+          content: Text('¡Contrasena actualizada con exito! Inicia sesion.'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.success,
         ),
@@ -51,7 +50,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(auth.errorMessage ?? 'Error al actualizar contraseña.'),
+          content: Text(auth.errorMessage ?? 'Error al actualizar contrasena.'),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.error,
         ),
@@ -81,7 +80,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                           top: 8,
                           left: 8,
                           child: IconButton(
-                            tooltip: 'Volver al inicio de sesión',
+                            tooltip: 'Volver al inicio de sesion',
                             onPressed: () => context.go(AppRoutes.login),
                             icon: const Icon(
                               Icons.arrow_back_ios_new_rounded,
@@ -94,24 +93,26 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Container(
-                                width: 68,
-                                height: 68,
-                                decoration: BoxDecoration(
-                                  color: AppColors.surface.withValues(alpha: 0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.vpn_key_rounded,
-                                  size: 36,
-                                  color: AppColors.surface,
-                                ),
-                              )
+                                    width: 68,
+                                    height: 68,
+                                    decoration: BoxDecoration(
+                                      color: AppColors.surface.withValues(
+                                        alpha: 0.15,
+                                      ),
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: const Icon(
+                                      Icons.vpn_key_rounded,
+                                      size: 36,
+                                      color: AppColors.surface,
+                                    ),
+                                  )
                                   .animate()
                                   .fadeIn(duration: 260.ms)
                                   .scale(begin: const Offset(.9, .9)),
                               const SizedBox(height: 12),
                               Text(
-                                'Nueva contraseña',
+                                'Nueva contrasena',
                                 style: GoogleFonts.plusJakartaSans(
                                   color: AppColors.surface,
                                   fontSize: 24,
@@ -120,9 +121,11 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                               ).animate(delay: 80.ms).fadeIn(duration: 220.ms),
                               const SizedBox(height: 4),
                               Text(
-                                'Crea una contraseña segura para tu cuenta',
+                                'Crea una contrasena segura para tu cuenta',
                                 style: GoogleFonts.inter(
-                                  color: AppColors.surface.withValues(alpha: 0.9),
+                                  color: AppColors.surface.withValues(
+                                    alpha: 0.9,
+                                  ),
                                   fontSize: 13,
                                 ),
                               ).animate(delay: 130.ms).fadeIn(duration: 220.ms),
@@ -155,28 +158,23 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                               crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 Text(
-                                  'Establece tu nueva contraseña',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .titleMedium
+                                  'Establece tu nueva contrasena',
+                                  style: Theme.of(context).textTheme.titleMedium
                                       ?.copyWith(fontWeight: FontWeight.w700),
                                 ),
                                 const SizedBox(height: 6),
                                 Text(
                                   'Debe contener al menos 6 caracteres.',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
-                                      ?.copyWith(color: AppColors.textSecondary),
+                                  style: Theme.of(context).textTheme.bodyMedium
+                                      ?.copyWith(
+                                        color: AppColors.textSecondary,
+                                      ),
                                 ),
                                 const SizedBox(height: 24),
 
-                                // Nueva contraseña
                                 Text(
-                                  'Nueva contraseña',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  'Nueva contrasena',
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(fontWeight: FontWeight.w700),
                                 ),
                                 const SizedBox(height: 8),
@@ -186,8 +184,9 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                   textInputAction: TextInputAction.next,
                                   decoration: InputDecoration(
                                     hintText: '••••••••',
-                                    prefixIcon:
-                                        const Icon(Icons.lock_outline_rounded),
+                                    prefixIcon: const Icon(
+                                      Icons.lock_outline_rounded,
+                                    ),
                                     filled: true,
                                     fillColor: AppColors.background,
                                     border: OutlineInputBorder(
@@ -198,8 +197,8 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                     ),
                                     suffixIcon: IconButton(
                                       tooltip: _obscurePassword
-                                          ? 'Mostrar contraseña'
-                                          : 'Ocultar contraseña',
+                                          ? 'Mostrar contrasena'
+                                          : 'Ocultar contrasena',
                                       onPressed: () => setState(
                                         () => _obscurePassword =
                                             !_obscurePassword,
@@ -213,17 +212,14 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                   ),
                                   validator: (value) =>
                                       value == null || value.length < 6
-                                          ? 'Mínimo 6 caracteres.'
-                                          : null,
+                                      ? 'Minimo 6 caracteres.'
+                                      : null,
                                 ),
                                 const SizedBox(height: 18),
 
-                                // Confirmar contraseña
                                 Text(
-                                  'Confirmar contraseña',
-                                  style: Theme.of(context)
-                                      .textTheme
-                                      .bodyMedium
+                                  'Confirmar contrasena',
+                                  style: Theme.of(context).textTheme.bodyMedium
                                       ?.copyWith(fontWeight: FontWeight.w700),
                                 ),
                                 const SizedBox(height: 8),
@@ -234,8 +230,9 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                   onFieldSubmitted: (_) => _submit(),
                                   decoration: InputDecoration(
                                     hintText: '••••••••',
-                                    prefixIcon:
-                                        const Icon(Icons.lock_outline_rounded),
+                                    prefixIcon: const Icon(
+                                      Icons.lock_outline_rounded,
+                                    ),
                                     filled: true,
                                     fillColor: AppColors.background,
                                     border: OutlineInputBorder(
@@ -246,11 +243,11 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                     ),
                                     suffixIcon: IconButton(
                                       tooltip: _obscureConfirm
-                                          ? 'Mostrar contraseña'
-                                          : 'Ocultar contraseña',
+                                          ? 'Mostrar contrasena'
+                                          : 'Ocultar contrasena',
                                       onPressed: () => setState(
-                                        () => _obscureConfirm =
-                                            !_obscureConfirm,
+                                        () =>
+                                            _obscureConfirm = !_obscureConfirm,
                                       ),
                                       icon: Icon(
                                         _obscureConfirm
@@ -261,14 +258,13 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                   ),
                                   validator: (value) {
                                     if (value != _passwordController.text) {
-                                      return 'Las contraseñas no coinciden.';
+                                      return 'Las contrasenas no coinciden.';
                                     }
                                     return null;
                                   },
                                 ),
                                 const SizedBox(height: 28),
 
-                                // Botón guardar
                                 Consumer<AuthViewModel>(
                                   builder: (context, auth, _) => FilledButton(
                                     onPressed: auth.isLoading ? null : _submit,
@@ -280,7 +276,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                               color: AppColors.surface,
                                             ),
                                           )
-                                        : const Text('Actualizar contraseña'),
+                                        : const Text('Actualizar contrasena'),
                                   ),
                                 ),
                               ],

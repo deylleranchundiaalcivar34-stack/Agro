@@ -52,7 +52,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
     if (!_key.currentState!.validate() || _category == null) {
       if (_category == null)
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selecciona una categoría.')),
+          const SnackBar(content: Text('Selecciona una categoria.')),
         );
       return;
     }
@@ -66,7 +66,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
     if (!mounted) return;
     if (ok) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Tu lote quedó publicado en preventa.')),
+        const SnackBar(content: Text('Tu lote quedo publicado en preventa.')),
       );
       context.go(AppRoutes.products);
     } else {
@@ -89,7 +89,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
     if (!producer)
       return Scaffold(
         appBar: AppBar(title: const Text('Publicar preventa')),
-        body: const Center(child: Text('Esta acción es para productores.')),
+        body: const Center(child: Text('Esta accion es para productores.')),
       );
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -102,7 +102,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
               children: [
                 Text(
-                  'Un lote, información clara',
+                  'Un lote, informacion clara',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
@@ -110,7 +110,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                 ).animate().fadeIn(duration: 220.ms).slideY(begin: .04, end: 0),
                 const SizedBox(height: 6),
                 Text(
-                  'Se mostrará como preventa a compradores con sesión iniciada.',
+                  'Se mostrara como preventa a compradores con sesion iniciada.',
                   style: GoogleFonts.inter(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 24),
@@ -131,7 +131,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                   value: _category,
                   isExpanded: true,
                   decoration: const InputDecoration(
-                    labelText: 'Categoría agrícola',
+                    labelText: 'Categoria agricola',
                     prefixIcon: Icon(Icons.category_outlined),
                   ),
                   items: vm.categories
@@ -220,7 +220,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
 
   String? _nonNegative(String? v) {
     final n = double.tryParse((v ?? '').replaceAll(',', '.'));
-    return n == null || n < 0 ? 'Ingresa un precio válido.' : null;
+    return n == null || n < 0 ? 'Ingresa un precio valido.' : null;
   }
 
   String _date(DateTime d) =>

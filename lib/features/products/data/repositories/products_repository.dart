@@ -2,8 +2,6 @@ import '../../../../core/network/supabase_service.dart';
 import '../models/agricultural_category.dart';
 import '../models/agricultural_product.dart';
 
-/// Source of truth for the Phase 0 catalogue and buyer pre-order interest.
-/// Views do not communicate with Supabase directly.
 class ProductsRepository {
   ProductsRepository({required SupabaseService supabaseService})
     : _supabaseService = supabaseService;
@@ -92,7 +90,7 @@ class ProductsRepository {
 
   String _requireUserId() {
     final userId = _supabaseService.currentUser?.id;
-    if (userId == null) throw StateError('La sesión ya no está disponible.');
+    if (userId == null) throw StateError('La sesion ya no esta disponible.');
     return userId;
   }
 }

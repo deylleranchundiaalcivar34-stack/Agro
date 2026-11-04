@@ -9,14 +9,6 @@ import '../../../../core/constants/app_routes.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/profile_selection_viewmodel.dart';
 
-/// Pantalla de Selección de Perfil / Rol en Agro+.
-///
-/// Principios de diseño [ui-ux-pro-max] e [impeccable]:
-/// - Fondo neutro claro #F7F9F6 para máxima frescura y legibilidad.
-/// - Logotipo centrado en squircle blanco con animación ascendente.
-/// - Tarjetas interactivas con entrada escalonada (100ms de retraso entre cada una).
-/// - Micro-escalado táctil (0.98) al presionar para respuesta inmediata.
-/// - Radio button animado y botón tipo pastilla #2E7D32 con validación de estado.
 class ProfileSelectionView extends StatelessWidget {
   const ProfileSelectionView({super.key});
 
@@ -85,13 +77,13 @@ class _ProfileSelectionContent extends StatelessWidget {
       _ProfileOptionData(
         role: UserRole.producer,
         title: 'Productor / Vendedor',
-        description: 'Publica cosechas y gestiona la venta de tus productos agrícolas directo al mercado.',
+        description: 'Publica cosechas y gestiona la venta de tus productos agricolas directo al mercado.',
         icon: Icons.agriculture_rounded,
       ),
       _ProfileOptionData(
         role: UserRole.buyer,
         title: 'Comprador',
-        description: 'Explora ofertas agrícolas y conecta con productores cercanos para abastecimiento ágil.',
+        description: 'Explora ofertas agricolas y conecta con productores cercanos para abastecimiento agil.',
         icon: Icons.shopping_basket_rounded,
       ),
     ];
@@ -108,9 +100,6 @@ class _ProfileSelectionContent extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  // ─────────────────────────────────────────────────────────
-                  // 1. CABECERA: LOGO + TÍTULOS
-                  // ─────────────────────────────────────────────────────────
                   Center(
                     child: _buildSquircleLogo()
                         .animate()
@@ -155,9 +144,6 @@ class _ProfileSelectionContent extends StatelessWidget {
 
                   const SizedBox(height: 32),
 
-                  // ─────────────────────────────────────────────────────────
-                  // 2. TARJETAS DE SELECCIÓN CON ANIMACIÓN ESCALONADA (100ms)
-                  // ─────────────────────────────────────────────────────────
                   ...List.generate(options.length, (index) {
                     final option = options[index];
                     final isSelected = viewModel.selectedRole == option.role;
@@ -183,9 +169,6 @@ class _ProfileSelectionContent extends StatelessWidget {
 
                   const SizedBox(height: 26),
 
-                  // ─────────────────────────────────────────────────────────
-                  // 3. BOTÓN PASTILLA CONTINUAR (Sólido #2E7D32 con sombra)
-                  // ─────────────────────────────────────────────────────────
                   _buildContinueButton(
                     context,
                     viewModel,
@@ -193,9 +176,6 @@ class _ProfileSelectionContent extends StatelessWidget {
 
                   const SizedBox(height: 14),
 
-                  // ─────────────────────────────────────────────────────────
-                  // 4. BADGE DE CONEXIÓN PROTEGIDA
-                  // ─────────────────────────────────────────────────────────
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
@@ -206,7 +186,7 @@ class _ProfileSelectionContent extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        'Conexión protegida y validada por cooperativas',
+                        'Conexion protegida y validada por cooperativas',
                         style: GoogleFonts.inter(
                           fontSize: 12,
                           fontWeight: FontWeight.w500,
@@ -224,7 +204,6 @@ class _ProfileSelectionContent extends StatelessWidget {
     );
   }
 
-  /// Logotipo dentro de un Squircle blanco elegante
   Widget _buildSquircleLogo() {
     return Container(
       width: 78,
@@ -254,7 +233,6 @@ class _ProfileSelectionContent extends StatelessWidget {
     );
   }
 
-  /// Botón de acción con estado deshabilitado (opacidad 0.5) hasta que se elija un perfil
   Widget _buildContinueButton(
     BuildContext context,
     ProfileSelectionViewModel viewModel,
@@ -270,8 +248,8 @@ class _ProfileSelectionContent extends StatelessWidget {
         child: Container(
           height: 54,
           decoration: BoxDecoration(
-            color: AppColors.primary, // #2E7D32
-            borderRadius: BorderRadius.circular(100), // Pill-shaped
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(100),
             boxShadow: canContinue
                 ? [
                     BoxShadow(
@@ -318,9 +296,6 @@ class _ProfileSelectionContent extends StatelessWidget {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MODELO DE DATOS INTERNO PARA CADA OPCIÓN DE PERFIL
-// ─────────────────────────────────────────────────────────────────────────────
 class _ProfileOptionData {
   final UserRole role;
   final String title;
@@ -335,9 +310,6 @@ class _ProfileOptionData {
   });
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TARJETA SELECCIONABLE CON FEEDBACK TÁCTIL (MICRO-ESCALA 0.98)
-// ─────────────────────────────────────────────────────────────────────────────
 class _ProfileSelectableCard extends StatefulWidget {
   final _ProfileOptionData data;
   final bool isSelected;
@@ -369,7 +341,7 @@ class _ProfileSelectableCardState extends State<_ProfileSelectableCard> {
         onTapCancel: () => setState(() => _isPressed = false),
         onTap: widget.onTap,
         child: AnimatedScale(
-          scale: _isPressed ? 0.98 : 1.0, // Micro-escalado táctil
+          scale: _isPressed ? 0.98 : 1.0,
           duration: const Duration(milliseconds: 90),
           curve: Curves.easeOut,
           child: AnimatedContainer(
@@ -377,11 +349,8 @@ class _ProfileSelectableCardState extends State<_ProfileSelectableCard> {
             curve: Curves.easeInOut,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
-              // Inactiva: fondo verde muy tenue/transparente sin borde
-              // Seleccionada: borde fino #2E7D32 y fondo verde claro
               color: isSelected
-                  ? AppColors
-                        .primarySurface // #E8F5E9
+                  ? AppColors.primarySurface
                   : AppColors.primarySurface.withValues(alpha: 0.32),
               borderRadius: BorderRadius.circular(18),
               border: Border.all(
@@ -401,7 +370,6 @@ class _ProfileSelectableCardState extends State<_ProfileSelectableCard> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Ícono circular a la izquierda
                 Container(
                   width: 44,
                   height: 44,
@@ -427,7 +395,6 @@ class _ProfileSelectableCardState extends State<_ProfileSelectableCard> {
                 ),
                 const SizedBox(width: 14),
 
-                // Título y descripción
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -454,7 +421,6 @@ class _ProfileSelectableCardState extends State<_ProfileSelectableCard> {
                 ),
                 const SizedBox(width: 12),
 
-                // Indicador circular tipo Radio Button a la derecha
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: AnimatedContainer(
@@ -495,9 +461,6 @@ class _ProfileSelectableCardState extends State<_ProfileSelectableCard> {
   }
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// WIDGET FEEDBACK TÁCTIL REUTILIZABLE
-// ─────────────────────────────────────────────────────────────────────────────
 class _PressableFeedback extends StatefulWidget {
   final Widget child;
   final VoidCallback? onTap;

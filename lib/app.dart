@@ -6,9 +6,6 @@ import 'core/constants/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
 
-/// Punto de entrada de la aplicación.
-/// Separa la configuración del árbol de widgets de [main.dart]
-/// para mantener el bootstrap limpio.
 class AgroApp extends StatefulWidget {
   const AgroApp({super.key});
 
@@ -17,15 +14,11 @@ class AgroApp extends StatefulWidget {
 }
 
 class _AgroAppState extends State<AgroApp> {
-  // El router se crea una sola vez y se le pasa la referencia
-  // del AuthViewModel para que pueda redirigir según el estado de sesión.
   late final AppRouter _appRouter;
 
   @override
   void initState() {
     super.initState();
-    // Accedemos al AuthViewModel sin escuchar (listen: false) porque
-    // estamos en initState, no en build.
     final authViewModel = context.read<AuthViewModel>();
     _appRouter = AppRouter(
       authViewModel: authViewModel,
@@ -41,7 +34,6 @@ class _AgroAppState extends State<AgroApp> {
       title: 'Agro+',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
-      // Conectamos el router de GoRouter al MaterialApp
       routerConfig: _appRouter.router,
     );
   }
