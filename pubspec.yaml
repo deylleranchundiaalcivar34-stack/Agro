@@ -45,6 +45,7 @@ flutter:
   uses-material-design: true
 
   assets:
+
     - .env
     - assets/images/
 
@@ -55,3 +56,4 @@ flutter_launcher_icons:
   min_sdk_android: 21
   adaptive_icon_background: "#F7F9F6"
   adaptive_icon_foreground: "assets/images/logotipo_oficial.png"
+
