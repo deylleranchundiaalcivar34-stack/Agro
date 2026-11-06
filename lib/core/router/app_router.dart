@@ -10,6 +10,7 @@ import '../../features/home/presentation/views/home_view.dart';
 import '../../features/products/presentation/views/products_catalog_view.dart';
 import '../../features/products/presentation/views/product_detail_view.dart';
 import '../../features/products/presentation/views/product_create_view.dart';
+import '../../features/products/presentation/views/product_edit_view.dart';
 import '../../features/map/presentation/views/map_view.dart';
 import '../../features/chat/presentation/views/chat_list_view.dart';
 import '../../features/chat/presentation/views/chat_room_view.dart';
@@ -133,6 +134,19 @@ class AppRouter {
                   ),
                   GoRoute(
                     path: ':id',
+                    routes: [
+                      GoRoute(
+                        path: 'edit',
+                        pageBuilder: (context, state) => _slideTransition(
+                          state: state,
+                          child: ProductEditView(
+                            productId: state.pathParameters['id']!,
+                            quantityOnly:
+                                state.uri.queryParameters['quantity'] == '1',
+                          ),
+                        ),
+                      ),
+                    ],
                     pageBuilder: (context, state) => _slideTransition(
                       state: state,
                       child: ProductDetailView(

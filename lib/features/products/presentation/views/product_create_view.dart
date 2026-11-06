@@ -1,3 +1,5 @@
+// Pantalla de alta: recoge datos y fotografía, valida y solicita publicar una preventa.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
@@ -6,6 +8,8 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../widgets/product_image_picker.dart';
+import '../../data/models/product_unit.dart';
+import '../widgets/product_quantity_fields.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
@@ -18,11 +22,14 @@ class ProductCreateView extends StatefulWidget {
   State<ProductCreateView> createState() => _ProductCreateViewState();
 }
 
+// Estado local del formulario; la persistencia y los bloqueos compartidos viven en el ViewModel.
 class _ProductCreateViewState extends State<ProductCreateView> {
+  // Controladores, selección de unidad/categoría y fotografía pendiente de subir.
   final _key = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _quantity = TextEditingController();
   final _price = TextEditingController();
+  ProductUnit? _unit;
   int? _category;
   XFile? _selectedImage;
   bool _isSelectingImage = false;
@@ -45,6 +52,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
     super.dispose();
   }
 
+  /// Abre el selector de la fecha opcional sin guardar cambios todavía.
   Future<void> _pickDate() async {
     // La fecha de cosecha es opcional y se limita a los próximos cinco años.
     final value = await showDatePicker(
@@ -56,7 +64,12 @@ class _ProductCreateViewState extends State<ProductCreateView> {
     if (value != null && mounted) setState(() => _harvest = value);
   }
 
+  /// Evita envíos simultáneos, valida los campos y muestra el resultado de la publicación.
   Future<void> _submit() async {
+    final vm = context.read<ProductsViewModel>();
+    if (vm.isSubmitting || vm.publicationRequiresReview || _isSelectingImage) {
+      return;
+    }
     // Valida el formulario y delega la publicación en el ViewModel.
     if (!_key.currentState!.validate() || _category == null) {
       if (_category == null) {
@@ -66,11 +79,13 @@ class _ProductCreateViewState extends State<ProductCreateView> {
       }
       return;
     }
+    // La imagen sigue siendo local aquí; el repositorio coordina su subida y asociación.
     final ok = await context.read<ProductsViewModel>().createPreorderProduct(
       name: _name.text,
       image: _selectedImage,
       categoryId: _category!,
       quantity: double.parse(_quantity.text.replaceAll(',', '.')),
+      unit: _unit,
       price: double.parse(_price.text.replaceAll(',', '.')),
       estimatedHarvestDate: _harvest,
     );
@@ -132,6 +147,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                   style: GoogleFonts.inter(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 24),
+                // Identificación del lote y categoría agrícola para su clasificación.
                 TextFormField(
                   controller: _name,
                   textCapitalization: TextCapitalization.words,
@@ -163,36 +179,25 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                       : (value) => setState(() => _category = value),
                 ),
                 const SizedBox(height: 16),
-                Row(
-                  children: [
-                    Expanded(
-                      child: TextFormField(
-                        controller: _quantity,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Cantidad disponible',
-                          hintText: '0',
-                        ),
-                        validator: _positive,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: TextFormField(
-                        controller: _price,
-                        keyboardType: const TextInputType.numberWithOptions(
-                          decimal: true,
-                        ),
-                        decoration: const InputDecoration(
-                          labelText: 'Precio unitario (USD)',
-                          hintText: '0.00',
-                        ),
-                        validator: _nonNegative,
-                      ),
-                    ),
-                  ],
+                // Cantidad y unidad comparten la validación con el formulario de edición.
+                ProductQuantityFields(
+                  controller: _quantity,
+                  unit: _unit,
+                  onUnitChanged: (unit) => setState(() => _unit = unit),
+                  enabled: !vm.isSubmitting,
+                ),
+                const SizedBox(height: 16),
+                // Precio unitario y fecha estimada de cosecha opcional.
+                TextFormField(
+                  controller: _price,
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  decoration: const InputDecoration(
+                    labelText: 'Precio unitario (USD)',
+                    hintText: '0.00',
+                  ),
+                  validator: _nonNegative,
                 ),
                 const SizedBox(height: 16),
                 OutlinedButton.icon(
@@ -208,6 +213,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                   ),
                 ),
                 const SizedBox(height: 16),
+                // Selección y vista previa; se impide publicar mientras se lee la imagen.
                 ProductImagePicker(
                   enabled: !vm.isSubmitting,
                   onLoadingChanged: (loading) {
@@ -220,8 +226,17 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                   },
                 ),
                 const SizedBox(height: 16),
+                // Un resultado incierto requiere revisar las publicaciones antes de repetir el alta.
+                if (vm.publicationRequiresReview)
+                  Text(
+                    vm.errorMessage ??
+                        'Revisa tus publicaciones antes de volver a publicar.',
+                  ),
                 FilledButton.icon(
-                  onPressed: vm.isSubmitting || _isSelectingImage
+                  onPressed:
+                      vm.isSubmitting ||
+                          _isSelectingImage ||
+                          vm.publicationRequiresReview
                       ? null
                       : _submit,
                   icon: vm.isSubmitting
@@ -245,18 +260,16 @@ class _ProductCreateViewState extends State<ProductCreateView> {
     );
   }
 
-  String? _positive(String? v) {
-    // Acepta coma decimal y exige una cantidad estrictamente positiva.
-    final n = double.tryParse((v ?? '').replaceAll(',', '.'));
-    return n == null || n <= 0 ? 'Ingresa un valor mayor a 0.' : null;
-  }
-
+  /// Admite precio cero y rechaza valores negativos o no finitos.
   String? _nonNegative(String? v) {
     // El precio admite cero; se normaliza la coma decimal antes de analizarlo.
     final n = double.tryParse((v ?? '').replaceAll(',', '.'));
-    return n == null || n < 0 ? 'Ingresa un precio válido.' : null;
+    return n == null || !n.isFinite || n < 0
+        ? 'Ingresa un precio válido.'
+        : null;
   }
 
+  /// Presenta fechas en formato día/mes/año sin alterar el valor seleccionado.
   String _date(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 }
