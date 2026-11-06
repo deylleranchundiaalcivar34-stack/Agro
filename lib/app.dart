@@ -1,3 +1,6 @@
+import 'dart:async';
+
+import 'package:app_links/app_links.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -15,6 +18,7 @@ class AgroApp extends StatefulWidget {
 
 class _AgroAppState extends State<AgroApp> {
   late final AppRouter _appRouter;
+  StreamSubscription<Uri>? _linkSubscription;
 
   @override
   void initState() {
@@ -26,6 +30,19 @@ class _AgroAppState extends State<AgroApp> {
           ? AppRoutes.home
           : AppRoutes.login,
     );
+    _linkSubscription = AppLinks().uriLinkStream.listen(_openEmailConfirmed);
+  }
+
+  Future<void> _openEmailConfirmed(Uri uri) async {
+    if (uri.scheme != 'io.supabase.agro' || uri.host != 'auth') return;
+    await Future<void>.delayed(const Duration(milliseconds: 450));
+    if (mounted) _appRouter.router.go(AppRoutes.emailConfirmed);
+  }
+
+  @override
+  void dispose() {
+    _linkSubscription?.cancel();
+    super.dispose();
   }
 
   @override

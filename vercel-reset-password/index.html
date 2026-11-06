@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#197C4B" />
+    <title>Agro+ | Nueva contrasena</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @keyframes subir { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
+      .subir { animation: subir 360ms ease-out both; }
+    </style>
+  </head>
+  <body class="min-h-screen bg-[#F4F7F2] text-slate-800">
+    <main class="mx-auto flex min-h-screen max-w-md items-center px-5 py-10">
+      <section class="subir w-full rounded-3xl bg-white p-7 shadow-xl shadow-emerald-950/10 sm:p-9">
+        <div class="mb-7 flex items-center gap-3">
+          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#197C4B] text-xl font-bold text-white">A+</div>
+          <div><p class="text-lg font-bold text-[#197C4B]">Agro+</p><p class="text-sm text-slate-500">Recuperar acceso</p></div>
+        </div>
+
+        <div id="cargando">
+          <h1 class="text-2xl font-bold">Verificando enlace</h1>
+          <p class="mt-2 text-slate-600">Un momento, estamos preparando el cambio de contrasena.</p>
+          <div class="mt-6 h-1.5 overflow-hidden rounded-full bg-emerald-100"><div class="h-full w-2/3 animate-pulse rounded-full bg-[#197C4B]"></div></div>
+        </div>
+
+        <form id="formulario" class="hidden" novalidate>
+          <h1 class="text-2xl font-bold">Crea una contrasena nueva</h1>
+          <p class="mt-2 text-slate-600">Usa al menos 6 caracteres y no la compartas con nadie.</p>
+          <label class="mt-6 block text-sm font-semibold" for="contrasena">Nueva contrasena</label>
+          <input id="contrasena" type="password" minlength="6" required autocomplete="new-password" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#197C4B] focus:ring-4 focus:ring-emerald-100" />
+          <label class="mt-4 block text-sm font-semibold" for="confirmar">Confirmar contrasena</label>
+          <input id="confirmar" type="password" minlength="6" required autocomplete="new-password" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#197C4B] focus:ring-4 focus:ring-emerald-100" />
+          <p id="aviso" class="mt-4 hidden rounded-xl px-4 py-3 text-sm" role="alert"></p>
+          <button id="boton" class="mt-6 w-full rounded-xl bg-[#197C4B] px-4 py-3 font-semibold text-white transition hover:bg-[#12663C] disabled:cursor-not-allowed disabled:opacity-60" type="submit">Guardar contrasena</button>
+        </form>
+
+        <div id="exito" class="hidden text-center">
+          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl text-[#197C4B]">✓</div>
+          <h1 class="mt-5 text-2xl font-bold">Contrasena actualizada</h1>
+          <p class="mt-2 text-slate-600">Ya puedes volver a Agro+ e iniciar sesion con tu nueva contrasena.</p>
+          <a href="io.supabase.agro://auth/callback" class="mt-6 inline-block rounded-xl bg-[#197C4B] px-5 py-3 font-semibold text-white transition hover:bg-[#12663C]">Abrir Agro+</a>
+        </div>
+
+        <div id="error" class="hidden">
+          <h1 class="text-2xl font-bold">No se pudo abrir el enlace</h1>
+          <p id="errorTexto" class="mt-2 text-slate-600"></p>
+          <p class="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Pide un nuevo correo desde la app. Por seguridad, cada enlace sirve una sola vez y vence pronto.</p>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

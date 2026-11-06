@@ -8,6 +8,9 @@ import '../../features/auth/presentation/views/register_view.dart';
 import '../../features/auth/presentation/views/profile_selection_view.dart';
 import '../../features/auth/presentation/views/forgot_password_view.dart';
 import '../../features/auth/presentation/views/reset_password_view.dart';
+import '../../features/auth/presentation/views/mfa_setup_view.dart';
+import '../../features/auth/presentation/views/mfa_challenge_view.dart';
+import '../../features/auth/presentation/views/email_confirmed_view.dart';
 import '../../features/home/presentation/views/home_view.dart';
 import '../../features/products/presentation/views/products_catalog_view.dart';
 import '../../features/products/presentation/views/product_detail_view.dart';
@@ -39,6 +42,9 @@ class AppRouter {
         AppRoutes.profileSelection,
         AppRoutes.forgotPassword,
         AppRoutes.resetPassword,
+        AppRoutes.mfaSetup,
+        AppRoutes.mfaChallenge,
+        AppRoutes.emailConfirmed,
         AppRoutes.splash,
       ];
 
@@ -96,6 +102,21 @@ class AppRouter {
         path: AppRoutes.resetPassword,
         pageBuilder: (context, state) =>
             _slideTransition(state: state, child: const ResetPasswordView()),
+      ),
+      GoRoute(
+        path: AppRoutes.mfaSetup,
+        pageBuilder: (context, state) =>
+            _slideTransition(state: state, child: const MfaSetupView()),
+      ),
+      GoRoute(
+        path: AppRoutes.mfaChallenge,
+        pageBuilder: (context, state) =>
+            _slideTransition(state: state, child: const MfaChallengeView()),
+      ),
+      GoRoute(
+        path: AppRoutes.emailConfirmed,
+        pageBuilder: (context, state) =>
+            _fadeTransition(state: state, child: const EmailConfirmedView()),
       ),
 
       StatefulShellRoute.indexedStack(

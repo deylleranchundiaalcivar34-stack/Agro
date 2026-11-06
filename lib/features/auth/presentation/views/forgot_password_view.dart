@@ -31,7 +31,9 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
     FocusScope.of(context).unfocus();
 
     final auth = context.read<AuthViewModel>();
-    final success = await auth.resetPasswordForEmail(_emailController.text);
+    final success = await auth.resetPasswordForEmail(
+      email: _emailController.text,
+    );
 
     if (!mounted) return;
 
@@ -278,7 +280,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
         ),
         const SizedBox(height: 12),
         Text(
-          'Hemos enviado un correo a:\n${_emailController.text}\n\nSigue las instrucciones del enlace recibido para actualizar tu contrasena.',
+          'Hemos enviado un correo a:\n${_emailController.text}\n\nEl enlace abrira una pagina segura para crear tu nueva contrasena.',
           textAlign: TextAlign.center,
           style: GoogleFonts.inter(
             fontSize: 14,

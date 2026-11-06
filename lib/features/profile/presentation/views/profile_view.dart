@@ -7,6 +7,7 @@ import '../../../../core/constants/app_routes.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
 import 'package:go_router/go_router.dart';
+import 'package:local_auth/local_auth.dart';
 
 class ProfileView extends StatelessWidget {
   const ProfileView({super.key});
@@ -152,6 +153,18 @@ class ProfileView extends StatelessWidget {
                   onTap: () {},
                 ),
                 _OptionTile(
+                  icon: Icons.fingerprint_rounded,
+                  title: 'Huella o Face ID',
+                  subtitle: 'Confirma el acceso en este telefono',
+                  onTap: () => _checkBiometric(context),
+                ),
+                _OptionTile(
+                  icon: Icons.security_rounded,
+                  title: 'Google Authenticator',
+                  subtitle: 'Activa la verificacion en dos pasos',
+                  onTap: () => context.push(AppRoutes.mfaSetup),
+                ),
+                _OptionTile(
                   icon: Icons.help_outline_rounded,
                   title: 'Ayuda y Soporte Tecnico',
                   subtitle: 'Preguntas frecuentes y contacto',
@@ -175,6 +188,42 @@ class ProfileView extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future<void> _checkBiometric(BuildContext context) async {
+    final auth = LocalAuthentication();
+    try {
+      final available = await auth.canCheckBiometrics;
+      if (!available) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Este telefono no tiene huella disponible.'),
+            ),
+          );
+        }
+        return;
+      }
+      final accepted = await auth.authenticate(
+        localizedReason: 'Confirma tu acceso a Agro+',
+        biometricOnly: true,
+      );
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              accepted ? 'Acceso confirmado.' : 'No se confirmo la huella.',
+            ),
+          ),
+        );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('No se pudo usar la huella.')),
+        );
+      }
+    }
   }
 
   Widget _buildSection({required String title, required List<Widget> items}) {

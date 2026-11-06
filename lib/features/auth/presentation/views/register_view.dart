@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../viewmodels/auth_viewmodel.dart';
-import '../widgets/recaptcha_widget.dart';
+import '../widgets/password_rules.dart';
 
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
@@ -24,21 +24,27 @@ class _RegisterViewState extends State<RegisterView> {
   int _step = 0;
   bool _showPassword = false;
   bool _showConfirmation = false;
-  final _captchaKey = GlobalKey<RecaptchaWidgetState>();
-  bool _isCaptchaVerified = false;
+  String _passwordValue = '';
 
-  void setCaptchaVerified(bool verified) {
-    setState(() => _isCaptchaVerified = verified);
+  void _onPasswordChanged() {
+    setState(() => _passwordValue = _password.text);
   }
 
   @override
   void dispose() {
+    _password.removeListener(_onPasswordChanged);
     _name.dispose();
     _email.dispose();
     _password.dispose();
     _confirmation.dispose();
     _company.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _password.addListener(_onPasswordChanged);
   }
 
   bool _validateFirstStep() =>
@@ -66,10 +72,6 @@ class _RegisterViewState extends State<RegisterView> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (!_isCaptchaVerified) {
-      _showError('Por favor, confirma que no eres un robot.');
-      return;
-    }
     FocusScope.of(context).unfocus();
     final auth = context.read<AuthViewModel>();
     final created = await auth.signUp(
@@ -85,8 +87,6 @@ class _RegisterViewState extends State<RegisterView> {
     } else if (created) {
       _confirmationDialog();
     } else {
-      setState(() => _isCaptchaVerified = false);
-      _captchaKey.currentState?.reset();
       _showError(auth.errorMessage ?? 'No se pudo crear la cuenta.');
     }
   }
@@ -338,7 +338,7 @@ class _SecurityStep extends StatelessWidget {
       ),
       const SizedBox(height: 6),
       Text(
-        'Tu empresa o finca es opcional.',
+        'Usa una contrasena fuerte para proteger tu cuenta.',
         style: Theme.of(context).textTheme.bodySmall
             ?.copyWith(color: AppColors.textSecondary),
       ),
@@ -350,12 +350,14 @@ class _SecurityStep extends StatelessWidget {
         obscureText: !state._showPassword,
         textInputAction: TextInputAction.next,
         decoration: _passwordField(
-          'Minimo 6 caracteres',
+          'Crea una contrasena segura',
           state._showPassword,
           state.togglePasswordVisibility,
         ),
         validator: state._passwordValidator,
       ),
+      const SizedBox(height: 8),
+      PasswordRulesView(password: state._passwordValue),
       const SizedBox(height: 14),
       const _Label('Confirmar contrasena'),
       const SizedBox(height: 6),
@@ -396,19 +398,10 @@ class _SecurityStep extends StatelessWidget {
           ],
         ),
       ),
-      const SizedBox(height: 16),
-      Center(
-        child: RecaptchaWidget(
-          key: state._captchaKey,
-          onVerified: state.setCaptchaVerified,
-        ),
-      ),
       const SizedBox(height: 20),
       Consumer<AuthViewModel>(
         builder: (context, auth, _) => FilledButton(
-          onPressed: (auth.isLoading || !state._isCaptchaVerified)
-              ? null
-              : state._submit,
+          onPressed: auth.isLoading ? null : state._submit,
           child: auth.isLoading
               ? const SizedBox.square(
                   dimension: 20,
@@ -559,7 +552,9 @@ extension on _RegisterViewState {
   String? _emailValidator(String? value) =>
       _validEmail(value ?? '') ? null : 'Ingresa un correo valido.';
   String? _passwordValidator(String? value) =>
-      value != null && value.length >= 6 ? null : 'Usa al menos 6 caracteres.';
+      PasswordRules.from(value ?? '').isStrong
+      ? null
+      : 'Completa todos los requisitos de la contrasena.';
 }
 
 bool _validEmail(String value) =>

@@ -72,6 +72,7 @@ class AuthViewModel extends ChangeNotifier {
   UserRole _selectedRole = UserRole.buyer;
   User? _currentUser;
   UserProfile? _profile;
+  bool _mfaRequired = false;
 
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -82,6 +83,7 @@ class AuthViewModel extends ChangeNotifier {
   String get userInitial => _profile?.initial ?? 'A';
   bool get isLoading => _status == AuthStatus.loading;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
+  bool get mfaRequired => _mfaRequired;
 
   void setRole(UserRole role) {
     _selectedRole = role;
@@ -146,6 +148,7 @@ class AuthViewModel extends ChangeNotifier {
       final response = await _supabaseService.client.auth.signUp(
         email: email.trim(),
         password: password,
+        emailRedirectTo: kIsWeb ? null : 'io.supabase.agro://auth/callback',
         data: {
           'full_name': fullName.trim(),
           'role': role.value,
@@ -170,6 +173,39 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
+  Future<AuthMFAEnrollResponse?> enrollTotp() async {
+    try {
+      return await _supabaseService.client.auth.mfa.enroll(
+        issuer: 'Agro+',
+        friendlyName: 'Google Authenticator',
+      );
+    } on AuthException catch (e) {
+      _setError(_mapAuthError(e.message));
+      return null;
+    }
+  }
+
+  Future<bool> verifyTotp(String factorId, String code) async {
+    try {
+      await _supabaseService.client.auth.mfa.challengeAndVerify(
+        factorId: factorId,
+        code: code,
+      );
+      _mfaRequired = false;
+      notifyListeners();
+      return true;
+    } on AuthException catch (e) {
+      _setError(_mapAuthError(e.message));
+      return false;
+    }
+  }
+
+  Future<bool> verifyCurrentTotp(String code) async {
+    final factors = await _supabaseService.client.auth.mfa.listFactors();
+    if (factors.totp.isEmpty) return false;
+    return verifyTotp(factors.totp.first.id, code);
+  }
+
   Future<void> signOut() async {
     try {
       await _supabaseService.client.auth.signOut();
@@ -184,12 +220,12 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> resetPasswordForEmail(String email) async {
+  Future<bool> resetPasswordForEmail({required String email}) async {
     _setLoading();
     try {
       await _supabaseService.client.auth.resetPasswordForEmail(
         email.trim(),
-        redirectTo: kIsWeb ? null : 'io.supabase.agro://reset-callback/',
+        redirectTo: 'https://agroplus-recuperar.vercel.app',
       );
       _setStatus(AuthStatus.unauthenticated);
       _errorMessage = null;
@@ -257,6 +293,11 @@ class AuthViewModel extends ChangeNotifier {
 
       _profile = profile;
       _selectedRole = UserRoleExtension.fromValue(profile.role);
+      final aal = _supabaseService.client.auth.mfa
+          .getAuthenticatorAssuranceLevel();
+      _mfaRequired =
+          aal.currentLevel != AuthenticatorAssuranceLevels.aal2 &&
+          aal.nextLevel == AuthenticatorAssuranceLevels.aal2;
       _setAuthenticated();
     } catch (_) {
       _setError('No se pudo cargar tu perfil. Verifica tu conexion.');

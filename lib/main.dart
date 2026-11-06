@@ -60,7 +60,7 @@ class _AgroBootstrapState extends State<_AgroBootstrap> {
         profileRepository: ProfileRepository(supabaseService: service),
       );
       await auth.initialLoad;
-      const minimumBrandTime = Duration(milliseconds: 3200);
+      const minimumBrandTime = Duration(milliseconds: 550);
       if (startupWatch.elapsed < minimumBrandTime) {
         await Future<void>.delayed(minimumBrandTime - startupWatch.elapsed);
       }
