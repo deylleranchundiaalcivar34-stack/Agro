@@ -135,116 +135,136 @@ class _PublicLocationEditViewState extends State<PublicLocationEditView> {
     appBar: AppBar(title: const Text('Mi zona publica')),
     body: _loading
         ? const Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Text(
-                  'Elige una zona aproximada',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Toca el mapa para elegir una zona que quieras compartir. '
-                  'El punto se redondea y no se toma tu ubicacion privada.',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                const SizedBox(height: 24),
-                TextField(
-                  controller: _alias,
-                  maxLength: 80,
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    labelText: 'Alias publico',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: _place,
-                  maxLength: 120,
-                  onChanged: (_) => setState(() {}),
-                  decoration: const InputDecoration(
-                    labelText: 'Lugar o sector',
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  height: 280,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: FlutterMap(
-                      options: MapOptions(
-                        initialCenter: _point ?? const LatLng(-1.67, -78.65),
-                        initialZoom: 11,
-                        onTap: (_, point) => setState(() => _point = point),
+        : Column(
+            children: [
+              Expanded(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      Text(
+                        'Elige una zona aproximada',
+                        style: Theme.of(context).textTheme.headlineSmall,
                       ),
-                      children: [
-                        if (widget.showTiles)
-                          TileLayer(
-                            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
-                            userAgentPackageName: 'com.agroplus.app',
-                          ),
-                        if (_point != null)
-                          MarkerLayer(
-                            markers: [
-                              Marker(
-                                point: _point!,
-                                width: 48,
-                                height: 48,
-                                child: const Icon(
-                                  Icons.place,
-                                  color: AppColors.primary,
-                                  size: 40,
+                      const SizedBox(height: 8),
+                      Text(
+                        'Toca el mapa para elegir una zona que quieras compartir. '
+                        'El punto se redondea y no se toma tu ubicacion privada.',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      const SizedBox(height: 24),
+                      TextField(
+                        controller: _alias,
+                        maxLength: 80,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          labelText: 'Alias publico',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextField(
+                        controller: _place,
+                        maxLength: 120,
+                        onChanged: (_) => setState(() {}),
+                        decoration: const InputDecoration(
+                          labelText: 'Lugar o sector',
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      SizedBox(
+                        height: 190,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: FlutterMap(
+                            options: MapOptions(
+                              initialCenter:
+                                  _point ?? const LatLng(-1.67, -78.65),
+                              initialZoom: 11,
+                              onTap: (_, point) =>
+                                  setState(() => _point = point),
+                            ),
+                            children: [
+                              if (widget.showTiles)
+                                TileLayer(
+                                  urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                  userAgentPackageName: 'com.agroplus.app',
                                 ),
+                              if (_point != null)
+                                MarkerLayer(
+                                  markers: [
+                                    Marker(
+                                      point: _point!,
+                                      width: 48,
+                                      height: 48,
+                                      child: const Icon(
+                                        Icons.place,
+                                        color: AppColors.primary,
+                                        size: 40,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              const RichAttributionWidget(
+                                attributions: [
+                                  TextSourceAttribution(
+                                    'OpenStreetMap contributors',
+                                  ),
+                                ],
                               ),
                             ],
                           ),
-                        const RichAttributionWidget(
-                          attributions: [
-                            TextSourceAttribution('OpenStreetMap contributors'),
-                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _point == null
+                            ? 'Aun no has elegido un punto.'
+                            : 'Zona aproximada: ${(_point!.latitude * 100).round() / 100}, '
+                                  '${(_point!.longitude * 100).round() / 100}',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      if (_error != null) ...[
+                        const SizedBox(height: 16),
+                        Text(
+                          _error!,
+                          style: const TextStyle(color: AppColors.error),
                         ),
                       ],
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 116),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    ElevatedButton(
+                      onPressed:
+                          _saving ||
+                              _point == null ||
+                              _alias.text.trim().isEmpty ||
+                              _place.text.trim().isEmpty
+                          ? null
+                          : _save,
+                      child: _saving
+                          ? const CircularProgressIndicator(strokeWidth: 2)
+                          : const Text('Publicar zona'),
                     ),
-                  ),
+                    if (_published) ...[
+                      const SizedBox(height: 8),
+                      OutlinedButton(
+                        onPressed: _saving ? null : _remove,
+                        child: const Text('Retirar mi zona'),
+                      ),
+                    ],
+                  ],
                 ),
-                const SizedBox(height: 16),
-                Text(
-                  _point == null
-                      ? 'Aun no has elegido un punto.'
-                      : 'Zona aproximada: ${(_point!.latitude * 100).round() / 100}, '
-                            '${(_point!.longitude * 100).round() / 100}',
-                  style: Theme.of(context).textTheme.bodyMedium,
-                ),
-                if (_error != null) ...[
-                  const SizedBox(height: 16),
-                  Text(_error!, style: const TextStyle(color: AppColors.error)),
-                ],
-                const SizedBox(height: 24),
-                ElevatedButton(
-                  onPressed:
-                      _saving ||
-                          _point == null ||
-                          _alias.text.trim().isEmpty ||
-                          _place.text.trim().isEmpty
-                      ? null
-                      : _save,
-                  child: _saving
-                      ? const CircularProgressIndicator(strokeWidth: 2)
-                      : const Text('Publicar zona'),
-                ),
-                if (_published) ...[
-                  const SizedBox(height: 16),
-                  OutlinedButton(
-                    onPressed: _saving ? null : _remove,
-                    child: const Text('Retirar mi zona'),
-                  ),
-                ],
-              ],
-            ),
+              ),
+            ],
           ),
   );
 }
