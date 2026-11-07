@@ -11,6 +11,7 @@ import '../widgets/product_delete_button.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../../chat/presentation/widgets/contact_producer_button.dart';
 import '../../data/models/agricultural_product.dart';
 import '../viewmodels/products_viewmodel.dart';
 
@@ -191,13 +192,17 @@ class _Detail extends StatelessWidget {
             const _Notice(
               text: 'Esta es tu publicacion. Los intereses de compradores se guardan de forma privada.',
             )
-          else if (role == UserRole.buyer)
+          else if (role == UserRole.buyer) ...[
             FilledButton.icon(
               onPressed: () => _interestSheet(context),
               icon: const Icon(Icons.handshake_outlined),
               label: const Text('Registrar interes'),
-            )
-          else
+            ),
+            if (product.isPublished && product.availableQuantity > 0) ...[
+              const SizedBox(height: 8),
+              ContactProducerButton(productId: product.id),
+            ],
+          ] else
             const _Notice(
               text: 'El registro de interes esta disponible para cuentas compradoras.',
             ),

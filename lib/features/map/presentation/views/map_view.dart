@@ -3,10 +3,13 @@ import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:latlong2/latlong.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/network/supabase_service.dart';
+import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../../chat/presentation/widgets/contact_producer_button.dart';
 import '../../../products/data/models/agricultural_product.dart';
 import '../../../products/data/repositories/products_repository.dart';
 import '../../data/models/public_producer_location.dart';
@@ -160,6 +163,8 @@ class _MapViewState extends State<MapView> {
 
   void _showProducer(ProducerMapEntry entry) {
     final point = LatLng(entry.location.latitude, entry.location.longitude);
+    final canContact =
+        context.read<AuthViewModel>().selectedRole == UserRole.buyer;
     showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
@@ -204,6 +209,10 @@ class _MapViewState extends State<MapView> {
                       },
                     ),
                   ),
+              if (canContact) ...[
+                const SizedBox(height: 16),
+                ContactProducerButton(productId: entry.products.first.id),
+              ],
             ],
           ),
         ),
