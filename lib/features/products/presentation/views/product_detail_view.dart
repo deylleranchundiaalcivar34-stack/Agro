@@ -1,12 +1,20 @@
+// Detalle del lote y acciones disponibles para su propietario o una cuenta compradora.
+
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../../core/constants/app_routes.dart';
+import '../widgets/product_card.dart';
+import '../widgets/product_delete_button.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../data/models/agricultural_product.dart';
 import '../viewmodels/products_viewmodel.dart';
 
+/// Carga una publicacion por ID y actualiza su lectura al regresar de la edicion.
 class ProductDetailView extends StatefulWidget {
   const ProductDetailView({super.key, required this.productId});
   final String productId;
@@ -15,7 +23,8 @@ class ProductDetailView extends StatefulWidget {
 }
 
 class _ProductDetailViewState extends State<ProductDetailView> {
-  late final Future<AgriculturalProduct?> _product;
+  // La misma Future se conserva entre reconstrucciones para no repetir consultas involuntarias.
+  late Future<AgriculturalProduct?> _product;
   @override
   void initState() {
     super.initState();
@@ -29,21 +38,57 @@ class _ProductDetailViewState extends State<ProductDetailView> {
     body: FutureBuilder<AgriculturalProduct?>(
       future: _product,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done)
+        if (snapshot.connectionState != ConnectionState.done) {
           return const Center(
             child: CircularProgressIndicator(color: AppColors.primary),
           );
+        }
         final product = snapshot.data;
-        if (snapshot.hasError || product == null)
+        if (snapshot.hasError || product == null) {
           return const Center(child: Text('Este lote no esta disponible.'));
-        return _Detail(product: product);
+        }
+        return _Detail(
+          product: product,
+          onQuantity: () => _editQuantity(product.id),
+          onEdit: () async {
+            await context.push<bool>(
+              '${AppRoutes.products}/${product.id}/edit',
+            );
+            if (!context.mounted) return;
+            setState(
+              () => _product = context.read<ProductsViewModel>().getProduct(
+                widget.productId,
+              ),
+            );
+          },
+        );
       },
     ),
   );
+
+  /// Abre la edicion reducida y vuelve a consultar el producto al regresar.
+  Future<void> _editQuantity(String productId) async {
+    await context.push<bool>(
+      '${AppRoutes.products}/$productId/edit?quantity=1',
+    );
+    if (!mounted) return;
+    setState(
+      () => _product = context.read<ProductsViewModel>().getProduct(
+        widget.productId,
+      ),
+    );
+  }
 }
 
+/// Contenido del detalle y permisos visuales de edicion, retirada e interes.
 class _Detail extends StatelessWidget {
-  const _Detail({required this.product});
+  const _Detail({
+    required this.product,
+    required this.onEdit,
+    required this.onQuantity,
+  });
+  final VoidCallback onEdit;
+  final VoidCallback onQuantity;
   final AgriculturalProduct product;
   @override
   Widget build(BuildContext context) {
@@ -53,11 +98,13 @@ class _Detail extends StatelessWidget {
     final userId = context.select<AuthViewModel, String?>(
       (auth) => auth.currentUser?.id,
     );
+    // La interfaz distingue al propietario; el servicio y RLS siguen controlando las escrituras.
     final owner = userId == product.producerId;
     return SafeArea(
       child: ListView(
         padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
         children: [
+          // Portada y datos informativos del lote, con icono alternativo si no hay fotografia.
           Container(
             height: 190,
             alignment: Alignment.center,
@@ -65,11 +112,8 @@ class _Detail extends StatelessWidget {
               color: AppColors.primarySurface,
               borderRadius: BorderRadius.circular(24),
             ),
-            child: const Icon(
-              Icons.eco_outlined,
-              size: 78,
-              color: AppColors.primary,
-            ),
+            clipBehavior: Clip.antiAlias,
+            child: imagenProducto(product.imagenUrl),
           ),
           const SizedBox(height: 22),
           Text(
@@ -95,13 +139,13 @@ class _Detail extends StatelessWidget {
           const SizedBox(height: 24),
           _Row(
             icon: Icons.inventory_2_outlined,
-            label: 'Disponible',
-            value: _amount(product.availableQuantity),
+            label: product.quantityLabel,
+            value: product.quantityWithUnit,
           ),
           _Row(
             icon: Icons.payments_outlined,
             label: 'Precio unitario',
-            value: '\$${product.unitPrice.toStringAsFixed(2)}',
+            value: product.priceWithUnit,
           ),
           if (product.estimatedHarvestDate != null)
             _Row(
@@ -110,6 +154,39 @@ class _Detail extends StatelessWidget {
               value: _date(product.estimatedHarvestDate!),
             ),
           const SizedBox(height: 28),
+          if (owner && role == UserRole.producer)
+            _Row(
+              icon: product.isPublished
+                  ? Icons.visibility_outlined
+                  : Icons.visibility_off_outlined,
+              label: 'Visibilidad',
+              value: product.visibilityLabel,
+            ),
+          // Las acciones de gestion se muestran unicamente al productor propietario.
+          if (owner && role == UserRole.producer)
+            FilledButton.icon(
+              onPressed: context.watch<ProductsViewModel>().isSubmitting
+                  ? null
+                  : onEdit,
+              icon: const Icon(Icons.edit_outlined),
+              label: const Text('Editar publicacion'),
+            ),
+          // Las acciones de gestion se muestran unicamente al productor propietario.
+          if (owner && role == UserRole.producer) ...[
+            const SizedBox(height: 8),
+            OutlinedButton.icon(
+              onPressed: context.watch<ProductsViewModel>().isSubmitting
+                  ? null
+                  : onQuantity,
+              icon: const Icon(Icons.inventory_2_outlined),
+              label: const Text('Actualizar cantidad'),
+            ),
+            const SizedBox(height: 8),
+            ProductDeleteButton(
+              product: product,
+              onDeleted: () => context.go(AppRoutes.products),
+            ),
+          ],
           if (owner)
             const _Notice(
               text: 'Esta es tu publicacion. Los intereses de compradores se guardan de forma privada.',
@@ -129,7 +206,9 @@ class _Detail extends StatelessWidget {
     );
   }
 
+  /// Recoge una cantidad proyectada; registrar interes no descuenta existencias.
   Future<void> _interestSheet(BuildContext context) async {
+    // Recursos temporales del formulario modal; el controlador se libera al cerrarlo.
     final controller = TextEditingController();
     final key = GlobalKey<FormState>();
     await showModalBottomSheet<void>(
@@ -222,12 +301,12 @@ class _Detail extends StatelessWidget {
     controller.dispose();
   }
 
-  String _amount(double v) =>
-      v == v.roundToDouble() ? v.toStringAsFixed(0) : v.toStringAsFixed(2);
+  /// Muestra dia, mes y ano para la fecha de cosecha.
   String _date(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 }
 
+/// Fila informativa reutilizable con icono, etiqueta y valor.
 class _Row extends StatelessWidget {
   const _Row({required this.icon, required this.label, required this.value});
   final IconData icon;
@@ -255,6 +334,7 @@ class _Row extends StatelessWidget {
   );
 }
 
+/// Aviso contextual para el propietario o cuentas sin acceso al registro de interes.
 class _Notice extends StatelessWidget {
   const _Notice({required this.text});
   final String text;
