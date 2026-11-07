@@ -37,6 +37,8 @@
 	<true/>
 	<key>NSFaceIDUsageDescription</key>
 	<string>Agro+ usa Face ID para confirmar el acceso local.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Agro+ usa tu ubicacion solo cuando eliges medir distancias a productores.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
