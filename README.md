@@ -1,63 +1,51 @@
-# 🌾 Agro+ — Del Campo A Tu Mano
+# Agro+
 
-Aplicacion movil disenada para conectar directamente a pequenos y medianos agricultores con compradores, optimizando la comercializacion agricola y reduciendo las perdidas poscosecha mediante herramientas de geolocalizacion, bases de datos en la nube y servicios en tiempo real.
+Aplicacion Flutter para publicar productos agricolas, encontrar productores por una zona aproximada y negociar mediante chats privados de Supabase.
 
----
+## Requisitos
 
-## 👥 Equipo de Desarrollo
-* **Jhonatan Gadvay**
-* **Mirian Saquinga**
-* **Deyller Anchundia**
-* **David Castillo**
+- Flutter y Dart compatibles con `pubspec.yaml`.
+- Un proyecto Supabase configurado con el esquema base de Agro+ y Auth por correo.
+- Cloudinary con un preset de carga unsigned para las fotografias de producto.
 
----
+## Configuracion local
 
-## 📌 Problematica
-Los pequenos y medianos agricultores enfrentan perdidas economicas severas debido al desperdicio de alimentos generado por la sobreproduccion y la falta de canales directos para comercializar sus excedentes a tiempo, lo que provoca que los cultivos se deterioren.
+1. Copia `.env.example` a `.env`.
+2. Define `SUPABASE_URL` y `SUPABASE_ANON_KEY` con el URL y la clave publica de tu proyecto. La app movil nunca debe recibir la clave `service_role`.
+3. Ejecuta `flutter pub get` y luego `flutter run`.
 
-## 💡 Propuesta y Fases de Comercializacion
-**Agro+** optimiza la venta agricola operando bajo un flujo estrategico de tres etapas:
-1. **Fase 0 (Preventa):** Publicacion de cosechas futuras para medir la demanda antes de recolectar.
-2. **Fase 1 (Venta Directa):** Comercializacion de productos disponibles al publico y comercios.
-3. **Fase 2 (Canales Alternativos):** Venta de excedentes a tiendas, restaurantes o ganaderos, o valorizacion organica (abono y compostaje) si el producto pierde uso alimenticio.
+El archivo `.env` esta ignorado por Git. Usa solo claves publicas de cliente; nunca pongas secretos de servidor en una app Flutter.
 
----
+## Datos y servicios
 
-## 🛠️ Tecnologias Utilizadas
+- **Productos:** se guardan en `productos`; sus fotos se relacionan mediante `fotografias_producto`.
+- **Fotos:** `ProductStorageService` envia archivos de hasta 5 MB en JPG, PNG o WebP a Cloudinary, con el preset `agroproductos` del cloud configurado en el servicio. El preset unsigned es publico. Restringe formatos, tamano y carpetas desde Cloudinary. No agregues el API secret de Cloudinary a Flutter.
+- **Mapa:** solo muestra productores que publicaron manualmente una zona aproximada. El punto se redondea a dos decimales y se separa de la tabla de ubicaciones privadas. El permiso de ubicacion del dispositivo se solicita al tocar el boton de distancia; sin permiso se ven todos los productores publicados.
+- **Map tiles:** el mapa usa los tiles publicos de OpenStreetMap con atribucion visible. Respeta sus politicas de uso y cambia a un proveedor contratado si el trafico de produccion lo requiere.
+- **Chat:** las conversaciones usan `chats_negociacion`; los mensajes usan `mensajes`. Realtime actualiza el flujo de mensajes y RLS controla acceso de participantes. No se crean mensajes de ejemplo ni se leen perfiles privados para nombrar a otros usuarios.
+- **Autenticacion:** correo y contrasena son el acceso principal. CAPTCHA no forma parte de la app. TOTP es opcional; biometria del telefono solo comprueba localmente el dispositivo y no reemplaza el inicio de sesion.
 
-* **Frontend Movil:** Flutter (con patron arquitectonico MVVM y Clean Architecture).
-* **Backend y Base de Datos:** Supabase (Supabase Auth, Supabase Database con PostgreSQL, Supabase Storage y Supabase Realtime).
-* **Gestion de Imagenes:** Cloudinary / Supabase Storage.
-* **Mapas y Geolocalizacion:** OpenStreetMap, Flutter Map, Geolocator y Geoapify.
-* **Control de Versiones:** Git y GitHub.
-* **Diseno UI/UX:** Figma.
-* **Entorno:** Visual Studio Code y Android Studio.
+## Migraciones incluidas
 
----
+Estas migraciones se aplicaron al proyecto Supabase conectado durante la integracion:
 
-## 📱 Requisitos Funcionales Principales
-* **RF01 - Gestion de Cuentas y Accesos:** Registro e inicio de sesion con control de permisos segun rol (Comprador, Vendedor/Productor y Administrador).
-* **RF02 - Publicacion y Preventa:** Creacion de publicaciones de productos o cosechas futuras indicando precios, cantidades y fotografias.
-* **RF03 - Busqueda y Geolocalizacion:** Filtrado de productos, visualizacion interactiva en mapas y calculo de distancias entre productores y compradores.
-* **RF04 - Comunicacion (Chat):** Canales de negociacion directa para acordar precios, cantidades y entregas.
-* **RF05 - Aprovechamiento de Excedentes:** Sugerencias de compradores alternativos y opciones de abono/compostaje.
-* **RF06 - Notificaciones y Avisos:** Alertas sobre publicaciones, disponibilidad y oportunidades de compra.
+- `20261107160013_public_producer_locations`: zonas aproximadas, seleccion voluntaria y RLS de lectura autenticada/escritura de productor propietario.
+- `20261107161259_chat_unique_realtime`: una conversacion por comprador y producto, y publicacion de `mensajes` en `supabase_realtime`.
 
----
+Aplican sobre el esquema base existente de Agro+. No crean un proyecto Supabase desde cero. Revisa y aplica estas migraciones a cada entorno antes de desplegar la app.
 
-## 📂 Estructura del Proyecto (Clean Architecture / MVVM)
-```text
-lib/
-├── core/
-│   ├── constants/       # Colores, textos y constantes de la app
-│   ├── network/         # Configuracion y servicios de Supabase
-│   ├── router/          # Enrutamiento con GoRouter y Auth Guards
-│   └── theme/           # Tema Material 3 centralizado
-│
-└── features/
-    ├── auth/            # Modulo de Autenticacion (Login, Registro, Roles)
-    ├── home/            # Panel de Control Agricola (Dashboard)
-    ├── products/        # CRUD de Productos, Catalogo y Preventas
-    ├── map/             # Geolocalizacion y Mapas
-    ├── chat/            # Mensajeria instantanea en tiempo real
-    └── notifications/   # Alertas y avisos del sistema
+## Seguridad y privacidad
+
+- No publiques ubicaciones de finca automaticamente ni copies la ubicacion actual del telefono.
+- El productor elige el punto y el alias que se mostraran publicamente; puede retirarlos desde Perfil.
+- Las operaciones de chat dependen de las politicas RLS ya existentes para compradores, productores y participantes.
+- La clave anon/publishable de Supabase esta pensada para el cliente y requiere politicas RLS activas. Nunca uses `service_role` en la app.
+
+## Verificacion
+
+```sh
+flutter analyze
+flutter test
+```
+
+El mapa requiere internet para cargar tiles. Para probar permisos y conversaciones entre dos cuentas, usa dispositivos o sesiones separadas con un comprador y un productor.
