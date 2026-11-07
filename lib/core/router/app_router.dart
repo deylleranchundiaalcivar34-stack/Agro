@@ -17,6 +17,7 @@ import '../../features/products/presentation/views/product_detail_view.dart';
 import '../../features/products/presentation/views/product_create_view.dart';
 import '../../features/products/presentation/views/product_edit_view.dart';
 import '../../features/map/presentation/views/map_view.dart';
+import '../../features/map/presentation/views/public_location_edit_view.dart';
 import '../../features/chat/presentation/views/chat_list_view.dart';
 import '../../features/chat/presentation/views/chat_room_view.dart';
 import '../../features/profile/presentation/views/profile_view.dart';
@@ -214,6 +215,10 @@ class AppRouter {
               GoRoute(
                 path: AppRoutes.profile,
                 builder: (context, state) => const ProfileView(),
+                routes: [
+                  GoRoute(path: 'public-location',
+                    builder: (context, state) => const PublicLocationEditView()),
+                ],
               ),
             ],
           ),

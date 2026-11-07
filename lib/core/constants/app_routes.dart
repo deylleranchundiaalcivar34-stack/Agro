@@ -22,4 +22,5 @@ abstract class AppRoutes {
   static const String chatRoom = '/chat/:roomId';
 
   static const String profile = '/profile';
+  static const String publicLocation = '/profile/public-location';
 }

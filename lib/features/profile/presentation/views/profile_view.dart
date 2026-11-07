@@ -133,6 +133,13 @@ class ProfileView extends StatelessWidget {
                   subtitle: 'Documentacion agricola y ubicacion',
                   onTap: () {},
                 ),
+                if (authViewModel.selectedRole == UserRole.producer)
+                  _OptionTile(
+                    icon: Icons.place_outlined,
+                    title: 'Mi zona publica',
+                    subtitle: 'Elige y comparte una zona aproximada',
+                    onTap: () => context.push(AppRoutes.publicLocation),
+                  ),
                 _OptionTile(
                   icon: Icons.notifications_none_rounded,
                   title: 'Notificaciones de Precios',
