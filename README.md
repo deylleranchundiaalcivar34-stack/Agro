@@ -23,7 +23,7 @@ El archivo `.env` esta ignorado por Git. Usa solo claves publicas de cliente; nu
 - **Mapa:** solo muestra productores que publicaron manualmente una zona aproximada. El punto se redondea a dos decimales y se separa de la tabla de ubicaciones privadas. El permiso de ubicacion del dispositivo se solicita al tocar el boton de distancia; sin permiso se ven todos los productores publicados.
 - **Map tiles:** el mapa usa los tiles publicos de OpenStreetMap con atribucion visible. Respeta sus politicas de uso y cambia a un proveedor contratado si el trafico de produccion lo requiere.
 - **Chat:** las conversaciones usan `chats_negociacion`; los mensajes usan `mensajes`. Realtime actualiza el flujo de mensajes y RLS controla acceso de participantes. No se crean mensajes de ejemplo ni se leen perfiles privados para nombrar a otros usuarios.
-- **Autenticacion:** correo y contrasena son el acceso principal. CAPTCHA no forma parte de la app. TOTP es opcional; biometria del telefono solo comprueba localmente el dispositivo y no reemplaza el inicio de sesion.
+- **Autenticacion:** correo y contrasena son el acceso principal. CAPTCHA no forma parte de la app. La opcion para activar TOTP esta temporalmente oculta hasta completar su enforcement en RLS; se conserva la ruta del desafio para no bloquear cuentas futuras. Biometria del telefono solo comprueba localmente el dispositivo y no reemplaza el inicio de sesion.
 
 ## Migraciones incluidas
 

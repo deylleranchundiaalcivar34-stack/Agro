@@ -166,12 +166,6 @@ class ProfileView extends StatelessWidget {
                   onTap: () => _checkBiometric(context),
                 ),
                 _OptionTile(
-                  icon: Icons.security_rounded,
-                  title: 'Google Authenticator',
-                  subtitle: 'Activa la verificacion en dos pasos',
-                  onTap: () => context.push(AppRoutes.mfaSetup),
-                ),
-                _OptionTile(
                   icon: Icons.help_outline_rounded,
                   title: 'Ayuda y Soporte Tecnico',
                   subtitle: 'Preguntas frecuentes y contacto',
