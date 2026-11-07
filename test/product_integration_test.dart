@@ -27,6 +27,6 @@ void main() {
       ],
     });
 
-    expect((product as dynamic).imagenUrl, 'https://example.com/cover.jpg');
+    expect(product.imagenUrl, 'https://example.com/cover.jpg');
   });
 }
