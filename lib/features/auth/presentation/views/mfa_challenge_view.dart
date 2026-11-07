@@ -91,6 +91,16 @@ class _MfaChallengeViewState extends State<MfaChallengeView> {
                         )
                       : const Text('Verificar'),
                 ),
+                const SizedBox(height: 12),
+                TextButton(
+                  onPressed: _loading
+                      ? null
+                      : () async {
+                          await context.read<AuthViewModel>().signOut();
+                          if (context.mounted) context.go(AppRoutes.login);
+                        },
+                  child: const Text('Cerrar sesion'),
+                ),
               ],
             ).animate().fadeIn(duration: 350.ms).slideY(begin: .04),
           ),

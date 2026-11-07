@@ -289,9 +289,10 @@ class _LoginViewState extends State<LoginView> {
                                         ),
                                         const SizedBox(height: 20),
                                         if (!widget.adminOnly) ...[
-                                          Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.center,
+                                          Wrap(
+                                            alignment: WrapAlignment.center,
+                                            crossAxisAlignment:
+                                                WrapCrossAlignment.center,
                                             children: [
                                               const Text('¿No tienes cuenta? '),
                                               TextButton(

@@ -52,6 +52,12 @@ class AppRouter {
         (route) => location.startsWith(route),
       );
 
+      if (isAuthenticated &&
+          authViewModel.mfaRequired &&
+          location != AppRoutes.mfaChallenge) {
+        return AppRoutes.mfaChallenge;
+      }
+
       if (!isAuthenticated && !isPublicRoute) {
         return AppRoutes.login;
       }

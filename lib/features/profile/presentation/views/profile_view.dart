@@ -155,7 +155,7 @@ class ProfileView extends StatelessWidget {
                 _OptionTile(
                   icon: Icons.fingerprint_rounded,
                   title: 'Huella o Face ID',
-                  subtitle: 'Confirma el acceso en este telefono',
+                  subtitle: 'Comprobacion local opcional del dispositivo',
                   onTap: () => _checkBiometric(context),
                 ),
                 _OptionTile(
