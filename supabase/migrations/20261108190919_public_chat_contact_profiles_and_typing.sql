@@ -49,8 +49,7 @@ using (id_usuario = (select auth.uid()));
 
 -- Only the two participants in a negotiation may join its ephemeral typing channel.
 -- Private Realtime channels must also be enforced in the project's Realtime settings.
-alter table realtime.messages enable row level security;
-
+-- Supabase already enables RLS on realtime.messages; migrations manage policies only.
 create policy agro_chat_typing_receive_participant
 on realtime.messages
 for select to authenticated
