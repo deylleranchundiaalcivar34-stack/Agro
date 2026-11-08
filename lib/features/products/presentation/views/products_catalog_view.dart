@@ -4,10 +4,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
+import '../../../../core/widgets/skeleton_block.dart';
+import '../../../main/presentation/views/main_navigation_view.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../data/models/agricultural_product.dart';
 import '../viewmodels/products_viewmodel.dart';
@@ -16,17 +17,53 @@ import '../widgets/product_delete_button.dart';
 
 /// Pantalla de publicaciones activas; conserva el buscador y la categoria seleccionada.
 class ProductsCatalogView extends StatefulWidget {
-  const ProductsCatalogView({super.key});
+  const ProductsCatalogView({
+    super.key,
+    this.initialQuery = '',
+    this.initialCategory,
+    this.initialMine = false,
+  });
+
+  final String initialQuery;
+  final String? initialCategory;
+  final bool initialMine;
+
   @override
   State<ProductsCatalogView> createState() => _ProductsCatalogViewState();
 }
 
 class _ProductsCatalogViewState extends State<ProductsCatalogView> {
+  ModuleRefreshRegistry? _refreshRegistry;
   // Filtros locales: escribir o cambiar categoria no realiza otra consulta a Supabase.
-  String _query = '';
-  String? _category;
-  bool _mine = false;
+  late String _query = widget.initialQuery;
+  late String? _category = widget.initialCategory;
+  final _searchController = TextEditingController();
+  late bool _mine;
   String? _observedOwner;
+
+  @override
+  void didUpdateWidget(covariant ProductsCatalogView oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.initialQuery != widget.initialQuery ||
+        oldWidget.initialCategory != widget.initialCategory ||
+        oldWidget.initialMine != widget.initialMine) {
+      _query = widget.initialQuery;
+      _category = widget.initialCategory;
+      _mine = widget.initialMine;
+      _searchController.value = TextEditingValue(
+        text: widget.initialQuery,
+        selection: TextSelection.collapsed(offset: widget.initialQuery.length),
+      );
+      if (widget.initialMine &&
+          context.read<AuthViewModel>().selectedRole == UserRole.producer) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            context.read<ProductsViewModel>().loadMyPublications();
+          }
+        });
+      }
+    }
+  }
 
   /// Al refrescar la vista privada se actualiza tambien el catalogo visible.
   Future<void> _refresh(ProductsViewModel vm) async {
@@ -41,9 +78,36 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback(
-      (_) => context.read<ProductsViewModel>().loadCatalogue(),
-    );
+    _mine = widget.initialMine;
+    _searchController.text = widget.initialQuery;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final viewModel = context.read<ProductsViewModel>();
+      viewModel.loadCatalogue();
+      if (_mine &&
+          context.read<AuthViewModel>().selectedRole == UserRole.producer) {
+        viewModel.loadMyPublications();
+      }
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final registry = ModuleRefreshScope.maybeOf(context);
+    if (identical(registry, _refreshRegistry)) return;
+    _refreshRegistry?.unregister(AppRoutes.products);
+    _refreshRegistry = registry;
+    _refreshRegistry?.register(AppRoutes.products, () {
+      return _refresh(context.read<ProductsViewModel>());
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshRegistry?.unregister(AppRoutes.products);
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -66,40 +130,16 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
     final mine = producer && _mine;
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(
-        title: Text(
-          'Preventa agricola',
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () => _refresh(context.read<ProductsViewModel>()),
-            icon: const Icon(Icons.refresh_rounded),
-            tooltip: 'Actualizar catalogo',
-          ),
-        ],
-      ),
-      // Acceso a la publicacion de preventas para cuentas productoras.
-      floatingActionButton: producer
-          ? Padding(
-              padding: const EdgeInsets.only(bottom: 72),
-              child: FloatingActionButton.extended(
-                onPressed: () => context.go(AppRoutes.productCreate),
-                backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.surface,
-                icon: const Icon(Icons.add_rounded),
-                label: const Text('Publicar preventa'),
-              ),
-            )
-          : null,
       body: Consumer<ProductsViewModel>(
         builder: (context, vm, _) {
           // Aplicar filtros sobre la lista cargada sin modificar los datos del ViewModel.
           final status = mine ? vm.myStatus : vm.catalogueStatus;
           final products = (mine ? vm.myProducts : vm.products)
               .where(
-                (product) =>
-                    mine ? product.producerId == ownerId : product.isPublished,
+                (product) => mine
+                    ? product.producerId == ownerId
+                    : product.isPublished &&
+                          (!producer || product.producerId != ownerId),
               )
               .where(_matches)
               .toList();
@@ -109,9 +149,7 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: CustomScrollView(
-                physics: const BouncingScrollPhysics(
-                  parent: AlwaysScrollableScrollPhysics(),
-                ),
+                physics: const AlwaysScrollableScrollPhysics(),
                 slivers: [
                   const SliverToBoxAdapter(child: SizedBox(height: 16)),
                   SliverToBoxAdapter(
@@ -125,7 +163,7 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                             runSpacing: 8,
                             children: [
                               ChoiceChip(
-                                label: const Text('Catalogo'),
+                                label: const Text('Comprar'),
                                 selected: !mine,
                                 onSelected: (_) =>
                                     setState(() => _mine = false),
@@ -143,6 +181,7 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                           const SizedBox(height: 16),
                         ],
                         TextField(
+                          controller: _searchController,
                           onChanged: (value) => setState(() => _query = value),
                           decoration: InputDecoration(
                             hintText: 'Buscar por producto o categoria',
@@ -240,8 +279,10 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                             : mine
                             ? 'Aun no tienes publicaciones'
                             : 'Aun no hay preventas',
-                        text: producer
-                            ? 'Publica el primer lote real cuando este listo.'
+                        text: mine
+                            ? 'Tus lotes apareceran aqui cuando publiques tu primera cosecha.'
+                            : producer
+                            ? 'Cuando otros productores publiquen lotes, podras descubrirlos aqui.'
                             : 'Cuando un productor publique un lote aparecera aqui.',
                       ),
                     )
@@ -316,7 +357,7 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                         );
                       },
                     ),
-                  const SliverToBoxAdapter(child: SizedBox(height: 112)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 24)),
                 ],
               ),
             ),
@@ -369,33 +410,24 @@ int _catalogueColumns(double width, TextScaler scaler) =>
 class _Skeleton extends StatelessWidget {
   const _Skeleton();
   @override
-  Widget build(BuildContext context) => Shimmer.fromColors(
-    baseColor: AppColors.surfaceVariant,
-    highlightColor: AppColors.surface,
-    child: LayoutBuilder(
-      builder: (context, constraints) => GridView.builder(
-        shrinkWrap: true,
-        physics: const NeverScrollableScrollPhysics(),
-        itemCount: 4,
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: _catalogueColumns(
-            constraints.maxWidth,
-            MediaQuery.textScalerOf(context),
-          ),
-          crossAxisSpacing: 12,
-          mainAxisSpacing: 12,
-          // Aproximacion solo para la carga; las tarjetas reales miden su contenido.
-          mainAxisExtent:
-              ProductCard.imageHeightFor(context) +
-              MediaQuery.textScalerOf(context).scale(150),
+  Widget build(BuildContext context) => LayoutBuilder(
+    builder: (context, constraints) => GridView.builder(
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      itemCount: 4,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: _catalogueColumns(
+          constraints.maxWidth,
+          MediaQuery.textScalerOf(context),
         ),
-        itemBuilder: (_, _) => const DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.all(Radius.circular(18)),
-          ),
-        ),
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        // Aproximacion solo para la carga; las tarjetas reales miden su contenido.
+        mainAxisExtent:
+            ProductCard.imageHeightFor(context) +
+            MediaQuery.textScalerOf(context).scale(150),
       ),
+      itemBuilder: (_, _) => const SkeletonBlock(height: 220, borderRadius: 18),
     ),
   );
 }

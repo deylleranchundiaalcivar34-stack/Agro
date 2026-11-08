@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -93,23 +92,20 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Container(
-                                    width: 68,
-                                    height: 68,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surface.withValues(
-                                        alpha: 0.15,
-                                      ),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.vpn_key_rounded,
-                                      size: 36,
-                                      color: AppColors.surface,
-                                    ),
-                                  )
-                                  .animate()
-                                  .fadeIn(duration: 260.ms)
-                                  .scale(begin: const Offset(.9, .9)),
+                                width: 68,
+                                height: 68,
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.vpn_key_rounded,
+                                  size: 36,
+                                  color: AppColors.surface,
+                                ),
+                              ),
                               const SizedBox(height: 12),
                               Text(
                                 'Nueva contrasena',
@@ -118,7 +114,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                   fontSize: 24,
                                   fontWeight: FontWeight.w800,
                                 ),
-                              ).animate(delay: 80.ms).fadeIn(duration: 220.ms),
+                              ),
                               const SizedBox(height: 4),
                               Text(
                                 'Crea una contrasena segura para tu cuenta',
@@ -128,7 +124,7 @@ class _ResetPasswordViewState extends State<ResetPasswordView> {
                                   ),
                                   fontSize: 13,
                                 ),
-                              ).animate(delay: 130.ms).fadeIn(duration: 220.ms),
+                              ),
                             ],
                           ),
                         ),

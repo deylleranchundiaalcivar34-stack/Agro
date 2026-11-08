@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#197C4B" />
+    <meta name="referrer" content="no-referrer" />
     <title>Agro+ | Nueva contrasena</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
@@ -20,19 +21,45 @@
         </div>
 
         <div id="cargando">
-          <h1 class="text-2xl font-bold">Verificando enlace</h1>
-          <p class="mt-2 text-slate-600">Un momento, estamos preparando el cambio de contrasena.</p>
+          <h1 class="text-2xl font-bold">Preparando recuperacion</h1>
+          <p class="mt-2 text-slate-600">Un momento, estamos preparando la pagina segura.</p>
           <div class="mt-6 h-1.5 overflow-hidden rounded-full bg-emerald-100"><div class="h-full w-2/3 animate-pulse rounded-full bg-[#197C4B]"></div></div>
         </div>
 
+        <section id="confirmarEnlace" class="hidden">
+          <h1 class="text-2xl font-bold">Confirma tu solicitud</h1>
+          <p class="mt-2 text-slate-600">Pulsa el boton para validar el enlace y continuar con el cambio de contrasena.</p>
+          <p class="mt-3 text-sm text-slate-500">El enlace se valida solo cuando confirmas aqui.</p>
+          <button id="botonConfirmar" class="mt-6 w-full rounded-xl bg-[#197C4B] px-4 py-3 font-semibold text-white transition hover:bg-[#12663C] disabled:cursor-not-allowed disabled:opacity-60" type="button">Validar enlace y continuar</button>
+        </section>
+
+        <section id="solicitud" class="hidden">
+          <h1 class="text-2xl font-bold">Recupera tu acceso</h1>
+          <p class="mt-2 text-slate-600">Ingresa el correo de tu cuenta y te enviaremos un enlace para crear una contrasena nueva.</p>
+          <p class="mt-3 text-sm text-slate-500">El enlace incluye un paso de confirmacion para evitar que sea consumido automaticamente.</p>
+          <form id="formularioCorreo" class="mt-6" novalidate>
+            <label class="block text-sm font-semibold" for="correo">Correo electronico</label>
+            <input id="correo" type="email" required autocomplete="email" inputmode="email" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#197C4B] focus:ring-4 focus:ring-emerald-100" placeholder="tu@correo.com" />
+            <button id="botonCorreo" class="mt-6 w-full rounded-xl bg-[#197C4B] px-4 py-3 font-semibold text-white transition hover:bg-[#12663C] disabled:cursor-not-allowed disabled:opacity-60" type="submit">Enviar enlace de recuperacion</button>
+          </form>
+        </section>
+
+        <section id="correoEnviado" class="hidden">
+          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl text-[#197C4B]">✓</div>
+          <h1 class="mt-5 text-2xl font-bold">Revisa tu correo</h1>
+          <p class="mt-2 text-slate-600">Si existe una cuenta asociada a ese correo, recibiras un enlace. Al abrirlo, confirma la solicitud para continuar.</p>
+          <button id="reintentarCorreo" class="mt-6 w-full rounded-xl border border-slate-200 px-4 py-3 font-semibold text-slate-700" type="button">Usar otro correo</button>
+        </section>
+
+        <p id="aviso" class="hidden rounded-xl px-4 py-3 text-sm" role="alert"></p>
+
         <form id="formulario" class="hidden" novalidate>
           <h1 class="text-2xl font-bold">Crea una contrasena nueva</h1>
-          <p class="mt-2 text-slate-600">Usa al menos 6 caracteres y no la compartas con nadie.</p>
+          <p class="mt-2 text-slate-600">La contrasena debe tener 8 caracteres, una mayuscula, una minuscula, un numero y un simbolo.</p>
           <label class="mt-6 block text-sm font-semibold" for="contrasena">Nueva contrasena</label>
-          <input id="contrasena" type="password" minlength="6" required autocomplete="new-password" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#197C4B] focus:ring-4 focus:ring-emerald-100" />
+          <input id="contrasena" type="password" minlength="8" required autocomplete="new-password" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#197C4B] focus:ring-4 focus:ring-emerald-100" />
           <label class="mt-4 block text-sm font-semibold" for="confirmar">Confirmar contrasena</label>
-          <input id="confirmar" type="password" minlength="6" required autocomplete="new-password" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#197C4B] focus:ring-4 focus:ring-emerald-100" />
-          <p id="aviso" class="mt-4 hidden rounded-xl px-4 py-3 text-sm" role="alert"></p>
+          <input id="confirmar" type="password" minlength="8" required autocomplete="new-password" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#197C4B] focus:ring-4 focus:ring-emerald-100" />
           <button id="boton" class="mt-6 w-full rounded-xl bg-[#197C4B] px-4 py-3 font-semibold text-white transition hover:bg-[#12663C] disabled:cursor-not-allowed disabled:opacity-60" type="submit">Guardar contrasena</button>
         </form>
 
@@ -44,9 +71,10 @@
         </div>
 
         <div id="error" class="hidden">
-          <h1 class="text-2xl font-bold">No se pudo abrir el enlace</h1>
+          <h1 id="errorTitulo" class="text-2xl font-bold">No se pudo abrir el enlace</h1>
           <p id="errorTexto" class="mt-2 text-slate-600"></p>
-          <p class="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Pide un nuevo correo desde la app. Por seguridad, cada enlace sirve una sola vez y vence pronto.</p>
+          <p class="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Por seguridad, cada enlace sirve una sola vez y vence pronto.</p>
+          <button id="reiniciarDesdeError" class="mt-5 w-full rounded-xl bg-[#197C4B] px-4 py-3 font-semibold text-white transition hover:bg-[#12663C]" type="button">Iniciar una nueva solicitud</button>
         </div>
       </section>
     </main>

@@ -2,6 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:proyecto_agro/features/profile/data/models/public_contact_profile.dart';
 import 'package:proyecto_agro/core/network/supabase_service.dart';
 import 'package:proyecto_agro/features/chat/data/models/chat_conversation.dart';
 import 'package:proyecto_agro/features/chat/data/models/chat_message.dart';
@@ -10,7 +12,7 @@ import 'package:proyecto_agro/features/chat/presentation/views/chat_list_view.da
 import 'package:proyecto_agro/features/chat/presentation/views/chat_room_view.dart';
 
 class _FakeChats extends ChatRepository {
-  _FakeChats() : super(supabaseService: SupabaseService());
+  _FakeChats() : super(supabaseService: _FakeSupabaseService());
   final updates = StreamController<List<ChatMessage>>.broadcast();
   bool failSend = false;
   @override
@@ -26,6 +28,10 @@ class _FakeChats extends ChatRepository {
     producerId: 'producer-1',
   );
   @override
+  Future<Map<String, PublicContactProfile>> loadParticipantProfiles(
+    ChatConversation chat,
+  ) async => const {};
+  @override
   Stream<List<ChatMessage>> watchMessages(String chatId) => updates.stream;
   @override
   Future<ChatMessage> send(String chatId, String content) async {
@@ -38,6 +44,11 @@ class _FakeChats extends ChatRepository {
       sentAt: DateTime(2026, 11, 7),
     );
   }
+}
+
+class _FakeSupabaseService extends SupabaseService {
+  @override
+  Stream<AuthState> get authStateChanges => const Stream.empty();
 }
 
 void main() {
@@ -61,7 +72,8 @@ void main() {
         home: ChatRoomView(roomId: 'chat-1', repository: repository),
       ),
     );
-    await tester.pump();
+    await tester.pumpAndSettle();
+    expect(repository.updates.hasListener, isTrue);
     repository.updates.add([
       ChatMessage(
         id: 'm1',
@@ -71,10 +83,10 @@ void main() {
         sentAt: DateTime(2026, 11, 7),
       ),
     ]);
-    await tester.pump();
+    await tester.pumpAndSettle();
     expect(find.text('Buenos dias'), findsOneWidget);
     await tester.enterText(find.byType(TextField), 'Me interesa el tomate');
-    await tester.tap(find.byIcon(Icons.send));
+    await tester.tap(find.byIcon(Icons.send_rounded));
     await tester.pump();
     expect(find.text('Me interesa el tomate'), findsOneWidget);
     await tester.pumpWidget(const SizedBox());

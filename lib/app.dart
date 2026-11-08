@@ -8,9 +8,12 @@ import 'core/router/app_router.dart';
 import 'core/constants/app_routes.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
+import 'features/profile/presentation/widgets/biometric_lock_gate.dart';
 
 class AgroApp extends StatefulWidget {
   const AgroApp({super.key});
+
+  static const String entryLocation = AppRoutes.welcome;
 
   @override
   State<AgroApp> createState() => _AgroAppState();
@@ -26,9 +29,7 @@ class _AgroAppState extends State<AgroApp> {
     final authViewModel = context.read<AuthViewModel>();
     _appRouter = AppRouter(
       authViewModel: authViewModel,
-      initialLocation: authViewModel.isAuthenticated
-          ? AppRoutes.home
-          : AppRoutes.login,
+      initialLocation: AgroApp.entryLocation,
     );
     _linkSubscription = AppLinks().uriLinkStream.listen(_openEmailConfirmed);
   }
@@ -52,6 +53,8 @@ class _AgroAppState extends State<AgroApp> {
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       routerConfig: _appRouter.router,
+      builder: (context, child) =>
+          BiometricLockGate(child: child ?? const SizedBox.shrink()),
     );
   }
 }

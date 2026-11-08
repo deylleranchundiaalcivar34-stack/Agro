@@ -4,6 +4,7 @@ class UserProfile {
   final String lastName;
   final String email;
   final String role;
+  final String companyName;
 
   const UserProfile({
     required this.id,
@@ -11,6 +12,7 @@ class UserProfile {
     required this.lastName,
     required this.email,
     required this.role,
+    this.companyName = '',
   });
 
   String get fullName {
@@ -32,6 +34,7 @@ class UserProfile {
       lastName: map['apellidos'] as String? ?? '',
       email: map['correo_electronico'] as String? ?? '',
       role: role ?? 'buyer',
+      companyName: map['nombre_empresa'] as String? ?? '',
     );
   }
 }

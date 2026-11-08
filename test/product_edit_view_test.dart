@@ -348,6 +348,29 @@ void main() {
       expect(find.text('Detalle actualizado'), findsOneWidget);
     });
 
+    testWidgets('acciones de edicion quedan visibles con teclado abierto', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await open(tester);
+      await tester.tap(find.byType(TextFormField).first);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AnimatedPadding), findsNothing);
+      expect(find.text('Guardar cambios'), findsOneWidget);
+      expect(find.text('Cancelar'), findsOneWidget);
+      expect(
+        tester.getRect(find.text('Guardar cambios')).bottom,
+        lessThan(440),
+      );
+      expect(tester.takeException(), isNull);
+    });
+
     testWidgets('un producto ajeno no abre los campos editables', (
       tester,
     ) async {

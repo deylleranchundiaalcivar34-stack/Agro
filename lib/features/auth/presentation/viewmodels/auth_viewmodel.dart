@@ -220,27 +220,6 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  Future<bool> resetPasswordForEmail({required String email}) async {
-    _setLoading();
-    try {
-      await _supabaseService.client.auth.resetPasswordForEmail(
-        email.trim(),
-        redirectTo: 'https://agroplus-recuperar.vercel.app',
-      );
-      _setStatus(AuthStatus.unauthenticated);
-      _errorMessage = null;
-      return true;
-    } on AuthException catch (e) {
-      _setError(_mapAuthError(e.message));
-      return false;
-    } catch (_) {
-      _setError(
-        'Error al enviar el correo de recuperacion. Intenta nuevamente.',
-      );
-      return false;
-    }
-  }
-
   Future<bool> updatePassword(String newPassword) async {
     _setLoading();
     try {
@@ -259,6 +238,54 @@ class AuthViewModel extends ChangeNotifier {
       return false;
     } catch (_) {
       _setError('Error al actualizar la contrasena.');
+      return false;
+    }
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _supabaseService.client.auth.updateUser(
+        UserAttributes(password: newPassword, currentPassword: currentPassword),
+      );
+      if (response.user == null) {
+        _errorMessage = 'No se pudo actualizar la contrasena.';
+        notifyListeners();
+        return false;
+      }
+      _errorMessage = null;
+      notifyListeners();
+      return true;
+    } on AuthException catch (error) {
+      _errorMessage = _mapAuthError(error.message);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'No se pudo actualizar la contrasena. Intenta de nuevo.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateProfileData({
+    required String firstName,
+    required String lastName,
+    required String companyName,
+  }) async {
+    try {
+      _profile = await _profileRepository.updateCurrentData(
+        firstName: firstName,
+        lastName: lastName,
+        companyName: companyName,
+      );
+      _errorMessage = null;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      _errorMessage = 'No se pudieron guardar tus datos. Intenta de nuevo.';
+      notifyListeners();
       return false;
     }
   }

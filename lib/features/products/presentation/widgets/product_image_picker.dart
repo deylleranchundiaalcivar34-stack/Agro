@@ -6,9 +6,9 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/skeleton_block.dart';
 
 import 'package:image_picker/image_picker.dart';
 
@@ -244,14 +244,7 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
               ? CachedNetworkImage(
                   imageUrl: widget.initialImageUrl!,
                   fit: BoxFit.contain,
-                  placeholder: (_, _) => Shimmer.fromColors(
-                    baseColor: AppColors.surfaceVariant,
-                    highlightColor: AppColors.surface,
-                    child: const SizedBox(
-                      height: 190,
-                      child: ColoredBox(color: AppColors.surface),
-                    ),
-                  ),
+                  placeholder: (_, _) => const SkeletonBlock(height: 190),
                   errorWidget: (_, _, _) => const SizedBox(
                     height: 190,
                     child: Icon(Icons.broken_image_outlined),

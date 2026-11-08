@@ -13,6 +13,7 @@ import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'features/products/data/repositories/products_repository.dart';
 import 'features/products/presentation/viewmodels/products_viewmodel.dart';
 import 'features/splash/splash_view.dart';
+import 'features/profile/data/services/local_biometric_lock.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -60,7 +61,7 @@ class _AgroBootstrapState extends State<_AgroBootstrap> {
         profileRepository: ProfileRepository(supabaseService: service),
       );
       await auth.initialLoad;
-      const minimumBrandTime = Duration(milliseconds: 550);
+      const minimumBrandTime = Duration(milliseconds: 800);
       if (startupWatch.elapsed < minimumBrandTime) {
         await Future<void>.delayed(minimumBrandTime - startupWatch.elapsed);
       }
@@ -116,27 +117,35 @@ class _AgroBootstrapState extends State<_AgroBootstrap> {
       );
     }
     final auth = _authViewModel;
-    return AnimatedSwitcher(
-      duration: const Duration(milliseconds: 220),
-      child: auth == null
-          ? const MaterialApp(
-              key: ValueKey('brand'),
-              home: SplashView(autoNavigate: false),
-            )
-          : MultiProvider(
-              key: const ValueKey('app'),
-              providers: [
-                ChangeNotifierProvider<AuthViewModel>.value(value: auth),
-                ChangeNotifierProvider(
-                  create: (_) => ProductsViewModel(
-                    productsRepository: ProductsRepository(
-                      supabaseService: SupabaseService(),
+    return ColoredBox(
+      color: AppColors.primary,
+      child: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 300),
+        switchInCurve: Curves.easeOutCubic,
+        switchOutCurve: Curves.easeInCubic,
+        transitionBuilder: (child, animation) =>
+            FadeTransition(opacity: animation, child: child),
+        child: auth == null
+            ? const MaterialApp(
+                key: ValueKey('brand'),
+                home: SplashView(autoNavigate: false),
+              )
+            : MultiProvider(
+                key: const ValueKey('app'),
+                providers: [
+                  ChangeNotifierProvider<AuthViewModel>.value(value: auth),
+                  ChangeNotifierProvider(create: (_) => LocalBiometricLock()),
+                  ChangeNotifierProvider(
+                    create: (_) => ProductsViewModel(
+                      productsRepository: ProductsRepository(
+                        supabaseService: SupabaseService(),
+                      ),
                     ),
                   ),
-                ),
-              ],
-              child: const AgroApp(),
-            ),
+                ],
+                child: const AgroApp(),
+              ),
+      ),
     );
   }
 }

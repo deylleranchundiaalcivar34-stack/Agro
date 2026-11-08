@@ -237,31 +237,34 @@ class _PublicLocationEditViewState extends State<PublicLocationEditView> {
                   ),
                 ),
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 116),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ElevatedButton(
-                      onPressed:
-                          _saving ||
-                              _point == null ||
-                              _alias.text.trim().isEmpty ||
-                              _place.text.trim().isEmpty
-                          ? null
-                          : _save,
-                      child: _saving
-                          ? const CircularProgressIndicator(strokeWidth: 2)
-                          : const Text('Publicar zona'),
-                    ),
-                    if (_published) ...[
-                      const SizedBox(height: 8),
-                      OutlinedButton(
-                        onPressed: _saving ? null : _remove,
-                        child: const Text('Retirar mi zona'),
+              SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      ElevatedButton(
+                        onPressed:
+                            _saving ||
+                                _point == null ||
+                                _alias.text.trim().isEmpty ||
+                                _place.text.trim().isEmpty
+                            ? null
+                            : _save,
+                        child: _saving
+                            ? const CircularProgressIndicator(strokeWidth: 2)
+                            : const Text('Publicar zona'),
                       ),
+                      if (_published) ...[
+                        const SizedBox(height: 8),
+                        OutlinedButton(
+                          onPressed: _saving ? null : _remove,
+                          child: const Text('Retirar mi zona'),
+                        ),
+                      ],
                     ],
-                  ],
+                  ),
                 ),
               ),
             ],

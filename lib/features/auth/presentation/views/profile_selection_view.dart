@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/profile_selection_viewmodel.dart';
@@ -100,47 +100,31 @@ class _ProfileSelectionContent extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Center(
-                    child: _buildSquircleLogo()
-                        .animate()
-                        .fadeIn(duration: 500.ms, curve: Curves.easeOut)
-                        .slideY(
-                          begin: 0.15,
-                          end: 0,
-                          duration: 500.ms,
-                          curve: Curves.easeOut,
-                        ),
-                  ),
+                  Center(child: _buildSquircleLogo()),
                   const SizedBox(height: 20),
 
                   Text(
-                        'Bienvenido a Agro+',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 27,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.textPrimary,
-                          letterSpacing: -0.6,
-                        ),
-                      )
-                      .animate(delay: 150.ms)
-                      .fadeIn(duration: 400.ms)
-                      .slideY(begin: 0.12, end: 0, curve: Curves.easeOut),
+                    'Bienvenido a Agro+',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 27,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary,
+                      letterSpacing: -0.6,
+                    ),
+                  ),
 
                   const SizedBox(height: 6),
 
                   Text(
-                        'Selecciona tu tipo de perfil para continuar',
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.inter(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w400,
-                          color: AppColors.textSecondary,
-                        ),
-                      )
-                      .animate(delay: 250.ms)
-                      .fadeIn(duration: 400.ms)
-                      .slideY(begin: 0.12, end: 0, curve: Curves.easeOut),
+                    'Selecciona tu tipo de perfil para continuar',
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.inter(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w400,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
 
                   const SizedBox(height: 32),
 
@@ -150,29 +134,17 @@ class _ProfileSelectionContent extends StatelessWidget {
 
                     return Padding(
                       padding: const EdgeInsets.only(bottom: 14),
-                      child:
-                          _ProfileSelectableCard(
-                                data: option,
-                                isSelected: isSelected,
-                                onTap: () => viewModel.selectRole(option.role),
-                              )
-                              .animate(delay: (300 + (index * 100)).ms)
-                              .fadeIn(duration: 400.ms, curve: Curves.easeOut)
-                              .slideY(
-                                begin: 0.1,
-                                end: 0,
-                                duration: 400.ms,
-                                curve: Curves.easeOut,
-                              ),
+                      child: _ProfileSelectableCard(
+                        data: option,
+                        isSelected: isSelected,
+                        onTap: () => viewModel.selectRole(option.role),
+                      ),
                     );
                   }),
 
                   const SizedBox(height: 26),
 
-                  _buildContinueButton(
-                    context,
-                    viewModel,
-                  ).animate(delay: 650.ms).fadeIn(duration: 400.ms),
+                  _buildContinueButton(context, viewModel),
 
                   const SizedBox(height: 14),
 
@@ -194,7 +166,7 @@ class _ProfileSelectionContent extends StatelessWidget {
                         ),
                       ),
                     ],
-                  ).animate(delay: 750.ms).fadeIn(duration: 400.ms),
+                  ),
                 ],
               ),
             ),
@@ -240,7 +212,7 @@ class _ProfileSelectionContent extends StatelessWidget {
     final canContinue = viewModel.hasSelection && !viewModel.isLoading;
 
     return AnimatedOpacity(
-      duration: const Duration(milliseconds: 200),
+      duration: AppDurations.resolve(context, AppDurations.stateChange),
       opacity: canContinue ? 1.0 : 0.5,
       child: _PressableFeedback(
         enabled: canContinue,
@@ -342,10 +314,10 @@ class _ProfileSelectableCardState extends State<_ProfileSelectableCard> {
         onTap: widget.onTap,
         child: AnimatedScale(
           scale: _isPressed ? 0.98 : 1.0,
-          duration: const Duration(milliseconds: 90),
+          duration: AppDurations.resolve(context, AppDurations.tapFeedback),
           curve: Curves.easeOut,
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: AppDurations.resolve(context, AppDurations.stateChange),
             curve: Curves.easeInOut,
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
             decoration: BoxDecoration(
@@ -424,7 +396,10 @@ class _ProfileSelectableCardState extends State<_ProfileSelectableCard> {
                 Padding(
                   padding: const EdgeInsets.only(top: 2),
                   child: AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
+                    duration: AppDurations.resolve(
+                      context,
+                      AppDurations.stateChange,
+                    ),
                     width: 22,
                     height: 22,
                     decoration: BoxDecoration(
@@ -495,11 +470,11 @@ class _PressableFeedbackState extends State<_PressableFeedback> {
         onTap: widget.onTap,
         child: AnimatedOpacity(
           opacity: _isPressed ? 0.70 : 1.0,
-          duration: const Duration(milliseconds: 90),
+          duration: AppDurations.resolve(context, AppDurations.tapFeedback),
           curve: Curves.easeInOut,
           child: AnimatedScale(
             scale: _isPressed ? 0.98 : 1.0,
-            duration: const Duration(milliseconds: 90),
+            duration: AppDurations.resolve(context, AppDurations.tapFeedback),
             curve: Curves.easeOut,
             child: widget.child,
           ),

@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/widgets/agro_brand_background.dart';
 import '../auth/presentation/viewmodels/auth_viewmodel.dart';
 
 class SplashView extends StatefulWidget {
@@ -27,14 +28,14 @@ class _SplashViewState extends State<SplashView> {
     await Future<void>.delayed(const Duration(milliseconds: 550));
     if (!mounted) return;
     final auth = context.read<AuthViewModel>();
-    context.go(auth.isAuthenticated ? AppRoutes.home : AppRoutes.login);
+    context.go(auth.isAuthenticated ? AppRoutes.home : AppRoutes.welcome);
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppColors.primary,
-    body: ColoredBox(
-      color: AppColors.primary,
+    backgroundColor: AppColors.primaryDark,
+    body: AgroBrandBackground(
+      backgroundKey: const ValueKey('splash-background'),
       child: SafeArea(
         child: SizedBox.expand(
           child: Stack(

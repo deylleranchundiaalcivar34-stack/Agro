@@ -70,6 +70,16 @@ class ProductStorageService {
     );
   }
 
+  /// Selects a compact profile image while leaving product-image selection unchanged.
+  Future<XFile?> seleccionarAvatar({
+    ImageSource source = ImageSource.gallery,
+  }) async => _picker.pickImage(
+    source: source,
+    imageQuality: 82,
+    maxWidth: 512,
+    maxHeight: 512,
+  );
+
   // Subir la fotografia a Cloudinary.
   Future<String> subirImagen(XFile imagen) async {
     if (cloudName.trim().isEmpty || uploadPreset.trim().isEmpty) {
@@ -164,4 +174,7 @@ class ProductStorageService {
       if (_httpClient == null) client.close();
     }
   }
+
+  /// Uploads a bounded avatar through the same unsigned preset as product photos.
+  Future<String> subirAvatar(XFile imagen) => subirImagen(imagen);
 }

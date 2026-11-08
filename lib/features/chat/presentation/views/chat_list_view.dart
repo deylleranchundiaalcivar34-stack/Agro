@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/network/supabase_service.dart';
+import '../../../main/presentation/views/main_navigation_view.dart';
+import '../../../profile/presentation/widgets/public_profile_avatar.dart';
 import '../../data/models/chat_conversation.dart';
 import '../../data/repositories/chat_repository.dart';
 
@@ -15,6 +17,7 @@ class ChatListView extends StatefulWidget {
 }
 
 class _ChatListViewState extends State<ChatListView> {
+  ModuleRefreshRegistry? _refreshRegistry;
   late final ChatRepository _repository =
       widget.repository ?? ChatRepository(supabaseService: SupabaseService());
   List<ChatConversation> _chats = const [];
@@ -27,9 +30,25 @@ class _ChatListViewState extends State<ChatListView> {
     _load();
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final registry = ModuleRefreshScope.maybeOf(context);
+    if (identical(registry, _refreshRegistry)) return;
+    _refreshRegistry?.unregister(AppRoutes.chatList);
+    _refreshRegistry = registry;
+    _refreshRegistry?.register(AppRoutes.chatList, _load);
+  }
+
+  @override
+  void dispose() {
+    _refreshRegistry?.unregister(AppRoutes.chatList);
+    super.dispose();
+  }
+
   Future<void> _load() async {
     setState(() {
-      _loading = true;
+      _loading = _chats.isEmpty;
       _error = null;
     });
     try {
@@ -41,10 +60,22 @@ class _ChatListViewState extends State<ChatListView> {
       });
     } catch (_) {
       if (mounted) {
+        final hasCachedChats = _chats.isNotEmpty;
         setState(() {
-          _error = 'No se pudieron cargar tus conversaciones.';
+          _error = hasCachedChats
+              ? null
+              : 'No se pudieron cargar tus conversaciones.';
           _loading = false;
         });
+        if (hasCachedChats) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                'No se pudo actualizar. Se muestran tus conversaciones recientes.',
+              ),
+            ),
+          );
+        }
       }
     }
   }
@@ -52,17 +83,7 @@ class _ChatListViewState extends State<ChatListView> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.background,
-    appBar: AppBar(
-      title: const Text('Mensajes Agro+'),
-      actions: [
-        IconButton(
-          tooltip: 'Actualizar conversaciones',
-          onPressed: _load,
-          icon: const Icon(Icons.refresh),
-        ),
-      ],
-    ),
-    body: _loading
+    body: _loading && _chats.isEmpty
         ? const Center(child: CircularProgressIndicator())
         : _error != null
         ? Center(
@@ -99,7 +120,7 @@ class _ChatListViewState extends State<ChatListView> {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    'Abre un producto para contactar a su productor.',
+                    'Abre una publicacion para conversar con la otra persona.',
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 24),
@@ -114,31 +135,68 @@ class _ChatListViewState extends State<ChatListView> {
         : RefreshIndicator(
             onRefresh: _load,
             child: ListView.separated(
-              padding: const EdgeInsets.only(top: 8, bottom: 100),
+              padding: const EdgeInsets.only(top: 8, bottom: 24),
               itemCount: _chats.length,
               separatorBuilder: (_, _) => const Divider(height: 1, indent: 72),
               itemBuilder: (context, index) {
                 final chat = _chats[index];
-                final isBuyer = chat.buyerId == _repository.currentUserId;
+                final isInterestedUser =
+                    chat.interestedUserId == _repository.currentUserId;
+                final participantName = chat.participantName?.trim();
+                final displayName =
+                    participantName == null || participantName.isEmpty
+                    ? 'Usuario de Agro+'
+                    : participantName;
+                final messagePreview = chat.lastMessagePreview?.trim();
+                final hasMessage =
+                    messagePreview != null && messagePreview.isNotEmpty;
                 return ListTile(
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
                     vertical: 8,
                   ),
-                  leading: const CircleAvatar(
-                    backgroundColor: AppColors.primary,
-                    child: Icon(Icons.agriculture, color: AppColors.surface),
+                  leading: PublicProfileAvatar(
+                    radius: 24,
+                    initial: displayName[0].toUpperCase(),
+                    imageUrl: chat.participantAvatarUrl,
                   ),
                   title: Text(
-                    chat.productName,
+                    displayName,
                     style: Theme.of(context).textTheme.titleMedium,
                   ),
-                  subtitle: Text(
-                    isBuyer
-                        ? 'Conversacion con el productor'
-                        : 'Consulta de un comprador',
+                  isThreeLine: hasMessage,
+                  subtitle: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        chat.productName,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                      Text(
+                        hasMessage
+                            ? '${chat.lastMessageSenderId == _repository.currentUserId ? 'Tu: ' : ''}$messagePreview'
+                            : isInterestedUser
+                            ? 'Tu interes en esta publicacion'
+                            : 'Interes en tu publicacion',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
                   ),
-                  trailing: const Icon(Icons.chevron_right),
+                  trailing: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      if (chat.lastMessageAt != null)
+                        Text(
+                          _formatMessageTime(chat.lastMessageAt!),
+                          style: Theme.of(context).textTheme.labelSmall,
+                        ),
+                      const Icon(Icons.chevron_right),
+                    ],
+                  ),
                   onTap: () => context
                       .push('${AppRoutes.chatList}/${chat.id}')
                       .then((_) {
@@ -149,4 +207,17 @@ class _ChatListViewState extends State<ChatListView> {
             ),
           ),
   );
+
+  String _formatMessageTime(DateTime dateTime) {
+    final local = dateTime.toLocal();
+    final now = DateTime.now();
+    final sameDay =
+        local.year == now.year &&
+        local.month == now.month &&
+        local.day == now.day;
+    if (sameDay) {
+      return '${local.hour.toString().padLeft(2, '0')}:${local.minute.toString().padLeft(2, '0')}';
+    }
+    return '${local.day.toString().padLeft(2, '0')}/${local.month.toString().padLeft(2, '0')}';
+  }
 }

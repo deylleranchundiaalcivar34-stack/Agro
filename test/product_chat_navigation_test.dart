@@ -1,18 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:proyecto_agro/core/network/supabase_service.dart';
 import 'package:proyecto_agro/features/chat/data/repositories/chat_repository.dart';
 import 'package:proyecto_agro/features/chat/presentation/widgets/contact_producer_button.dart';
 
 class _OpenChats extends ChatRepository {
-  _OpenChats() : super(supabaseService: SupabaseService());
+  _OpenChats() : super(supabaseService: _FakeSupabaseService());
   String? openedProduct;
   @override
   Future<String> openForProduct(String productId) async {
     openedProduct = productId;
     return 'chat-123';
   }
+}
+
+class _FakeSupabaseService extends SupabaseService {
+  @override
+  Stream<AuthState> get authStateChanges => const Stream.empty();
 }
 
 void main() {

@@ -1,7 +1,6 @@
 // Pantalla de alta: recoge datos y fotografia, valida y solicita publicar una preventa.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -132,7 +131,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
           child: Form(
             key: _key,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 180),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
               children: [
                 Text(
                   'Un lote, informacion clara',
@@ -140,7 +139,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
                   ),
-                ).animate().fadeIn(duration: 220.ms).slideY(begin: .04, end: 0),
+                ),
                 const SizedBox(height: 6),
                 Text(
                   'Se mostrara como preventa a compradores con sesion iniciada.',

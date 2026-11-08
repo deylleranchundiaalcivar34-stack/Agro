@@ -30,7 +30,7 @@ class ProductPublicationException implements Exception {
   final bool requiresReview;
 }
 
-/// Fuente de datos para el catalogo de preventas y los intereses de compradores.
+/// Fuente de datos para el catalogo, publicaciones e intereses del marketplace.
 /// Las vistas delegan sus operaciones; no consultan Supabase directamente.
 class ProductsRepository {
   ProductsRepository({
@@ -137,6 +137,51 @@ class ProductsRepository {
         .toList();
   }
 
+  /// Loads only available publications from producers with a public map zone.
+  /// Avoids transferring the full catalog when opening the map.
+  Future<List<AgriculturalProduct>> getPublishedProductsForProducers(
+    Iterable<String> producerIds,
+  ) async {
+    final ids = producerIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    if (ids.isEmpty) return const [];
+
+    final rows = await _withOptionalUnit(
+      (select) async => await _supabaseService.client
+          .from('productos')
+          .select(select)
+          .inFilter('id_productor', ids)
+          .eq('estado_publicacion', true)
+          .gt('cantidad_disponible', 0)
+          .order('created_at', ascending: false),
+    );
+    return (rows as List)
+        .map((row) => AgriculturalProduct.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Lists active marketplace items for one producer without loading others.
+  Future<List<AgriculturalProduct>> getPublishedProductsForProducer(
+    String producerId,
+  ) async {
+    if (producerId.trim().isEmpty) return const [];
+    final rows = await _withOptionalUnit(
+      (select) async => await _supabaseService.client
+          .from('productos')
+          .select(select)
+          .eq('id_productor', producerId)
+          .eq('estado_publicacion', true)
+          .gt('cantidad_disponible', 0)
+          .order('created_at', ascending: false),
+    );
+    return (rows as List)
+        .map((row) => AgriculturalProduct.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
   /// Busca un lote por ID; una publicacion inactiva solo se devuelve a su propietario.
   Future<AgriculturalProduct?> getProduct(String productId) async {
     final row = await _withOptionalUnit(
@@ -222,6 +267,13 @@ class ProductsRepository {
     XFile? image,
   }) async {
     final userId = _requireUserId();
+    final profile = await ProfileRepository(supabaseService: _supabaseService)
+        .getCurrentProfile();
+    if (profile == null || profile.id != userId || profile.role != 'producer') {
+      throw const ProductPublicationException(
+        'Solo las cuentas productoras pueden publicar productos.',
+      );
+    }
     if (name.trim().length < 3 || !price.isFinite || price < 0) {
       throw const ProductPublicationException(
         'Revisa el nombre y el precio del producto.',

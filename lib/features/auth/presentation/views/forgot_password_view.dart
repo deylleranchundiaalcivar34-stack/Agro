@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:provider/provider.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../../core/app_constants.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
-import '../viewmodels/auth_viewmodel.dart';
 
 class ForgotPasswordView extends StatefulWidget {
   const ForgotPasswordView({super.key});
@@ -16,35 +15,27 @@ class ForgotPasswordView extends StatefulWidget {
 }
 
 class _ForgotPasswordViewState extends State<ForgotPasswordView> {
-  final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
-  bool _emailSent = false;
+  bool _isOpening = false;
 
-  @override
-  void dispose() {
-    _emailController.dispose();
-    super.dispose();
-  }
-
-  Future<void> _submit() async {
-    if (!_formKey.currentState!.validate()) return;
-    FocusScope.of(context).unfocus();
-
-    final auth = context.read<AuthViewModel>();
-    final success = await auth.resetPasswordForEmail(
-      email: _emailController.text,
-    );
-
+  Future<void> _openRecoveryPage() async {
+    if (_isOpening) return;
+    setState(() => _isOpening = true);
+    var opened = false;
+    try {
+      opened = await launchUrl(
+        Uri.parse(AppConstants.passwordRecoveryUrl),
+        mode: LaunchMode.externalApplication,
+      );
+    } catch (_) {
+      opened = false;
+    }
     if (!mounted) return;
-
-    if (success) {
-      setState(() => _emailSent = true);
-    } else {
+    setState(() => _isOpening = false);
+    if (!opened) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(auth.errorMessage ?? 'No se pudo enviar el correo.'),
+        const SnackBar(
+          content: Text('No se pudo abrir la pagina de recuperacion.'),
           behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.error,
         ),
       );
     }
@@ -85,23 +76,20 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Container(
-                                    width: 68,
-                                    height: 68,
-                                    decoration: BoxDecoration(
-                                      color: AppColors.surface.withValues(
-                                        alpha: 0.15,
-                                      ),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: const Icon(
-                                      Icons.lock_reset_rounded,
-                                      size: 38,
-                                      color: AppColors.surface,
-                                    ),
-                                  )
-                                  .animate()
-                                  .fadeIn(duration: 260.ms)
-                                  .scale(begin: const Offset(.9, .9)),
+                                width: 68,
+                                height: 68,
+                                decoration: BoxDecoration(
+                                  color: AppColors.surface.withValues(
+                                    alpha: 0.15,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.lock_reset_rounded,
+                                  size: 38,
+                                  color: AppColors.surface,
+                                ),
+                              ),
                               const SizedBox(height: 12),
                               Text(
                                 'Recuperar contrasena',
@@ -110,7 +98,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                                   fontSize: 24,
                                   fontWeight: FontWeight.w800,
                                 ),
-                              ).animate(delay: 80.ms).fadeIn(duration: 220.ms),
+                              ),
                               const SizedBox(height: 4),
                               Text(
                                 'Te ayudaremos a restablecer tu acceso',
@@ -120,7 +108,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                                   ),
                                   fontSize: 13,
                                 ),
-                              ).animate(delay: 130.ms).fadeIn(duration: 220.ms),
+                              ),
                             ],
                           ),
                         ),
@@ -145,9 +133,7 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
                       child: Center(
                         child: ConstrainedBox(
                           constraints: const BoxConstraints(maxWidth: 420),
-                          child: _emailSent
-                              ? _buildSuccessView()
-                              : _buildRequestForm(),
+                          child: _buildRequestForm(),
                         ),
                       ),
                     ),
@@ -162,143 +148,40 @@ class _ForgotPasswordViewState extends State<ForgotPasswordView> {
   }
 
   Widget _buildRequestForm() {
-    return Form(
-      key: _formKey,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Ingresa tu correo electronico',
-            style: Theme.of(context).textTheme.titleMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Enviaremos un enlace para que puedas definir una nueva contrasena de forma segura.',
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(color: AppColors.textSecondary, height: 1.4),
-          ),
-          const SizedBox(height: 24),
-
-          Text(
-            'Correo electronico',
-            style: Theme.of(context).textTheme.bodyMedium
-                ?.copyWith(fontWeight: FontWeight.w700),
-          ),
-          const SizedBox(height: 8),
-          TextFormField(
-            controller: _emailController,
-            keyboardType: TextInputType.emailAddress,
-            textInputAction: TextInputAction.done,
-            onFieldSubmitted: (_) => _submit(),
-            decoration: InputDecoration(
-              hintText: 'ejemplo@agro.com',
-              prefixIcon: const Icon(Icons.mail_outline_rounded),
-              filled: true,
-              fillColor: AppColors.background,
-              border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.inputBorder),
-              ),
-              enabledBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(color: AppColors.inputBorder),
-              ),
-              focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(14),
-                borderSide: const BorderSide(
-                  color: AppColors.inputFocused,
-                  width: 2,
-                ),
-              ),
-            ),
-            validator: (value) {
-              final email = value?.trim() ?? '';
-              if (email.isEmpty) return 'Ingresa tu correo electronico.';
-              return RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(email)
-                  ? null
-                  : 'Ingresa un correo electronico valido.';
-            },
-          ),
-          const SizedBox(height: 28),
-
-          Consumer<AuthViewModel>(
-            builder: (context, auth, _) => FilledButton(
-              onPressed: auth.isLoading ? null : _submit,
-              child: auth.isLoading
-                  ? const SizedBox.square(
-                      dimension: 20,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.surface,
-                      ),
-                    )
-                  : const Text('Enviar enlace de recuperacion'),
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          OutlinedButton(
-            onPressed: () => context.go(AppRoutes.login),
-            child: const Text('Volver al inicio de sesion'),
-          ),
-        ],
-      ),
-    ).animate().fadeIn(duration: 240.ms).slideY(begin: 0.03, end: 0);
-  }
-
-  Widget _buildSuccessView() {
     return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        const SizedBox(height: 20),
-        Center(
-          child: Container(
-            width: 80,
-            height: 80,
-            decoration: const BoxDecoration(
-              color: AppColors.primarySurface,
-              shape: BoxShape.circle,
-            ),
-            child: const Icon(
-              Icons.mark_email_read_outlined,
-              size: 44,
-              color: AppColors.primary,
-            ),
-          ),
+        Text(
+          'Continua en el navegador',
+          style: Theme.of(context).textTheme.titleMedium
+              ?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          'Para validar el enlace de forma segura, solicita la recuperacion y abre el correo desde el mismo navegador.',
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: AppColors.textSecondary, height: 1.4),
         ),
         const SizedBox(height: 24),
-        Text(
-          '¡Revisa tu bandeja de entrada!',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 22,
-            fontWeight: FontWeight.w800,
-            color: AppColors.textPrimary,
-          ),
+        FilledButton.icon(
+          onPressed: _isOpening ? null : _openRecoveryPage,
+          icon: _isOpening
+              ? const SizedBox.square(
+                  dimension: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppColors.surface,
+                  ),
+                )
+              : const Icon(Icons.open_in_browser_rounded),
+          label: Text(_isOpening ? 'Abriendo...' : 'Continuar en navegador'),
         ),
-        const SizedBox(height: 12),
-        Text(
-          'Hemos enviado un correo a:\n${_emailController.text}\n\nEl enlace abrira una pagina segura para crear tu nueva contrasena.',
-          textAlign: TextAlign.center,
-          style: GoogleFonts.inter(
-            fontSize: 14,
-            color: AppColors.textSecondary,
-            height: 1.5,
-          ),
-        ),
-        const SizedBox(height: 32),
-        FilledButton(
+        const SizedBox(height: 16),
+        OutlinedButton(
           onPressed: () => context.go(AppRoutes.login),
           child: const Text('Volver al inicio de sesion'),
         ),
-        const SizedBox(height: 12),
-        TextButton(
-          onPressed: () => setState(() => _emailSent = false),
-          child: const Text('¿No te llego el correo? Reintentar'),
-        ),
       ],
-    ).animate().fadeIn(duration: 260.ms).scale(begin: const Offset(0.96, 0.96));
+    );
   }
 }

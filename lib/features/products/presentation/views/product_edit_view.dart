@@ -1,15 +1,14 @@
 // Edicion completa o solo de cantidad de una publicacion perteneciente al productor activo.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:shimmer/shimmer.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../widgets/product_image_picker.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/skeleton_block.dart';
 import '../../data/models/agricultural_product.dart';
 import '../../data/models/product_quantity.dart';
 import '../../data/models/product_unit.dart';
@@ -212,20 +211,13 @@ class _ProductEditViewState extends State<ProductEditView> {
         appBar: AppBar(title: const Text('Editar publicacion')),
         body: Center(
           child: _loadError == null
-              ? Shimmer.fromColors(
-                  baseColor: AppColors.surfaceVariant,
-                  highlightColor: AppColors.surface,
-                  child: ListView(
-                    padding: const EdgeInsets.all(24),
-                    children: List.generate(
-                      5,
-                      (_) => const Padding(
-                        padding: EdgeInsets.only(bottom: 16),
-                        child: ColoredBox(
-                          color: AppColors.surface,
-                          child: SizedBox(height: 56),
-                        ),
-                      ),
+              ? ListView(
+                  padding: const EdgeInsets.all(24),
+                  children: List.generate(
+                    5,
+                    (_) => const Padding(
+                      padding: EdgeInsets.only(bottom: 16),
+                      child: SkeletonBlock(height: 56),
                     ),
                   ),
                 )
@@ -261,13 +253,7 @@ class _ProductEditViewState extends State<ProductEditView> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      if (MediaQuery.disableAnimationsOf(context))
-                        heading
-                      else
-                        heading
-                            .animate()
-                            .fadeIn(duration: 220.ms)
-                            .slideY(begin: .04, end: 0),
+                      heading,
                       const SizedBox(height: 16),
                       // Cabecera compacta: foto actual o nueva y opcion para deshacer el cambio local.
                       ProductImagePicker(
@@ -402,35 +388,40 @@ class _ProductEditViewState extends State<ProductEditView> {
             ),
           ),
         ),
-        // Las acciones permanecen por encima de la navegacion inferior y del area segura.
-        bottomNavigationBar: Consumer<ProductsViewModel>(
-          builder: (context, vm, _) => SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  FilledButton.icon(
-                    onPressed: vm.isSubmitting || _isSelectingImage
-                        ? null
-                        : _submit,
-                    icon: vm.isSubmitting
-                        ? const SizedBox.square(
-                            dimension: 18,
-                            child: CircularProgressIndicator(strokeWidth: 2),
-                          )
-                        : const Icon(Icons.save_outlined),
-                    label: Text(
-                      vm.isSubmitting ? 'Guardando...' : 'Guardar cambios',
+        // Las acciones respetan el area segura y suben sobre el teclado cuando aparece.
+        bottomNavigationBar: Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.viewInsetsOf(context).bottom,
+          ),
+          child: Consumer<ProductsViewModel>(
+            builder: (context, vm, _) => SafeArea(
+              top: false,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    FilledButton.icon(
+                      onPressed: vm.isSubmitting || _isSelectingImage
+                          ? null
+                          : _submit,
+                      icon: vm.isSubmitting
+                          ? const SizedBox.square(
+                              dimension: 18,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
+                          : const Icon(Icons.save_outlined),
+                      label: Text(
+                        vm.isSubmitting ? 'Guardando...' : 'Guardar cambios',
+                      ),
                     ),
-                  ),
-                  TextButton(
-                    onPressed: vm.isSubmitting ? null : () => context.pop(),
-                    child: const Text('Cancelar'),
-                  ),
-                ],
+                    TextButton(
+                      onPressed: vm.isSubmitting ? null : () => context.pop(),
+                      child: const Text('Cancelar'),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

@@ -19,6 +19,19 @@ class PublicLocationRepository {
         .toList();
   }
 
+  /// Returns only the producer's voluntarily published, approximate area.
+  Future<PublicProducerLocation?> getPublishedForProducer(
+    String producerId,
+  ) async {
+    if (producerId.trim().isEmpty) return null;
+    final row = await _service.client
+        .from(table)
+        .select('id_productor,alias_publico,nombre_lugar,latitud,longitud')
+        .eq('id_productor', producerId)
+        .maybeSingle();
+    return row == null ? null : PublicProducerLocation.fromMap(row);
+  }
+
   Future<PublicProducerLocation?> getMine() async {
     final row = await _service.client
         .from(table)

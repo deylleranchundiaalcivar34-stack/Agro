@@ -2,9 +2,9 @@
 
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/skeleton_block.dart';
 import '../../data/models/agricultural_product.dart';
 
 /// Ordena portada, fase, nombre, cantidad, categoria y precio sin separadores flexibles.
@@ -234,11 +234,7 @@ Widget imagenProducto(String? imagenUrl, {double height = 100}) {
     width: double.infinity,
     height: height,
     fit: BoxFit.cover,
-    placeholder: (_, _) => Shimmer.fromColors(
-      baseColor: AppColors.surfaceVariant,
-      highlightColor: AppColors.surface,
-      child: const ColoredBox(color: AppColors.surface),
-    ),
+    placeholder: (_, _) => const SkeletonBlock(),
     errorWidget: (context, url, error) => const Center(
       child: Icon(Icons.broken_image, color: AppColors.textSecondary),
     ),

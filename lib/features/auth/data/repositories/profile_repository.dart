@@ -10,7 +10,7 @@ class ProfileRepository {
   ProfileRepository._(this._supabaseService);
 
   static const _profileSelect =
-      'id_usuario, nombres, apellidos, correo_electronico, '
+      'id_usuario, nombres, apellidos, correo_electronico, nombre_empresa, '
       'tipos_usuario(nombre_tipo)';
 
   Future<UserProfile?> getCurrentProfile() async {
@@ -43,6 +43,30 @@ class ProfileRepository {
     final data = await _supabaseService.client
         .from('usuarios')
         .update({'id_tipo_usuario': roleData['id_tipo_usuario']})
+        .eq('id_usuario', user.id)
+        .select(_profileSelect)
+        .single();
+
+    return UserProfile.fromMap(data);
+  }
+
+  Future<UserProfile> updateCurrentData({
+    required String firstName,
+    required String lastName,
+    required String companyName,
+  }) async {
+    final user = _supabaseService.currentUser;
+    if (user == null) throw StateError('No hay una sesion activa.');
+
+    final data = await _supabaseService.client
+        .from('usuarios')
+        .update({
+          'nombres': firstName.trim(),
+          'apellidos': lastName.trim(),
+          'nombre_empresa': companyName.trim().isEmpty
+              ? null
+              : companyName.trim(),
+        })
         .eq('id_usuario', user.id)
         .select(_profileSelect)
         .single();

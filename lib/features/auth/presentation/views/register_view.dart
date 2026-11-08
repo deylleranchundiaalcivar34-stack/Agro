@@ -129,7 +129,13 @@ class _RegisterViewState extends State<RegisterView> {
                   step: _step,
                   onBack: _step == 1
                       ? () => setState(() => _step = 0)
-                      : () => context.go(AppRoutes.login),
+                      : () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go(AppRoutes.login);
+                          }
+                        },
                 ),
                 Transform.translate(
                   offset: const Offset(0, -14),

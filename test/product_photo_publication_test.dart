@@ -28,6 +28,18 @@ class PhotoSupabase extends SupabaseService {
   });
 }
 
+http.Response _profileResponse(http.Request request) => http.Response(
+  jsonEncode({
+    'id_usuario': 'owner',
+    'nombres': 'Productor',
+    'apellidos': 'Prueba',
+    'correo_electronico': 'producer@example.com',
+    'tipos_usuario': {'nombre_tipo': 'producer'},
+  }),
+  200,
+  request: request,
+);
+
 void main() {
   final png = base64Decode(
     'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/l9sAAAAASUVORK5CYII=',
@@ -139,6 +151,7 @@ void main() {
           'https://example.supabase.co',
           'fake-key',
           httpClient: MockClient((r) async {
+            if (r.url.path.endsWith('/usuarios')) return _profileResponse(r);
             if (r.method == 'POST') {
               writes.add(r);
               expect(r.url.path, endsWith('/productos'));
@@ -183,12 +196,13 @@ void main() {
   }
 
   test('no consulta ni publica sin unidad o con cantidad cero', () async {
-    var calls = 0;
+    var productCalls = 0;
     final client = SupabaseClient(
       'https://example.supabase.co',
       'fake-key',
       httpClient: MockClient((r) async {
-        calls++;
+        if (r.url.path.endsWith('/usuarios')) return _profileResponse(r);
+        productCalls++;
         return http.Response('{}', 200, request: r);
       }),
     );
@@ -217,7 +231,7 @@ void main() {
       ),
       isFalse,
     );
-    expect(calls, 0);
+    expect(productCalls, 0);
     vm.dispose();
     await client.dispose();
   });
@@ -251,6 +265,7 @@ void main() {
         'https://example.supabase.co',
         'fake-key',
         httpClient: MockClient((r) async {
+          if (r.url.path.endsWith('/usuarios')) return _profileResponse(r);
           if (r.method == 'POST') {
             expect(uploaded, isTrue);
             writes.add(r);

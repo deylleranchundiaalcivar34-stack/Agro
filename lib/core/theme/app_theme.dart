@@ -181,7 +181,15 @@ abstract class AppTheme {
       chipTheme: ChipThemeData(
         backgroundColor: AppColors.primarySurface,
         selectedColor: AppColors.primary,
-        labelStyle: GoogleFonts.inter(fontSize: 13),
+        labelStyle: GoogleFonts.inter(
+          fontSize: 14,
+          color: AppColors.primaryDark,
+        ),
+        secondaryLabelStyle: GoogleFonts.inter(
+          fontSize: 14,
+          color: AppColors.surface,
+          fontWeight: FontWeight.w600,
+        ),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
       ),
 
