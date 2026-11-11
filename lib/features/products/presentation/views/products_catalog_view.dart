@@ -1,6 +1,9 @@
 // Catálogo adaptable con búsqueda local, filtros por categoría y acceso al detalle de cada lote.
 
 import 'package:flutter/material.dart';
+
+import '../widgets/product_scaffold.dart';
+
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -13,6 +16,7 @@ import '../../data/models/agricultural_product.dart';
 import '../viewmodels/products_viewmodel.dart';
 import '../widgets/product_card.dart';
 import '../widgets/product_delete_button.dart';
+import '../widgets/product_permanent_delete_button.dart';
 
 /// Pantalla de publicaciones activas; conserva el buscador y la categoría seleccionada.
 class ProductsCatalogView extends StatefulWidget {
@@ -25,6 +29,7 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
   // Filtros locales: escribir o cambiar categoría no realiza otra consulta a Supabase.
   String _query = '';
   String? _category;
+  bool? _visibility;
   bool _mine = false;
   String? _observedOwner;
 
@@ -64,11 +69,12 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
       });
     }
     final mine = producer && _mine;
-    return Scaffold(
+    return ProductScaffold(
+      contentMaxWidth: 1180,
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: Text(
-          'Preventa agrícola',
+          mine ? 'Mis publicaciones' : 'Preventa agrícola',
           style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
         ),
         actions: [
@@ -100,6 +106,12 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
               .where(
                 (product) =>
                     mine ? product.producerId == ownerId : product.isPublished,
+              )
+              .where(
+                (p) =>
+                    !mine ||
+                    _visibility == null ||
+                    p.isPublished == _visibility,
               )
               .where(_matches)
               .toList();
@@ -142,6 +154,46 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                           ),
                           const SizedBox(height: 16),
                         ],
+                        if (mine && status == ProductsStatus.ready) ...[
+                          Wrap(
+                            spacing: 12,
+                            runSpacing: 12,
+                            children: [
+                              _PublicationMetric(
+                                label: 'Total de publicaciones',
+                                value: vm.myPublicationsTotal,
+                              ),
+                              _PublicationMetric(
+                                label: 'Publicaciones visibles',
+                                value: vm.myPublicationsVisible,
+                              ),
+                              _PublicationMetric(
+                                label: 'Publicaciones ocultas',
+                                value: vm.myPublicationsHidden,
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                          Wrap(
+                            spacing: 8,
+                            runSpacing: 8,
+                            children: [
+                              for (final entry in <bool?, String>{
+                                null: 'Todos',
+                                true: 'Visibles',
+                                false: 'Ocultos',
+                              }.entries)
+                                ChoiceChip(
+                                  key: ValueKey('visibility-${entry.value}'),
+                                  label: Text(entry.value),
+                                  selected: _visibility == entry.key,
+                                  onSelected: (_) =>
+                                      setState(() => _visibility = entry.key),
+                                ),
+                            ],
+                          ),
+                          const SizedBox(height: 16),
+                        ],
                         TextField(
                           onChanged: (value) => setState(() => _query = value),
                           decoration: InputDecoration(
@@ -158,29 +210,22 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                           ),
                         ),
                         const SizedBox(height: 16),
-                        SizedBox(
-                          height: 40,
-                          child: ListView(
-                            scrollDirection: Axis.horizontal,
-                            children: [
+                        Wrap(
+                          spacing: 8,
+                          runSpacing: 8,
+                          children: [
+                            _Chip(
+                              label: 'Todos',
+                              selected: _category == null,
+                              onTap: () => setState(() => _category = null),
+                            ),
+                            for (final c in vm.categories)
                               _Chip(
-                                label: 'Todos',
-                                selected: _category == null,
-                                onTap: () => setState(() => _category = null),
+                                label: c.name,
+                                selected: _category == c.name,
+                                onTap: () => setState(() => _category = c.name),
                               ),
-                              ...vm.categories.map(
-                                (c) => Padding(
-                                  padding: const EdgeInsets.only(left: 8),
-                                  child: _Chip(
-                                    label: c.name,
-                                    selected: _category == c.name,
-                                    onTap: () =>
-                                        setState(() => _category = c.name),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
+                          ],
                         ),
                         const SizedBox(height: 24),
                         Row(
@@ -232,17 +277,34 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                   else if (products.isEmpty)
                     SliverToBoxAdapter(
                       child: _State(
-                        icon: _query.isNotEmpty || _category != null
+                        icon:
+                            _query.isNotEmpty ||
+                                _category != null ||
+                                (mine && _visibility != null)
                             ? Icons.search_off_rounded
                             : Icons.inventory_2_outlined,
-                        title: _query.isNotEmpty || _category != null
+                        title: mine && vm.myPublicationsTotal == 0
+                            ? 'Aún no tienes publicaciones'
+                            : _query.isNotEmpty ||
+                                  _category != null ||
+                                  (mine && _visibility != null)
                             ? 'No encontramos resultados'
                             : mine
                             ? 'Aún no tienes publicaciones'
                             : 'Aún no hay preventas',
-                        text: producer
+                        text: mine && vm.myPublicationsTotal > 0
+                            ? 'Prueba otro nombre, categoría o filtro de visibilidad.'
+                            : producer
                             ? 'Publica el primer lote real cuando esté listo.'
                             : 'Cuando un productor publique un lote aparecerá aquí.',
+                        action: mine && vm.myPublicationsTotal == 0
+                            ? FilledButton.icon(
+                                onPressed: () =>
+                                    context.go(AppRoutes.productCreate),
+                                icon: const Icon(Icons.add),
+                                label: const Text('Crear primera publicación'),
+                              )
+                            : null,
                       ),
                     )
                   else
@@ -252,6 +314,7 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                         final columns = _catalogueColumns(
                           constraints.crossAxisExtent,
                           MediaQuery.textScalerOf(context),
+                          managing: mine,
                         );
                         final width =
                             (constraints.crossAxisExtent - (columns - 1) * 12) /
@@ -279,9 +342,9 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                                 mainAxisExtent:
                                     extent +
                                     (mine
-                                        ? 22 +
+                                        ? 78 +
                                               MediaQuery.textScalerOf(context)
-                                                  .scale(28)
+                                                  .scale(56)
                                         : 0),
                               ),
                           itemBuilder: (_, index) {
@@ -301,13 +364,43 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
                                 const SizedBox(height: 6),
                                 SizedBox(
                                   height:
-                                      16 +
+                                      72 +
                                       MediaQuery.textScalerOf(context)
-                                          .scale(28),
+                                          .scale(56),
                                   width: double.infinity,
-                                  child: ProductDeleteButton(
-                                    product: product,
-                                    onDeleted: () {},
+                                  child: Column(
+                                    children: [
+                                      ProductDeleteButton(
+                                        product: product,
+                                        onDeleted: () {},
+                                      ),
+                                      ProductPermanentDeleteButton(
+                                        product: product,
+                                        busy: vm.isSubmitting,
+                                        onConfirmed: (name) async {
+                                          final messenger =
+                                              ScaffoldMessenger.of(context);
+                                          final deleted = await vm
+                                              .permanentlyDeleteProduct(
+                                                product.id,
+                                                name,
+                                              );
+                                          // El refresco retira esta tarjeta antes de que vuelva el callback.
+                                          if (deleted && context.mounted) {
+                                            messenger.showSnackBar(
+                                              const SnackBar(
+                                                content: Text(
+                                                  'Producto eliminado definitivamente',
+                                                ),
+                                              ),
+                                            );
+                                          }
+                                          return deleted;
+                                        },
+                                        errorMessage: () => vm.errorMessage,
+                                        onDeleted: () {},
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ],
@@ -336,6 +429,27 @@ class _ProductsCatalogViewState extends State<ProductsCatalogView> {
   }
 }
 
+/// Indicadores adaptables de todas las publicaciones propias cargadas.
+class _PublicationMetric extends StatelessWidget {
+  const _PublicationMetric({required this.label, required this.value});
+  final String label;
+  final int value;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(12),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      border: Border.all(color: AppColors.divider),
+      borderRadius: BorderRadius.circular(16),
+    ),
+    child: Text(
+      '$label: $value',
+      style: Theme.of(context).textTheme.titleSmall,
+    ),
+  );
+}
+
 /// Opción visual del filtro de categoría, con selección controlada por el catálogo.
 class _Chip extends StatelessWidget {
   const _Chip({
@@ -362,8 +476,14 @@ class _Chip extends StatelessWidget {
 
 // Mantener un ancho aproximado mínimo de 160 px por tarjeta, con hasta cuatro columnas.
 // Aumentar el ancho mínimo con texto ampliado evita comprimir etiquetas y acciones de gestión.
-int _catalogueColumns(double width, TextScaler scaler) =>
-    ((width + 12) / (scaler.scale(160) + 12)).floor().clamp(1, 4);
+int _catalogueColumns(
+  double width,
+  TextScaler scaler, {
+  bool managing = false,
+}) => ((width + 12) / (scaler.scale(managing ? 240 : 160) + 12)).floor().clamp(
+  1,
+  4,
+);
 
 /// Marcadores de carga con portada y columnas adaptadas al catálogo.
 class _Skeleton extends StatelessWidget {

@@ -1,6 +1,9 @@
 // Pantalla de alta: recoge datos y fotografía, valida y solicita publicar una preventa.
 
 import 'package:flutter/material.dart';
+
+import '../widgets/product_scaffold.dart';
+
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -119,12 +122,12 @@ class _ProductCreateViewState extends State<ProductCreateView> {
       (auth) => auth.selectedRole == UserRole.producer,
     );
     if (!producer) {
-      return Scaffold(
+      return ProductScaffold(
         appBar: AppBar(title: const Text('Publicar preventa')),
         body: const Center(child: Text('Esta acción es para productores.')),
       );
     }
-    return Scaffold(
+    return ProductScaffold(
       backgroundColor: AppColors.background,
       appBar: AppBar(title: const Text('Publicar preventa')),
       body: Consumer<ProductsViewModel>(
@@ -132,7 +135,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
           child: Form(
             key: _key,
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 180),
+              padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
               children: [
                 Text(
                   'Un lote, información clara',
@@ -148,11 +151,16 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                 ),
                 const SizedBox(height: 24),
                 // Identificación del lote y categoría agrícola para su clasificación.
+                const ProductSectionHeading(
+                  'Información del producto',
+                  subtitle: 'Los campos indicados como obligatorios deben completarse.',
+                ),
                 TextFormField(
                   controller: _name,
                   textCapitalization: TextCapitalization.words,
                   decoration: const InputDecoration(
                     labelText: 'Nombre del producto',
+                    helperText: 'Obligatorio',
                     hintText: 'Ej. Aguacate Hass',
                     prefixIcon: Icon(Icons.eco_outlined),
                   ),
@@ -162,10 +170,13 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                 ),
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
+                  validator: (value) =>
+                      value == null ? 'Selecciona una categoría.' : null,
                   initialValue: _category,
                   isExpanded: true,
                   decoration: const InputDecoration(
                     labelText: 'Categoría agrícola',
+                    helperText: 'Obligatorio',
                     prefixIcon: Icon(Icons.category_outlined),
                   ),
                   items: vm.categories
@@ -180,6 +191,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                 ),
                 const SizedBox(height: 16),
                 // Cantidad y unidad comparten la validación con el formulario de edición.
+                const ProductSectionHeading('Disponibilidad y precio'),
                 ProductQuantityFields(
                   controller: _quantity,
                   unit: _unit,
@@ -195,6 +207,8 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                   ),
                   decoration: const InputDecoration(
                     labelText: 'Precio unitario (USD)',
+                    helperText: 'Obligatorio · Precio por unidad seleccionada',
+                    prefixIcon: Icon(Icons.payments_outlined),
                     hintText: '0.00',
                   ),
                   validator: _nonNegative,
@@ -214,6 +228,10 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                 ),
                 const SizedBox(height: 16),
                 // Selección y vista previa; se impide publicar mientras se lee la imagen.
+                const ProductSectionHeading(
+                  'Fotografía',
+                  subtitle: 'Opcional · Una imagen clara ayuda a presentar tu producto.',
+                ),
                 ProductImagePicker(
                   enabled: !vm.isSubmitting,
                   onLoadingChanged: (loading) {
@@ -251,6 +269,12 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                   label: Text(
                     vm.isSubmitting ? 'Publicando...' : 'Publicar preventa',
                   ),
+                ),
+                TextButton(
+                  onPressed: vm.isSubmitting
+                      ? null
+                      : () => context.go(AppRoutes.products),
+                  child: const Text('Cancelar'),
                 ),
               ],
             ),

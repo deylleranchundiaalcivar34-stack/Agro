@@ -231,10 +231,10 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
         // BoxFit.contain mantiene la fotografía completa dentro de una altura limitada.
         Container(
           width: double.infinity,
-          constraints: const BoxConstraints(minHeight: 150, maxHeight: 320),
+          constraints: const BoxConstraints(minHeight: 150, maxHeight: 240),
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: AppColors.surfaceVariant,
+            color: AppColors.primarySurface,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(color: AppColors.divider),
           ),

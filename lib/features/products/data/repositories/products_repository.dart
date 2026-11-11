@@ -42,6 +42,34 @@ class ProductsRepository {
   final ProductStorageService _storageService;
   String? get currentUserId => _supabaseService.currentUser?.id;
 
+  /// Delega la transición en el mismo servicio, sin duplicar escrituras ni historial.
+  Future<int> transitionToDirectSale(
+    String productId, {
+    required double quantity,
+    required double price,
+    required ProductUnit unit,
+  }) => ProductService(supabaseService: _supabaseService)
+      .transitionToDirectSale(
+        productId,
+        quantity: quantity,
+        price: price,
+        unit: unit,
+      );
+
+  /// La segunda transición también se confirma exclusivamente mediante su RPC.
+  Future<int> transitionToAlternativeChannels(
+    String productId, {
+    required double quantity,
+    required double price,
+    required ProductUnit unit,
+  }) => ProductService(supabaseService: _supabaseService)
+      .transitionToAlternativeChannels(
+        productId,
+        quantity: quantity,
+        price: price,
+        unit: unit,
+      );
+
   /// Lista privada del productor: no filtrar estado para incluir visibles y ocultos.
   Future<List<AgriculturalProduct>> getMyProducts() async {
     final userId = _requireUserId();
@@ -64,6 +92,10 @@ class ProductsRepository {
   Future<void> setVisibility(String productId, bool visible) =>
       ProductService(supabaseService: _supabaseService)
           .setVisibility(productId, visible);
+
+  Future<void> permanentlyDeleteProduct(String productId, String name) =>
+      ProductService(supabaseService: _supabaseService)
+          .permanentlyDeleteProduct(productId, name);
 
   // Campos y alias comunes del catálogo y detalle; las fotografías son una relación hija.
   static const _productSelect = '''

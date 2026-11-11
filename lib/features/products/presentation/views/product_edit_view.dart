@@ -1,6 +1,9 @@
 // Edición completa o solo de cantidad de una publicación perteneciente al productor activo.
 
 import 'package:flutter/material.dart';
+
+import '../widgets/product_scaffold.dart';
+
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shimmer/shimmer.dart';
@@ -201,14 +204,14 @@ class _ProductEditViewState extends State<ProductEditView> {
           (_product == null || auth.currentUser?.id == _product!.producerId),
     );
     if (!producer) {
-      return Scaffold(
+      return ProductScaffold(
         appBar: AppBar(title: const Text('Editar publicación')),
         body: const Center(child: Text('Esta acción es para productores.')),
       );
     }
     // La edición espera la carga inicial y ofrece reintento si no se pudo completar.
     if (_product == null && producer) {
-      return Scaffold(
+      return ProductScaffold(
         appBar: AppBar(title: const Text('Editar publicación')),
         body: Center(
           child: _loadError == null
@@ -246,7 +249,7 @@ class _ProductEditViewState extends State<ProductEditView> {
     // Impide salir durante el guardado y bloquea la edición simultánea de los campos.
     return PopScope(
       canPop: !context.watch<ProductsViewModel>().isSubmitting,
-      child: Scaffold(
+      child: ProductScaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('Editar publicación')),
         body: Consumer<ProductsViewModel>(
@@ -270,6 +273,10 @@ class _ProductEditViewState extends State<ProductEditView> {
                             .slideY(begin: .04, end: 0),
                       const SizedBox(height: 16),
                       // Cabecera compacta: foto actual o nueva y opción para deshacer el cambio local.
+                      const ProductSectionHeading(
+                        'Fotografía',
+                        subtitle: 'Opcional · Una imagen clara ayuda a presentar tu producto.',
+                      ),
                       ProductImagePicker(
                         productName: _product!.name,
                         initialImageUrl: _product!.imagenUrl,
@@ -285,11 +292,13 @@ class _ProductEditViewState extends State<ProductEditView> {
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 24),
+                      const ProductSectionHeading('Información del producto'),
                       TextFormField(
                         controller: _name,
                         textCapitalization: TextCapitalization.words,
                         decoration: const InputDecoration(
                           labelText: 'Nombre del producto',
+                          helperText: 'Obligatorio',
                           hintText: 'Ej. Aguacate Hass',
                           prefixIcon: Icon(Icons.eco_outlined),
                         ),
@@ -303,6 +312,7 @@ class _ProductEditViewState extends State<ProductEditView> {
                         isExpanded: true,
                         decoration: const InputDecoration(
                           labelText: 'Categoría agrícola',
+                          helperText: 'Obligatorio',
                           prefixIcon: Icon(Icons.category_outlined),
                         ),
                         items: vm.categories
@@ -321,6 +331,7 @@ class _ProductEditViewState extends State<ProductEditView> {
                       ),
                       const SizedBox(height: 16),
                       // Cantidad y unidad se validan juntas según las reglas compartidas.
+                      const ProductSectionHeading('Disponibilidad y precio'),
                       ProductQuantityFields(
                         controller: _quantity,
                         unit: _unit,
@@ -336,6 +347,9 @@ class _ProductEditViewState extends State<ProductEditView> {
                         ),
                         decoration: const InputDecoration(
                           labelText: 'Precio unitario (USD)',
+                          helperText:
+                              'Obligatorio · Precio por unidad seleccionada',
+                          prefixIcon: Icon(Icons.payments_outlined),
                           hintText: '0.00',
                         ),
                         validator: _nonNegative,
@@ -362,6 +376,7 @@ class _ProductEditViewState extends State<ProductEditView> {
                         ),
                       const SizedBox(height: 16),
                       // La publicación puede retirarse del catálogo conservando sus datos.
+                      const ProductSectionHeading('Publicación'),
                       SwitchListTile(
                         title: const Text('Visibilidad del producto'),
                         subtitle: Text(_published ? 'Visible' : 'Oculto'),
@@ -446,7 +461,7 @@ class _ProductEditViewState extends State<ProductEditView> {
     // Impide salir durante el guardado y bloquea la edición simultánea de los campos.
     return PopScope(
       canPop: !vm.isSubmitting,
-      child: Scaffold(
+      child: ProductScaffold(
         backgroundColor: AppColors.background,
         appBar: AppBar(title: const Text('Actualizar cantidad')),
         body: SafeArea(
@@ -475,6 +490,7 @@ class _ProductEditViewState extends State<ProductEditView> {
                   if (product.harvestLabel != null)
                     Text('Cosecha estimada: ${product.harvestLabel}'),
                   const SizedBox(height: 24),
+                  const ProductSectionHeading('Disponibilidad y precio'),
                   ProductQuantityFields(
                     controller: _quantity,
                     unit: _unit,

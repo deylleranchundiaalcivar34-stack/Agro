@@ -42,6 +42,91 @@ class ProductsViewModel extends ChangeNotifier {
   bool get publicationRequiresReview => _publicationRequiresReview;
   ProductUploadException? get lastUploadError => _lastUploadError;
 
+  /// Publica en memoria únicamente una transición confirmada con historial por la RPC.
+  Future<AgriculturalProduct?> transitionToDirectSale(
+    AgriculturalProduct product, {
+    required double quantity,
+    required double price,
+  }) => _transitionCommercialPhase(
+    product,
+    quantity: quantity,
+    price: price,
+    alternative: false,
+  );
+
+  /// Solo actualiza detalle y listas después de confirmar el historial remoto.
+  Future<AgriculturalProduct?> transitionToAlternativeChannels(
+    AgriculturalProduct product, {
+    required double quantity,
+    required double price,
+  }) => _transitionCommercialPhase(
+    product,
+    quantity: quantity,
+    price: price,
+    alternative: true,
+  );
+
+  Future<AgriculturalProduct?> _transitionCommercialPhase(
+    AgriculturalProduct product, {
+    required double quantity,
+    required double price,
+    required bool alternative,
+  }) async {
+    if (_isSubmitting) return null;
+    _isSubmitting = true;
+    _errorMessage = null;
+    final owner = _productsRepository.currentUserId;
+    notifyListeners();
+    try {
+      // No inventar una unidad para productos históricos sin clasificar.
+      if (product.unit == null) {
+        throw const ProductPhaseException(
+          'Registra primero la unidad del producto mediante Editar.',
+        );
+      }
+      final transition = alternative
+          ? _productsRepository.transitionToAlternativeChannels
+          : _productsRepository.transitionToDirectSale;
+      final phaseId = await transition(
+        product.id,
+        quantity: quantity,
+        price: price,
+        unit: product.unit!,
+      );
+      if (_productsRepository.currentUserId != owner) {
+        throw const ProductPhaseException(
+          'La sesión cambió. Actualiza tus publicaciones.',
+        );
+      }
+      final withPhase = alternative
+          ? product.withAlternativeChannels
+          : product.withDirectSale;
+      final updated = withPhase(
+        phaseId: phaseId,
+        quantity: quantity,
+        price: price,
+      );
+      _products = _products
+          .map((p) => p.id == product.id ? updated : p)
+          .toList();
+      _myProducts = _myProducts
+          .map((p) => p.id == product.id ? updated : p)
+          .toList();
+      notifyListeners();
+      await _refreshLists();
+      return updated;
+    } on ProductPhaseException catch (error) {
+      _errorMessage = error.message;
+      return null;
+    } catch (_) {
+      _errorMessage = 'No se pudo confirmar el cambio. Revisa tu conexión y actualiza el producto antes de reintentar.';
+      return null;
+    } finally {
+      _isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
   // La lista privada se vincula a la sesión para no mostrar publicaciones de una cuenta anterior.
   List<AgriculturalProduct> _myProducts = const [];
   ProductsStatus _myStatus = ProductsStatus.idle;
@@ -58,6 +143,12 @@ class ProductsViewModel extends ChangeNotifier {
   String? get myError =>
       _myOwnerId == _productsRepository.currentUserId ? _myError : null;
   String? get visibilityWarning => _visibilityWarning;
+
+  // La búsqueda y los filtros no cambian los indicadores de la lista completa.
+  int get myPublicationsTotal => myProducts.length;
+  int get myPublicationsVisible =>
+      myProducts.where((p) => p.isPublished).length;
+  int get myPublicationsHidden => myPublicationsTotal - myPublicationsVisible;
 
   /// Carga privada con control de solicitudes simultáneas y de cambios de sesión.
   Future<void> loadMyPublications({bool force = false}) async {
@@ -353,6 +444,29 @@ class ProductsViewModel extends ChangeNotifier {
         debugPrintStack(stackTrace: stackTrace);
       }
       _errorMessage = 'No se pudo confirmar la actualización. Revisa la publicación antes de reintentar.';
+      return false;
+    } finally {
+      _isSubmitting = false;
+      notifyListeners();
+    }
+  }
+
+  Future<bool> permanentlyDeleteProduct(String productId, String name) async {
+    if (_isSubmitting) return false;
+    _isSubmitting = true;
+    _errorMessage = null;
+    notifyListeners();
+    try {
+      await _productsRepository.permanentlyDeleteProduct(productId, name);
+      _products = _products.where((p) => p.id != productId).toList();
+      _myProducts = _myProducts.where((p) => p.id != productId).toList();
+      await _refreshLists();
+      return true;
+    } on ProductPermanentDeleteException catch (error) {
+      _errorMessage = error.message;
+      return false;
+    } catch (_) {
+      _errorMessage = 'No se pudo confirmar la eliminación. Revisa tu conexión y la publicación. Puedes utilizar «Ocultar producto».';
       return false;
     } finally {
       _isSubmitting = false;

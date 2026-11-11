@@ -360,7 +360,7 @@ void main() {
     await showButton(tester, onDeleted: () => navigated = true);
     await tester.tap(find.text('Ocultar producto'));
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Ocultar producto').last);
+    await tester.tap(find.widgetWithText(FilledButton, 'Ocultar'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 400));
     expect(

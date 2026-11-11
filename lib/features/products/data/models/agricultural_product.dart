@@ -7,6 +7,7 @@ import 'product_unit.dart';
 class AgriculturalProduct {
   // La creación existente identifica esta fase por nombre, nunca por un ID fijo.
   bool get isPresale => phaseName.trim().toLowerCase() == 'preventa';
+  bool get isDirectSale => phaseName.trim().toLowerCase() == 'venta directa';
   String get quantityLabel =>
       isPresale ? 'Cantidad anunciada' : 'Cantidad disponible';
   String get formattedQuantity => ProductQuantity.format(availableQuantity);
@@ -78,6 +79,50 @@ class AgriculturalProduct {
     fotografias: fotografias,
   );
   final String categoryName;
+
+  /// Refleja la fase confirmada sin alterar visibilidad, unidad, fechas ni fotografías.
+  AgriculturalProduct withDirectSale({
+    required int phaseId,
+    required double quantity,
+    required double price,
+  }) => AgriculturalProduct(
+    id: id,
+    producerId: producerId,
+    categoryId: categoryId,
+    phaseId: phaseId,
+    name: name,
+    availableQuantity: quantity,
+    unitPrice: price,
+    unit: unit,
+    isPublished: isPublished,
+    categoryName: categoryName,
+    phaseName: 'Venta directa',
+    estimatedHarvestDate: estimatedHarvestDate,
+    imagenUrl: imagenUrl,
+    fotografias: fotografias,
+  );
+
+  /// Conserva unidad, fotos y visibilidad tras confirmar Canales alternativos.
+  AgriculturalProduct withAlternativeChannels({
+    required int phaseId,
+    required double quantity,
+    required double price,
+  }) => AgriculturalProduct(
+    id: id,
+    producerId: producerId,
+    categoryId: categoryId,
+    phaseId: phaseId,
+    name: name,
+    availableQuantity: quantity,
+    unitPrice: price,
+    unit: unit,
+    isPublished: isPublished,
+    categoryName: categoryName,
+    phaseName: 'Canales alternativos',
+    estimatedHarvestDate: estimatedHarvestDate,
+    imagenUrl: imagenUrl,
+    fotografias: fotografias,
+  );
   final String phaseName;
   final DateTime? estimatedHarvestDate;
 

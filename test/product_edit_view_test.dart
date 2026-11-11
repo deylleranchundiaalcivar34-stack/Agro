@@ -223,7 +223,7 @@ void main() {
         'fake-key',
         httpClient: MockClient((r) async {
           requests.add(r);
-          if (r.url.path.endsWith('/usuarios'))
+          if (r.url.path.endsWith('/usuarios')) {
             return http.Response(
               jsonEncode({
                 'id_usuario': 'owner',
@@ -232,14 +232,17 @@ void main() {
               200,
               request: r,
             );
-          if (r.url.path.endsWith('/categorias_agricolas'))
+          }
+          if (r.url.path.endsWith('/categorias_agricolas')) {
             return http.Response(
               '[{"id_categoria":1,"nombre_categoria":"Hortalizas"}]',
               200,
               request: r,
             );
-          if (r.method == 'PATCH')
+          }
+          if (r.method == 'PATCH') {
             row.addAll(jsonDecode(r.body) as Map<String, dynamic>);
+          }
           return http.Response(
             jsonEncode(
               r.url.queryParameters.containsKey('id_producto') ? row : [row],

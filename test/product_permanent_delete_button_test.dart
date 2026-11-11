@@ -96,7 +96,7 @@ void main() {
     );
   }
 
-  testWidgets('cancelar o escribir otro nombre nunca ejecuta el callback', (
+  testWidgets('cancelar cierra el diálogo sin ejecutar el callback', (
     tester,
   ) async {
     var calls = 0;
@@ -106,17 +106,16 @@ void main() {
     });
     await tester.tap(find.text('Eliminar definitivamente'));
     await tester.pumpAndSettle();
-    expect(find.text('¿Eliminar producto definitivamente?'), findsOneWidget);
+    expect(find.text('¿Eliminar producto?'), findsOneWidget);
     expect(
-      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-      isNull,
+      find.text(
+        '¿Está seguro de que desea eliminar este producto definitivamente?',
+      ),
+      findsOneWidget,
     );
-    await tester.enterText(find.byType(TextField), 'Otro producto');
-    await tester.pump();
-    expect(
-      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
-      isNull,
-    );
+    expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
+    expect(find.byType(TextField), findsNothing);
+    expect(find.widgetWithText(FilledButton, 'Eliminar'), findsOneWidget);
     await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
     expect(calls, 0);
@@ -124,38 +123,35 @@ void main() {
   });
 
   for (final visible in [true, false]) {
-    testWidgets('exige nombre exacto y bloquea duplicados, visible=$visible', (
-      tester,
-    ) async {
-      row['estado_publicacion'] = visible;
-      final wait = Completer<bool>();
-      var calls = 0;
-      var removed = false;
-      await open(tester, (name) {
-        expect(name, 'Tomates');
-        calls++;
-        return wait.future;
-      }, onDeleted: () => removed = true);
-      await tester.tap(find.text('Eliminar definitivamente'));
-      await tester.pumpAndSettle();
-      await tester.enterText(find.byType(TextField), 'Tomates');
-      await tester.pump();
-      await tester.tap(
-        find.widgetWithText(FilledButton, 'Eliminar definitivamente'),
-      );
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 400));
-      expect(calls, 1);
-      expect(removed, isFalse);
-      expect(
-        tester.widget<OutlinedButton>(find.byType(OutlinedButton)).onPressed,
-        isNull,
-      );
-      wait.complete(true);
-      await tester.pumpAndSettle();
-      expect(removed, isTrue);
-      expect(find.text('Producto eliminado definitivamente'), findsOneWidget);
-    });
+    testWidgets(
+      'confirmar conserva el nombre y bloquea duplicados, visible=$visible',
+      (tester) async {
+        row['estado_publicacion'] = visible;
+        final wait = Completer<bool>();
+        var calls = 0;
+        var removed = false;
+        await open(tester, (name) {
+          expect(name, 'Tomates');
+          calls++;
+          return wait.future;
+        }, onDeleted: () => removed = true);
+        await tester.tap(find.text('Eliminar definitivamente'));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FilledButton, 'Eliminar'));
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 400));
+        expect(calls, 1);
+        expect(removed, isFalse);
+        expect(
+          tester.widget<OutlinedButton>(find.byType(OutlinedButton)).onPressed,
+          isNull,
+        );
+        wait.complete(true);
+        await tester.pumpAndSettle();
+        expect(removed, isTrue);
+        expect(find.text('Producto eliminado definitivamente'), findsOneWidget);
+      },
+    );
   }
 
   testWidgets('un fallo conserva el producto y no anuncia éxito', (
@@ -165,11 +161,7 @@ void main() {
     await open(tester, (_) async => false, onDeleted: () => removed = true);
     await tester.tap(find.text('Eliminar definitivamente'));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byType(TextField), 'Tomates');
-    await tester.pump();
-    await tester.tap(
-      find.widgetWithText(FilledButton, 'Eliminar definitivamente'),
-    );
+    await tester.tap(find.widgetWithText(FilledButton, 'Eliminar'));
     await tester.pumpAndSettle();
     expect(removed, isFalse);
     expect(find.text('Producto eliminado definitivamente'), findsNothing);

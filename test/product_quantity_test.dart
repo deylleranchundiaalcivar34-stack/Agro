@@ -429,7 +429,7 @@ void main() {
         expect(find.text('Cosecha: 15/01/2030'), findsOneWidget);
         expect(
           tester.getSize(find.byType(ClipRRect)).height,
-          width >= 600 ? 200 : 170,
+          width >= 600 ? 160 : 136,
         );
         // El borde inferior debe quedar junto al margen interior, sin una reserva vacía grande.
         final bottomGap =

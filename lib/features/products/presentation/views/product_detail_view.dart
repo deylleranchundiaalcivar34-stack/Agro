@@ -1,13 +1,19 @@
 // Detalle del lote y acciones disponibles para su propietario o una cuenta compradora.
 
 import 'package:flutter/material.dart';
+
+import '../widgets/product_scaffold.dart';
+import '../widgets/product_phase_section.dart';
+
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_routes.dart';
 import '../widgets/product_card.dart';
+import '../widgets/product_status_badge.dart';
 import '../widgets/product_delete_button.dart';
+import '../widgets/product_permanent_delete_button.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
@@ -32,9 +38,9 @@ class _ProductDetailViewState extends State<ProductDetailView> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
+  Widget build(BuildContext context) => ProductScaffold(
     backgroundColor: AppColors.background,
-    appBar: AppBar(title: const Text('Detalle de preventa')),
+    appBar: AppBar(title: const Text('Detalle del producto')),
     body: FutureBuilder<AgriculturalProduct?>(
       future: _product,
       builder: (context, snapshot) {
@@ -49,17 +55,29 @@ class _ProductDetailViewState extends State<ProductDetailView> {
         }
         return _Detail(
           product: product,
+          // La respuesta confirmada actualiza el detalle sin depender del refresco de red.
+          onPhaseChanged: (updated) {
+            setState(() {
+              _product = Future.value(updated);
+            });
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text('Producto actualizado a ${updated.phaseName}'),
+              ),
+            );
+          },
           onQuantity: () => _editQuantity(product.id),
           onEdit: () async {
             await context.push<bool>(
               '${AppRoutes.products}/${product.id}/edit',
             );
             if (!context.mounted) return;
-            setState(
-              () => _product = context.read<ProductsViewModel>().getProduct(
-                widget.productId,
-              ),
+            final reload = context.read<ProductsViewModel>().getProduct(
+              widget.productId,
             );
+            setState(() {
+              _product = reload;
+            });
           },
         );
       },
@@ -72,11 +90,12 @@ class _ProductDetailViewState extends State<ProductDetailView> {
       '${AppRoutes.products}/$productId/edit?quantity=1',
     );
     if (!mounted) return;
-    setState(
-      () => _product = context.read<ProductsViewModel>().getProduct(
-        widget.productId,
-      ),
+    final reload = context.read<ProductsViewModel>().getProduct(
+      widget.productId,
     );
+    setState(() {
+      _product = reload;
+    });
   }
 }
 
@@ -86,9 +105,11 @@ class _Detail extends StatelessWidget {
     required this.product,
     required this.onEdit,
     required this.onQuantity,
+    required this.onPhaseChanged,
   });
   final VoidCallback onEdit;
   final VoidCallback onQuantity;
+  final ValueChanged<AgriculturalProduct> onPhaseChanged;
   final AgriculturalProduct product;
   @override
   Widget build(BuildContext context) {
@@ -100,28 +121,46 @@ class _Detail extends StatelessWidget {
     );
     // La interfaz distingue al propietario; el servicio y RLS siguen controlando las escrituras.
     final owner = userId == product.producerId;
+    // La barra compartida se superpone: 72 de alto y 14 de margen inferior.
+    // SafeArea ya reserva el área del sistema; no se suma otra vez al scroll.
+    const navigationOverlayHeight = 72.0 + 14.0;
+    final screenSize = MediaQuery.sizeOf(context);
+    // Reducir la portada en pantallas bajas sin deformar la imagen (BoxFit.cover).
+    final imageHeight = (screenSize.height * 0.30)
+        .clamp(120.0, screenSize.width < 600 ? 220.0 : 300.0)
+        .toDouble();
     return SafeArea(
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+        padding: const EdgeInsets.fromLTRB(
+          20,
+          12,
+          20,
+          navigationOverlayHeight + 28,
+        ),
         children: [
           // Portada y datos informativos del lote, con icono alternativo si no hay fotografía.
           Container(
-            height: 190,
+            height: imageHeight,
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: AppColors.primarySurface,
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(18),
             ),
             clipBehavior: Clip.antiAlias,
-            child: imagenProducto(product.imagenUrl),
+            child: imagenProducto(product.imagenUrl, height: imageHeight),
           ),
           const SizedBox(height: 22),
-          Text(
-            product.phaseName,
-            style: GoogleFonts.inter(
-              fontWeight: FontWeight.w700,
-              color: AppColors.primaryDark,
-            ),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              ProductStatusBadge(product.phaseName),
+              if (owner && role == UserRole.producer)
+                ProductStatusBadge(
+                  product.visibilityLabel,
+                  muted: !product.isPublished,
+                ),
+            ],
           ),
           const SizedBox(height: 8),
           Text(
@@ -136,7 +175,17 @@ class _Detail extends StatelessWidget {
             product.categoryName,
             style: GoogleFonts.inter(color: AppColors.textSecondary),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
+          Text(
+            product.priceWithUnit,
+            style: Theme.of(context).textTheme.headlineSmall?.copyWith(
+              color: AppColors.primaryDark,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 20),
+          // La sección distingue fase comercial de visibilidad y permisos de gestión.
+          ProductPhaseSection(product: product, onChanged: onPhaseChanged),
           _Row(
             icon: Icons.inventory_2_outlined,
             label: product.quantityLabel,
@@ -164,6 +213,8 @@ class _Detail extends StatelessWidget {
             ),
           // Las acciones de gestión se muestran únicamente al productor propietario.
           if (owner && role == UserRole.producer)
+            const ProductSectionHeading('Gestionar publicación'),
+          if (owner && role == UserRole.producer)
             FilledButton.icon(
               onPressed: context.watch<ProductsViewModel>().isSubmitting
                   ? null
@@ -184,6 +235,18 @@ class _Detail extends StatelessWidget {
             const SizedBox(height: 8),
             ProductDeleteButton(
               product: product,
+              onDeleted: () => context.go(AppRoutes.products),
+            ),
+            const SizedBox(height: 8),
+            const Divider(height: 28),
+            ProductPermanentDeleteButton(
+              product: product,
+              busy: context.watch<ProductsViewModel>().isSubmitting,
+              onConfirmed: (name) => context
+                  .read<ProductsViewModel>()
+                  .permanentlyDeleteProduct(product.id, name),
+              errorMessage: () =>
+                  context.read<ProductsViewModel>().errorMessage,
               onDeleted: () => context.go(AppRoutes.products),
             ),
           ],
@@ -325,9 +388,12 @@ class _Row extends StatelessWidget {
             style: GoogleFonts.inter(color: AppColors.textSecondary),
           ),
         ),
-        Text(
-          value,
-          style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+        Flexible(
+          child: Text(
+            value,
+            textAlign: TextAlign.end,
+            style: GoogleFonts.plusJakartaSans(fontWeight: FontWeight.w700),
+          ),
         ),
       ],
     ),

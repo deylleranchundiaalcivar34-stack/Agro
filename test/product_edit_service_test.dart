@@ -186,6 +186,9 @@ void main() {
       final write = requests.singleWhere((r) => r.method == 'PATCH');
       expect(write.url.queryParameters['id_producto'], 'eq.product-1');
       expect(write.url.queryParameters['id_productor'], 'eq.owner');
+      final payload = jsonDecode(write.body) as Map<String, dynamic>;
+      expect(payload.containsKey('id_fase_actual'), isFalse);
+      expect(payload.containsKey('id_productor'), isFalse);
       expect(row['id_fase_actual'], 0);
       expect(result.precioUnitario, 0);
       expect(result.imagenUrl, 'https://example.com/old.jpg');

@@ -65,7 +65,7 @@ class _ProductPermanentDeleteButtonState
         return;
       }
       setState(() => _deleting = true);
-      // La escritura se delegará al flujo autorizado una vez revisadas las relaciones reales.
+      // El servicio confirma la fila eliminada y el trigger protege las relaciones.
       final deleted = await widget.onConfirmed(confirmation);
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
@@ -74,7 +74,7 @@ class _ProductPermanentDeleteButtonState
           content: Text(
             deleted
                 ? 'Producto eliminado definitivamente'
-                : widget.errorMessage?.call() ?? 'No se pudo confirmar la eliminación. Revisa el producto antes de reintentar.',
+                : widget.errorMessage?.call() ?? 'No se pudo confirmar la eliminación. Puedes utilizar «Ocultar producto».',
           ),
         ),
       );
@@ -84,7 +84,7 @@ class _ProductPermanentDeleteButtonState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'No se pudo confirmar la eliminación. Revisa el producto antes de reintentar.',
+            'No se pudo confirmar la eliminación. Puedes utilizar «Ocultar producto».',
           ),
         ),
       );
@@ -123,40 +123,18 @@ class _ProductPermanentDeleteButtonState
   }
 }
 
-/// Solo devuelve una confirmación explícita cuando coincide el nombre completo.
-class _PermanentDeleteDialog extends StatefulWidget {
+/// Conserva el nombre capturado para el flujo seguro tras confirmar la acción.
+class _PermanentDeleteDialog extends StatelessWidget {
   const _PermanentDeleteDialog({required this.productName});
   final String productName;
-  @override
-  State<_PermanentDeleteDialog> createState() => _PermanentDeleteDialogState();
-}
 
-class _PermanentDeleteDialogState extends State<_PermanentDeleteDialog> {
-  String _typedName = '';
   @override
   Widget build(BuildContext context) => AlertDialog(
-    scrollable: true,
-    title: const Text('¿Eliminar producto definitivamente?'),
-    content: Column(
-      mainAxisSize: MainAxisSize.min,
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const Text(
-          'Estás a punto de eliminar permanentemente esta publicación. Esta acción no se puede deshacer y el producto dejará de estar disponible en Agro+.',
-        ),
-        const SizedBox(height: 12),
-        const Text('Las fotografías pueden permanecer en Cloudinary.'),
-        const SizedBox(height: 16),
-        Text('Escribe el nombre del producto: ${widget.productName}'),
-        const SizedBox(height: 8),
-        TextField(
-          decoration: const InputDecoration(
-            labelText: 'Nombre del producto',
-            helperText: 'Debe coincidir exactamente con el nombre mostrado.',
-          ),
-          onChanged: (value) => setState(() => _typedName = value),
-        ),
-      ],
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    icon: const Icon(Icons.warning_amber_rounded, color: AppColors.error),
+    title: const Text('¿Eliminar producto?'),
+    content: const Text(
+      '¿Está seguro de que desea eliminar este producto definitivamente?',
     ),
     actions: [
       TextButton(
@@ -168,12 +146,8 @@ class _PermanentDeleteDialogState extends State<_PermanentDeleteDialog> {
           backgroundColor: AppColors.error,
           foregroundColor: Colors.white,
         ),
-        onPressed:
-            _typedName.trim().isNotEmpty &&
-                _typedName.trim() == widget.productName.trim()
-            ? () => Navigator.pop(context, _typedName.trim())
-            : null,
-        child: const Text('Eliminar definitivamente'),
+        onPressed: () => Navigator.pop(context, productName),
+        child: const Text('Eliminar'),
       ),
     ],
   );

@@ -38,9 +38,16 @@ class _ProductDeleteButtonState extends State<ProductDeleteButton> {
           : await showDialog<bool>(
               context: context,
               builder: (dialog) => AlertDialog(
-                title: const Text('Ocultar producto'),
+                icon: const Icon(
+                  Icons.visibility_off_outlined,
+                  color: AppColors.primary,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                title: const Text('¿Ocultar producto?'),
                 content: const Text(
-                  '¿Deseas ocultar este producto? Dejará de aparecer en el catálogo, pero conservarás su información',
+                  '¿Desea ocultar este producto del catálogo?',
                 ),
                 actions: [
                   TextButton(
@@ -49,7 +56,7 @@ class _ProductDeleteButtonState extends State<ProductDeleteButton> {
                   ),
                   FilledButton(
                     onPressed: () => Navigator.pop(dialog, true),
-                    child: const Text('Ocultar producto'),
+                    child: const Text('Ocultar'),
                   ),
                 ],
               ),

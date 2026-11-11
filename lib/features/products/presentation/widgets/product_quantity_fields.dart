@@ -45,6 +45,7 @@ class ProductQuantityFields extends StatelessWidget {
       inputFormatters: [ProductQuantityInputFormatter()],
       decoration: InputDecoration(
         labelText: label,
+        prefixIcon: const Icon(Icons.inventory_2_outlined),
         hintText: '5',
         helperText: unit == ProductUnit.unidad
             ? 'Solo enteros positivos'
@@ -59,6 +60,7 @@ class ProductQuantityFields extends StatelessWidget {
       isExpanded: true,
       decoration: const InputDecoration(
         labelText: 'Unidad de medida',
+        prefixIcon: Icon(Icons.straighten_outlined),
         helperText: 'Selecciona una opción',
       ),
       items: ProductUnit.values
@@ -71,7 +73,8 @@ class ProductQuantityFields extends StatelessWidget {
     // Mostrar los campos juntos con espacio suficiente o apilarlos en pantallas estrechas.
     return LayoutBuilder(
       builder: (context, constraints) {
-        if (constraints.maxWidth >= 520) {
+        if (constraints.maxWidth >=
+            520 * MediaQuery.textScalerOf(context).scale(1)) {
           return Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

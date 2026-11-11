@@ -313,8 +313,9 @@ void main() {
             .length,
         mode == 'uploadFailure' || mode == 'productFailure' ? 0 : 1,
       );
-      if (mode == 'photoFailure' || mode == 'refreshFailure')
+      if (mode == 'photoFailure' || mode == 'refreshFailure') {
         expect(vm.publicationWarning, isNotNull);
+      }
       if (mode == 'uploadFailure') expect(vm.lastUploadError?.statusCode, 400);
       if (mode == 'productFailure') {
         expect(vm.publicationRequiresReview, isTrue);

@@ -1,6 +1,9 @@
 // Tarjeta compacta del catálogo; solo presenta el lote y comunica su pulsación al llamador.
 
 import 'package:flutter/material.dart';
+
+import 'product_status_badge.dart';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 
@@ -24,7 +27,7 @@ class ProductCard extends StatelessWidget {
 
   // Elegir la portada por ancho disponible, también en Chrome con ventana estrecha.
   static double imageHeightFor(BuildContext context) =>
-      MediaQuery.sizeOf(context).width >= 600 ? 200 : 170;
+      MediaQuery.sizeOf(context).width >= 600 ? 160 : 136;
 
   // Compartir estilos entre la medición y el dibujo evita reservar alturas arbitrarias.
   static TextStyle? _bodyStyle(TextTheme theme) =>
@@ -87,6 +90,9 @@ class ProductCard extends StatelessWidget {
           title?.copyWith(fontWeight: FontWeight.w800),
           2,
         );
+    if (showVisibility) {
+      height += 4 + textHeight(product.phaseName, body, 2);
+    }
     if (product.harvestLabel != null) {
       height +=
           4 +
@@ -107,6 +113,8 @@ class ProductCard extends StatelessWidget {
     final bodyStyle = _bodyStyle(theme);
     final titleStyle = _titleStyle(theme);
     return Material(
+      elevation: 1,
+      shadowColor: AppColors.divider,
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(18),
       child: InkWell(
@@ -145,29 +153,24 @@ class ProductCard extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: AppColors.primarySurface,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        showVisibility
-                            ? product.visibilityLabel
-                            : product.isPublished
-                            ? product.phaseName
-                            : 'Oculto',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: bodyStyle?.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.primaryDark,
-                        ),
-                      ),
+                    ProductStatusBadge(
+                      showVisibility
+                          ? product.visibilityLabel
+                          : product.isPublished
+                          ? product.phaseName
+                          : 'Oculto',
+                      muted: !product.isPublished,
+                      style: bodyStyle,
                     ),
+                    if (showVisibility) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        product.phaseName,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: bodyStyle,
+                      ),
+                    ],
                     const SizedBox(height: 6),
                     Text(
                       product.name,
