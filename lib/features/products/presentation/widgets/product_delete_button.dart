@@ -1,4 +1,4 @@
-// Confirmación de retirada lógica de publicaciones, disponible solo para el productor propietario.
+// Confirmacion de retirada logica de publicaciones, disponible solo para el productor propietario.
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -8,7 +8,7 @@ import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../data/models/agricultural_product.dart';
 import '../viewmodels/products_viewmodel.dart';
 
-/// Botón de gestión que solicita confirmación y avisa a la vista tras una retirada exitosa.
+/// Boton de gestion que solicita confirmacion y avisa a la vista tras una retirada exitosa.
 class ProductDeleteButton extends StatefulWidget {
   const ProductDeleteButton({
     super.key,
@@ -23,10 +23,10 @@ class ProductDeleteButton extends StatefulWidget {
 }
 
 class _ProductDeleteButtonState extends State<ProductDeleteButton> {
-  // Evita abrir más de un diálogo de confirmación al pulsar repetidamente.
+  // Evita abrir mas de un dialogo de confirmacion al pulsar repetidamente.
   bool _confirming = false;
 
-  /// Confirma la intención, revalida la sesión y delega la desactivación en el ViewModel.
+  /// Confirma la intencion, revalida la sesion y delega la desactivacion en el ViewModel.
   Future<void> _confirm() async {
     final vm = context.read<ProductsViewModel>();
     if (_confirming || vm.isSubmitting) return;
@@ -47,7 +47,7 @@ class _ProductDeleteButtonState extends State<ProductDeleteButton> {
                 ),
                 title: const Text('¿Ocultar producto?'),
                 content: const Text(
-                  '¿Desea ocultar este producto del catálogo?',
+                  '¿Deseas ocultar este producto? Dejara de aparecer en el catalogo, pero conservaras su informacion',
                 ),
                 actions: [
                   TextButton(
@@ -62,7 +62,7 @@ class _ProductDeleteButtonState extends State<ProductDeleteButton> {
               ),
             );
       if (!mounted || confirmed != true) return;
-      // Volver a comprobar propietario y rol después de esperar la decisión del diálogo.
+      // Volver a comprobar propietario y rol despues de esperar la decision del dialogo.
       final auth = context.read<AuthViewModel>();
       if (auth.selectedRole != UserRole.producer ||
           auth.currentUser?.id != widget.product.producerId) {

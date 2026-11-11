@@ -1,4 +1,4 @@
-// Operaciones de productos con validación de datos, propiedad y confirmación de escrituras.
+// Operaciones de productos con validacion de datos, propiedad y confirmacion de escrituras.
 
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/foundation.dart';
@@ -11,7 +11,7 @@ import '../models/product_unit.dart';
 import 'product_storage_service.dart';
 import '../../../auth/data/repositories/profile_repository.dart';
 
-/// Señala que no se pudo autorizar o confirmar la retirada de una publicación.
+/// Senala que no se pudo autorizar o confirmar la retirada de una publicacion.
 class ProductDeleteException implements Exception {
   const ProductDeleteException();
 }
@@ -21,19 +21,19 @@ class ProductPermanentDeleteException implements Exception {
   final String message;
 }
 
-/// Error de edición con un mensaje apto para mostrar al productor.
+/// Error de edicion con un mensaje apto para mostrar al productor.
 class ProductEditException implements Exception {
   const ProductEditException(this.message);
   final String message;
 }
 
-/// Fallo de transición que puede mostrarse sin exponer detalles internos de SQL.
+/// Fallo de transicion que puede mostrarse sin exponer detalles internos de SQL.
 class ProductPhaseException implements Exception {
   const ProductPhaseException(this.message);
   final String message;
 }
 
-/// Encapsula las operaciones de Supabase y la actualización opcional de fotografías.
+/// Encapsula las operaciones de Supabase y la actualizacion opcional de fotografias.
 class ProductService {
   final SupabaseService _supabaseService;
   final ProductStorageService _storageService;
@@ -45,7 +45,7 @@ class ProductService {
 
   SupabaseClient get _client => _supabaseService.client;
 
-  /// Avanza exclusivamente de Preventa a Venta directa mediante una RPC atómica.
+  /// Avanza exclusivamente de Preventa a Venta directa mediante una RPC atomica.
   /// Nunca sustituirla por UPDATE + INSERT: ambos deben confirmar o revertir juntos.
   Future<int> transitionToDirectSale(
     String productId, {
@@ -74,7 +74,7 @@ class ProductService {
     alternative: true,
   );
 
-  // Ambas transiciones comparten autorización y confirmación, con RPC independientes.
+  // Ambas transiciones comparten autorizacion y confirmacion, con RPC independientes.
   Future<int> _transitionCommercialPhase(
     String productId, {
     required double quantity,
@@ -89,7 +89,7 @@ class ProductService {
         : 'agro_pasar_a_venta_directa';
     final user = _supabaseService.currentUser;
     if (user == null || productId.trim().isEmpty) {
-      throw const ProductPhaseException('Inicia sesión como productor.');
+      throw const ProductPhaseException('Inicia sesion como productor.');
     }
     // Cantidad y precio mantienen las reglas compartidas; la unidad no se convierte.
     final quantityError = ProductQuantity.validate(
@@ -99,10 +99,10 @@ class ProductService {
     if (quantityError != null) throw ProductPhaseException(quantityError);
     if (!price.isFinite || price < 0) {
       throw const ProductPhaseException(
-        'Ingresa un precio válido, mayor o igual a cero.',
+        'Ingresa un precio valido, mayor o igual a cero.',
       );
     }
-    // Identifica la operación fallida sin registrar sesión ni parámetros de la petición.
+    // Identifica la operacion fallida sin registrar sesion ni parametros de la peticion.
     var diagnosticStage = 'lectura del perfil';
     try {
       final profile = await ProfileRepository(supabaseService: _supabaseService)
@@ -140,7 +140,7 @@ class ProductService {
           );
         }
       }
-      // Resolver los IDs reales por nombre; no asumir su numeración en Supabase.
+      // Resolver los IDs reales por nombre; no asumir su numeracion en Supabase.
       diagnosticStage = 'lectura de la fase $sourcePhase';
       final presale = await _client
           .from('fases_comercializacion')
@@ -156,12 +156,12 @@ class ProductService {
       if (existing['id_fase_actual'] != presale['id_fase'] ||
           presale['id_fase'] == direct['id_fase']) {
         throw ProductPhaseException(
-          'El producto ya no está en $sourcePhase. Actualiza el detalle.',
+          'El producto ya no esta en $sourcePhase. Actualiza el detalle.',
         );
       }
       if (_supabaseService.currentUser?.id != user.id) {
         throw const ProductPhaseException(
-          'La sesión cambió. Vuelve a abrir el producto.',
+          'La sesion cambio. Vuelve a abrir el producto.',
         );
       }
       // PostgreSQL vuelve a validar propietario y fase bajo bloqueo de la fila.
@@ -182,7 +182,7 @@ class ProductService {
         if (result is! Map) {
           debugPrint(
             '[ProductService.$rpcName] RPC completada; '
-            'validación de respuesta fallida: se esperaba un objeto Map.',
+            'validacion de respuesta fallida: se esperaba un objeto Map.',
           );
         } else {
           final expected = <String, Object?>{
@@ -210,7 +210,7 @@ class ProductService {
           if (mismatches.isNotEmpty) {
             debugPrint(
               '[ProductService.$rpcName] RPC completada; '
-              'validación de respuesta fallida. Campos que no coinciden: '
+              'validacion de respuesta fallida. Campos que no coinciden: '
               '${mismatches.join(', ')}.',
             );
           }
@@ -235,7 +235,7 @@ class ProductService {
       if (kDebugMode) {
         debugPrint(
           '[ProductService.$rpcName] PostgrestException '
-          'durante $diagnosticStage; no se completó la validación de respuesta. '
+          'durante $diagnosticStage; no se completo la validacion de respuesta. '
           'code=${error.code}; message=${error.message}; '
           'details=${error.details}; hint=${error.hint}',
         );
@@ -243,15 +243,15 @@ class ProductService {
       if (error.code == 'PGRST202' || error.code == '42883') {
         if (alternative) {
           throw const ProductPhaseException(
-            'El paso a Canales alternativos aún no está habilitado en Supabase. Falta instalar y verificar su RPC.',
+            'El paso a Canales alternativos aun no esta habilitado en Supabase. Falta instalar y verificar su RPC.',
           );
         }
         throw const ProductPhaseException(
-          'La transición aún no está habilitada en Supabase. Falta instalar y verificar la operación transaccional.',
+          'La transicion aun no esta habilitada en Supabase. Falta instalar y verificar la operacion transaccional.',
         );
       }
       throw const ProductPhaseException(
-        'Supabase no confirmó la transición. Revisa permisos, fase e historial y actualiza el producto antes de reintentar.',
+        'Supabase no confirmo la transicion. Revisa permisos, fase e historial y actualiza el producto antes de reintentar.',
       );
     }
   }
@@ -317,7 +317,7 @@ class ProductService {
   // 3. CONSULTAR UN PRODUCTO POR SU ID
   // ==========================================
 
-  /// Recupera el producto y ordena sus fotografías para mantener una portada estable.
+  /// Recupera el producto y ordena sus fotografias para mantener una portada estable.
   Future<ProductModel> getProductById(String idProducto) async {
     final response = await _client
         .from('productos')
@@ -351,7 +351,7 @@ class ProductService {
   // 4. ACTUALIZAR PRODUCTO
   // ==========================================
 
-  /// Edita un producto propio sin alterar su fase y conserva las demás fotografías.
+  /// Edita un producto propio sin alterar su fase y conserva las demas fotografias.
   Future<ProductModel> updateProduct(
     ProductModel product, {
     XFile? image,
@@ -361,9 +361,9 @@ class ProductService {
     }
     final userId = _supabaseService.currentUser?.id;
     if (userId == null) {
-      throw const ProductEditException('Inicia sesión como productor.');
+      throw const ProductEditException('Inicia sesion como productor.');
     }
-    // El perfil persistido y el propietario se comprueban además de la sesión.
+    // El perfil persistido y el propietario se comprueban ademas de la sesion.
     final profile = await ProfileRepository(supabaseService: _supabaseService)
         .getCurrentProfile();
     final existing = await getProductById(product.idProducto!);
@@ -399,14 +399,14 @@ class ProductService {
         .select()
         .single();
 
-    // Verificar la identidad devuelta antes de asociar una fotografía al registro editado.
+    // Verificar la identidad devuelta antes de asociar una fotografia al registro editado.
     if (response['id_producto'] != product.idProducto ||
         response['id_productor'] != userId) {
       throw const ProductEditException(
-        'No se pudo confirmar la actualización. Revisa la publicación antes de reintentar.',
+        'No se pudo confirmar la actualizacion. Revisa la publicacion antes de reintentar.',
       );
     }
-    // La fotografía se asocia después del producto; un fallo se informa como guardado parcial.
+    // La fotografia se asocia despues del producto; un fallo se informa como guardado parcial.
     if (imageUrl != null) {
       try {
         final photos = await _client
@@ -441,8 +441,8 @@ class ProductService {
           debugPrintStack(stackTrace: stackTrace);
         }
         throw const ProductEditException(
-          'Los datos se guardaron, pero no se pudo confirmar el cambio de fotografía. '
-          'La fotografía anterior no se eliminó. Revisa la publicación antes de reintentar.',
+          'Los datos se guardaron, pero no se pudo confirmar el cambio de fotografia. '
+          'La fotografia anterior no se elimino. Revisa la publicacion antes de reintentar.',
         );
       }
     }
@@ -457,10 +457,10 @@ class ProductService {
   }
 
   // ==========================================
-  // 5. DESACTIVAR PUBLICACIÓN
+  // 5. DESACTIVAR PUBLICACION
   // ==========================================
 
-  /// Mantiene la entrada de desactivación delegando en la misma retirada lógica.
+  /// Mantiene la entrada de desactivacion delegando en la misma retirada logica.
   Future<void> deactivateProduct(String idProducto) async {
     await deleteProduct(idProducto);
   }
@@ -473,9 +473,9 @@ class ProductService {
   }) async {
     final user = _supabaseService.currentUser;
     if (user == null || productId.trim().isEmpty) {
-      throw const ProductEditException('Inicia sesión como productor.');
+      throw const ProductEditException('Inicia sesion como productor.');
     }
-    // El perfil persistido y el propietario se comprueban además de la sesión.
+    // El perfil persistido y el propietario se comprueban ademas de la sesion.
     final profile = await ProfileRepository(supabaseService: _supabaseService)
         .getCurrentProfile();
     if (profile == null ||
@@ -496,7 +496,7 @@ class ProductService {
         'Solo puedes modificar tus publicaciones.',
       );
     }
-    // Conservar la unidad existente si no se envía otra; nunca inventarla para NULL.
+    // Conservar la unidad existente si no se envia otra; nunca inventarla para NULL.
     final selectedUnit =
         unit ?? ProductUnit.fromValue(existing['unidad_medida']);
     if (selectedUnit == null) {
@@ -507,7 +507,7 @@ class ProductService {
       unit: selectedUnit,
     );
     if (error != null) throw ProductEditException(error);
-    // La representación devuelta permite comprobar que la escritura afectó al registro esperado.
+    // La representacion devuelta permite comprobar que la escritura afecto al registro esperado.
     final updated = await _client
         .from('productos')
         .update({
@@ -523,7 +523,7 @@ class ProductService {
         (updated['cantidad_disponible'] as num?)?.toDouble() != quantity ||
         updated['unidad_medida'] != selectedUnit.value) {
       throw const ProductEditException(
-        'No se pudo confirmar la cantidad actualizada. Refresca la publicación.',
+        'No se pudo confirmar la cantidad actualizada. Refresca la publicacion.',
       );
     }
   }
@@ -532,10 +532,10 @@ class ProductService {
   // 6. ELIMINAR PRODUCTO
   // ==========================================
 
-  /// El trigger instalado protege las cascadas; RLS se aplica a la sesión actual.
+  /// El trigger instalado protege las cascadas; RLS se aplica a la sesion actual.
   Future<void> permanentlyDeleteProduct(String productId, String name) async {
     const unconfirmed = ProductPermanentDeleteException(
-      'No se pudo confirmar la eliminación. Revisa la publicación antes de reintentar. Puedes utilizar «Ocultar producto».',
+      'No se pudo confirmar la eliminacion. Revisa la publicacion antes de reintentar. Puedes utilizar «Ocultar producto».',
     );
     final user = _supabaseService.currentUser;
     if (user == null || productId.trim().isEmpty || name.trim().isEmpty) {
@@ -560,7 +560,7 @@ class ProductService {
           _supabaseService.currentUser?.id != user.id) {
         throw unconfirmed;
       }
-      // RETURNING evita anunciar éxito cuando RLS no permite eliminar ninguna fila.
+      // RETURNING evita anunciar exito cuando RLS no permite eliminar ninguna fila.
       final deleted = await _client
           .from('productos')
           .delete()
@@ -578,26 +578,26 @@ class ProductService {
           error.code == '23503' ||
           error.code == '23514') {
         throw const ProductPermanentDeleteException(
-          'Supabase bloqueó la eliminación por actividad comercial o historial protegido. Puedes utilizar «Ocultar producto» para conservar la información.',
+          'Supabase bloqueo la eliminacion por actividad comercial o historial protegido. Puedes utilizar «Ocultar producto» para conservar la informacion.',
         );
       }
       throw unconfirmed;
     }
   }
 
-  /// Retira del catálogo mediante estado_publicacion=false; no elimina filas ni fotografías.
+  /// Retira del catalogo mediante estado_publicacion=false; no elimina filas ni fotografias.
   Future<void> deleteProduct(String idProducto) =>
       setVisibility(idProducto, false);
 
-  /// Oculta o vuelve a mostrar sin modificar campos del producto ni sus fotografías.
+  /// Oculta o vuelve a mostrar sin modificar campos del producto ni sus fotografias.
   Future<void> setVisibility(String idProducto, bool visible) async {
     final user = _supabaseService.currentUser;
     if (user == null || idProducto.trim().isEmpty) {
       throw const ProductDeleteException();
     }
-    // usuarios.id_usuario corresponde a Auth según el repositorio de perfiles.
+    // usuarios.id_usuario corresponde a Auth segun el repositorio de perfiles.
     // Verificar el perfil real y su rol, nunca user_metadata editable.
-    // El perfil persistido y el propietario se comprueban además de la sesión.
+    // El perfil persistido y el propietario se comprueban ademas de la sesion.
     final profile = await ProfileRepository(supabaseService: _supabaseService)
         .getCurrentProfile();
     if (profile == null ||
@@ -614,7 +614,7 @@ class ProductService {
         existing['id_productor'] != profile.id) {
       throw const ProductDeleteException();
     }
-    // La representación devuelta permite comprobar que la escritura afectó al registro esperado.
+    // La representacion devuelta permite comprobar que la escritura afecto al registro esperado.
     final updated = await _client
         .from('productos')
         .update({'estado_publicacion': visible})

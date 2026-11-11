@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
 
-/// Estilo limitado a productos: no altera el tema ni la navegación de otros módulos.
+/// Estilo limitado a productos: no altera el tema ni la navegacion de otros modulos.
 class ProductScaffold extends StatelessWidget {
   const ProductScaffold({
     super.key,

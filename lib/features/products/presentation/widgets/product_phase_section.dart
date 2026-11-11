@@ -39,7 +39,7 @@ class ProductPhaseSection extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Text(
-              'Fase de comercialización',
+              'Fase de comercializacion',
               style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 8),
@@ -85,7 +85,7 @@ class ProductPhaseSection extends StatelessWidget {
   }
 }
 
-/// Formulario local: conserva unidad y visibilidad y solicita doble confirmación explícita.
+/// Formulario local: conserva unidad y visibilidad y solicita doble confirmacion explicita.
 class _PhaseTransitionForm extends StatefulWidget {
   const _PhaseTransitionForm({required this.product});
   final AgriculturalProduct product;
@@ -134,7 +134,7 @@ class _PhaseTransitionFormState extends State<_PhaseTransitionForm> {
     super.dispose();
   }
 
-  /// Revalida sesión, rol y propietario tras el diálogo; solo la RPC puede confirmar éxito.
+  /// Revalida sesion, rol y propietario tras el dialogo; solo la RPC puede confirmar exito.
   Future<void> _submit() async {
     if (_working || !_key.currentState!.validate() || !_available) return;
     if (widget.product.unit == null) {
@@ -157,7 +157,7 @@ class _PhaseTransitionFormState extends State<_PhaseTransitionForm> {
           content: Text(
             _alternative
                 ? '¿Confirmas destinar esta cantidad a Canales alternativos con el precio indicado?'
-                : '¿Está seguro de que este producto ya está disponible para la venta?',
+                : '¿Esta seguro de que este producto ya esta disponible para la venta?',
           ),
           actions: [
             TextButton(
@@ -181,7 +181,7 @@ class _PhaseTransitionFormState extends State<_PhaseTransitionForm> {
         return;
       }
       final vm = context.read<ProductsViewModel>();
-      // El progreso representa la petición, no el tiempo de decisión del productor.
+      // El progreso representa la peticion, no el tiempo de decision del productor.
       setState(() => _saving = true);
       final transition = _alternative
           ? vm.transitionToAlternativeChannels
@@ -197,7 +197,7 @@ class _PhaseTransitionFormState extends State<_PhaseTransitionForm> {
       } else {
         setState(
           () =>
-              _error = vm.errorMessage ?? 'No se pudo confirmar la transición.',
+              _error = vm.errorMessage ?? 'No se pudo confirmar la transicion.',
         );
       }
     } finally {
@@ -274,7 +274,7 @@ class _PhaseTransitionFormState extends State<_PhaseTransitionForm> {
                 (value ?? '').trim().replaceAll(',', '.'),
               );
               return number == null || !number.isFinite || number < 0
-                  ? 'Ingresa un precio válido, mayor o igual a cero.'
+                  ? 'Ingresa un precio valido, mayor o igual a cero.'
                   : null;
             },
           ),
@@ -285,7 +285,7 @@ class _PhaseTransitionFormState extends State<_PhaseTransitionForm> {
             title: Text(
               _alternative
                   ? 'Confirmo la cantidad destinada a Canales alternativos.'
-                  : 'Confirmo que el producto ya está disponible para comercialización.',
+                  : 'Confirmo que el producto ya esta disponible para comercializacion.',
             ),
             value: _available,
             onChanged: _working

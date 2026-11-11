@@ -6,9 +6,9 @@ import 'package:provider/provider.dart';
 import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_strings.dart';
+import '../../core/widgets/agro_brand_background.dart';
 import '../auth/presentation/viewmodels/auth_viewmodel.dart';
 
-/// Brand sequence displayed after native launch and before login/home.
 class SplashView extends StatefulWidget {
   const SplashView({super.key, this.autoNavigate = true});
 
@@ -25,17 +25,17 @@ class _SplashViewState extends State<SplashView> {
   }
 
   Future<void> _finishSplash() async {
-    await Future<void>.delayed(const Duration(milliseconds: 3200));
+    await Future<void>.delayed(const Duration(milliseconds: 550));
     if (!mounted) return;
     final auth = context.read<AuthViewModel>();
-    context.go(auth.isAuthenticated ? AppRoutes.home : AppRoutes.login);
+    context.go(auth.isAuthenticated ? AppRoutes.home : AppRoutes.welcome);
   }
 
   @override
   Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppColors.primary,
-    body: ColoredBox(
-      color: AppColors.primary,
+    backgroundColor: AppColors.primaryDark,
+    body: AgroBrandBackground(
+      backgroundKey: const ValueKey('splash-background'),
       child: SafeArea(
         child: SizedBox.expand(
           child: Stack(
@@ -51,50 +51,44 @@ class _SplashViewState extends State<SplashView> {
                               borderRadius: BorderRadius.circular(24),
                               child: Image.asset(
                                 'assets/images/logotipo_oficial.png',
-                                width: 112,
-                                height: 112,
+                                width: 96,
+                                height: 96,
                                 fit: BoxFit.contain,
-                                cacheWidth: 224,
-                                filterQuality: FilterQuality.medium,
+                                cacheWidth: 192,
+                                filterQuality: FilterQuality.low,
                               ),
                             ),
                           )
                           .animate()
-                          .fadeIn(duration: 420.ms, curve: Curves.easeOutCubic)
+                          .fadeIn(duration: 240.ms, curve: Curves.easeOut)
                           .scale(
                             begin: const Offset(.88, .88),
                             end: const Offset(1, 1),
-                            duration: 420.ms,
-                            curve: Curves.easeOutCubic,
+                            duration: 240.ms,
+                            curve: Curves.easeOut,
                           ),
                       const SizedBox(height: 20),
                       Text(
-                            'Agro+',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: AppColors.surface,
-                              fontSize: 42,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: -1,
-                            ),
-                          )
-                          .animate(delay: 220.ms)
-                          .fadeIn(duration: 340.ms)
-                          .slideY(begin: .08, end: 0),
+                        'Agro+',
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: AppColors.surface,
+                          fontSize: 42,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -1,
+                        ),
+                      ).animate(delay: 100.ms).fadeIn(duration: 200.ms),
                       const SizedBox(height: 10),
                       Text(
-                            AppStrings.appTagline,
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              color: AppColors.surface.withValues(alpha: .92),
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1.2,
-                            ),
-                          )
-                          .animate(delay: 420.ms)
-                          .fadeIn(duration: 320.ms)
-                          .slideY(begin: .06, end: 0),
+                        AppStrings.appTagline,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: AppColors.surface.withValues(alpha: .92),
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 1.2,
+                        ),
+                      ).animate(delay: 180.ms).fadeIn(duration: 180.ms),
                     ],
                   ),
                 ),
@@ -129,7 +123,7 @@ class _SplashViewState extends State<SplashView> {
                         ),
                       ],
                     ),
-                  ).animate(delay: 680.ms).fadeIn(duration: 240.ms),
+                  ).animate(delay: 260.ms).fadeIn(duration: 160.ms),
                 ),
               ),
             ],

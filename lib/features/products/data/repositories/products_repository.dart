@@ -1,4 +1,4 @@
-// Acceso a datos del catálogo y coordinación del alta de preventas con fotografía.
+// Acceso a datos del catalogo y coordinacion del alta de preventas con fotografia.
 
 import 'dart:convert';
 
@@ -17,7 +17,7 @@ import '../services/product_storage_service.dart';
 import '../services/product_service.dart';
 import '../../../auth/data/repositories/profile_repository.dart';
 
-/// Distingue errores de validación, creación incierta y guardado parcial de fotografías.
+/// Distingue errores de validacion, creacion incierta y guardado parcial de fotografias.
 class ProductPublicationException implements Exception {
   const ProductPublicationException(
     this.message, {
@@ -25,12 +25,12 @@ class ProductPublicationException implements Exception {
     this.requiresReview = false,
   });
   final String message;
-  // Un ID conocido indica que el producto ya se creó; requiresReview bloquea reintentos inciertos.
+  // Un ID conocido indica que el producto ya se creo; requiresReview bloquea reintentos inciertos.
   final String? productId;
   final bool requiresReview;
 }
 
-/// Fuente de datos para el catálogo de preventas y los intereses de compradores.
+/// Fuente de datos para el catalogo, publicaciones e intereses del marketplace.
 /// Las vistas delegan sus operaciones; no consultan Supabase directamente.
 class ProductsRepository {
   ProductsRepository({
@@ -42,7 +42,7 @@ class ProductsRepository {
   final ProductStorageService _storageService;
   String? get currentUserId => _supabaseService.currentUser?.id;
 
-  /// Delega la transición en el mismo servicio, sin duplicar escrituras ni historial.
+  /// Delega la transicion en el mismo servicio, sin duplicar escrituras ni historial.
   Future<int> transitionToDirectSale(
     String productId, {
     required double quantity,
@@ -56,7 +56,7 @@ class ProductsRepository {
         unit: unit,
       );
 
-  /// La segunda transición también se confirma exclusivamente mediante su RPC.
+  /// La segunda transicion tambien se confirma exclusivamente mediante su RPC.
   Future<int> transitionToAlternativeChannels(
     String productId, {
     required double quantity,
@@ -76,7 +76,7 @@ class ProductsRepository {
     final profile = await ProfileRepository(supabaseService: _supabaseService)
         .getCurrentProfile();
     if (profile == null || profile.id != userId || profile.role != 'producer') {
-      throw const ProductEditException('Esta sección es para productores.');
+      throw const ProductEditException('Esta seccion es para productores.');
     }
     final rows = await _withOptionalUnit(
       (select) async => await _supabaseService.client
@@ -88,7 +88,7 @@ class ProductsRepository {
     return rows.map((row) => AgriculturalProduct.fromMap(row)).toList();
   }
 
-  /// La misma comprobación de rol y propiedad protege ambos cambios de visibilidad.
+  /// La misma comprobacion de rol y propiedad protege ambos cambios de visibilidad.
   Future<void> setVisibility(String productId, bool visible) =>
       ProductService(supabaseService: _supabaseService)
           .setVisibility(productId, visible);
@@ -97,7 +97,7 @@ class ProductsRepository {
       ProductService(supabaseService: _supabaseService)
           .permanentlyDeleteProduct(productId, name);
 
-  // Campos y alias comunes del catálogo y detalle; las fotografías son una relación hija.
+  // Campos y alias comunes del catalogo y detalle; las fotografias son una relacion hija.
   static const _productSelect = '''
     id_producto, id_productor, id_categoria, id_fase_actual,
     nombre_producto, cantidad_disponible, precio_unitario,
@@ -128,7 +128,7 @@ class ProductsRepository {
             message = body['message'] as String;
           }
         } on FormatException {
-          // No es un error JSON estructurado; propagar la excepción original.
+          // No es un error JSON estructurado; propagar la excepcion original.
         }
       }
       if (code != '42703' || !message.contains('productos.unidad_medida')) {
@@ -144,7 +144,7 @@ class ProductsRepository {
     }
   }
 
-  /// Carga las categorías ordenadas que utilizan los filtros y formularios.
+  /// Carga las categorias ordenadas que utilizan los filtros y formularios.
   Future<List<AgriculturalCategory>> getCategories() async {
     final rows = await _supabaseService.client
         .from('categorias_agricolas')
@@ -155,7 +155,7 @@ class ProductsRepository {
         .toList();
   }
 
-  /// Consulta publicaciones activas, sus relaciones y el orden de creación descendente.
+  /// Consulta publicaciones activas, sus relaciones y el orden de creacion descendente.
   Future<List<AgriculturalProduct>> getPublishedProducts() async {
     final rows = await _withOptionalUnit(
       (select) async => await _supabaseService.client
@@ -169,7 +169,52 @@ class ProductsRepository {
         .toList();
   }
 
-  /// Busca un lote por ID; una publicación inactiva solo se devuelve a su propietario.
+  /// Loads only available publications from producers with a public map zone.
+  /// Avoids transferring the full catalog when opening the map.
+  Future<List<AgriculturalProduct>> getPublishedProductsForProducers(
+    Iterable<String> producerIds,
+  ) async {
+    final ids = producerIds
+        .map((id) => id.trim())
+        .where((id) => id.isNotEmpty)
+        .toSet()
+        .toList(growable: false);
+    if (ids.isEmpty) return const [];
+
+    final rows = await _withOptionalUnit(
+      (select) async => await _supabaseService.client
+          .from('productos')
+          .select(select)
+          .inFilter('id_productor', ids)
+          .eq('estado_publicacion', true)
+          .gt('cantidad_disponible', 0)
+          .order('created_at', ascending: false),
+    );
+    return (rows as List)
+        .map((row) => AgriculturalProduct.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Lists active marketplace items for one producer without loading others.
+  Future<List<AgriculturalProduct>> getPublishedProductsForProducer(
+    String producerId,
+  ) async {
+    if (producerId.trim().isEmpty) return const [];
+    final rows = await _withOptionalUnit(
+      (select) async => await _supabaseService.client
+          .from('productos')
+          .select(select)
+          .eq('id_productor', producerId)
+          .eq('estado_publicacion', true)
+          .gt('cantidad_disponible', 0)
+          .order('created_at', ascending: false),
+    );
+    return (rows as List)
+        .map((row) => AgriculturalProduct.fromMap(row as Map<String, dynamic>))
+        .toList();
+  }
+
+  /// Busca un lote por ID; una publicacion inactiva solo se devuelve a su propietario.
   Future<AgriculturalProduct?> getProduct(String productId) async {
     final row = await _withOptionalUnit(
       (select) async => await _supabaseService.client
@@ -186,12 +231,12 @@ class ProductsRepository {
     return AgriculturalProduct.fromMap(row);
   }
 
-  /// Delega la retirada lógica en el servicio que comprueba sesión, rol y propiedad.
+  /// Delega la retirada logica en el servicio que comprueba sesion, rol y propiedad.
   Future<void> deleteProduct(String productId) =>
       ProductService(supabaseService: _supabaseService)
           .deleteProduct(productId);
 
-  /// Guarda cantidad y unidad sin modificar el resto de la publicación.
+  /// Guarda cantidad y unidad sin modificar el resto de la publicacion.
   Future<void> updateQuantity(
     String productId,
     double quantity, {
@@ -200,7 +245,7 @@ class ProductsRepository {
       ProductService(supabaseService: _supabaseService)
           .updateQuantity(productId, quantity, unit: unit);
 
-  /// Recupera el modelo actual y delega una edición que conserva su fase comercial.
+  /// Recupera el modelo actual y delega una edicion que conserva su fase comercial.
   Future<void> updateProduct({
     required String productId,
     required String name,
@@ -212,10 +257,10 @@ class ProductsRepository {
     DateTime? harvest,
     XFile? image,
   }) async {
-    // Rechazar accesos directos sin sesión o sin unidad antes de consultar el producto.
+    // Rechazar accesos directos sin sesion o sin unidad antes de consultar el producto.
     final userId = _supabaseService.currentUser?.id;
     if (userId == null) {
-      throw const ProductEditException('Inicia sesión como productor.');
+      throw const ProductEditException('Inicia sesion como productor.');
     }
     if (unit == null) {
       throw const ProductEditException('Selecciona la unidad de medida.');
@@ -254,6 +299,13 @@ class ProductsRepository {
     XFile? image,
   }) async {
     final userId = _requireUserId();
+    final profile = await ProfileRepository(supabaseService: _supabaseService)
+        .getCurrentProfile();
+    if (profile == null || profile.id != userId || profile.role != 'producer') {
+      throw const ProductPublicationException(
+        'Solo las cuentas productoras pueden publicar productos.',
+      );
+    }
     if (name.trim().length < 3 || !price.isFinite || price < 0) {
       throw const ProductPublicationException(
         'Revisa el nombre y el precio del producto.',
@@ -277,7 +329,7 @@ class ProductsRepository {
         .eq('nombre_fase', 'Preventa')
         .single();
 
-    // Subir la fotografía a Cloudinary, si se seleccionó una.
+    // Subir la fotografia a Cloudinary, si se selecciono una.
     String? imageUrl;
 
     if (image != null) {
@@ -287,12 +339,12 @@ class ProductsRepository {
         rethrow;
       } catch (_) {
         throw const ProductUploadException(
-          'No se pudo subir la fotografía. Revisa tu conexión e intenta de nuevo.',
+          'No se pudo subir la fotografia. Revisa tu conexion e intenta de nuevo.',
         );
       }
     }
 
-    // Estas operaciones no forman una transacción conjunta con Cloudinary.
+    // Estas operaciones no forman una transaccion conjunta con Cloudinary.
     // Registrar el producto y recuperar su identificador.
     late String productId;
     try {
@@ -318,13 +370,13 @@ class ProductsRepository {
       productId = product['id_producto'].toString();
     } catch (_) {
       throw const ProductPublicationException(
-        'No se pudo confirmar la creación del producto. Revisa tus publicaciones antes de reintentar.',
+        'No se pudo confirmar la creacion del producto. Revisa tus publicaciones antes de reintentar.',
         requiresReview: true,
       );
     }
 
     // Si falla esta segunda escritura, el ID permite advertir que el producto ya existe.
-    // Asociar la fotografía al producto en Supabase.
+    // Asociar la fotografia al producto en Supabase.
     if (imageUrl != null) {
       try {
         await _supabaseService.client.from('fotografias_producto').insert({
@@ -333,15 +385,15 @@ class ProductsRepository {
         });
       } catch (_) {
         throw ProductPublicationException(
-          'El producto se guardó, pero no se pudo confirmar la asociación de la fotografía. '
-          'Revisa la publicación antes de reintentar.',
+          'El producto se guardo, pero no se pudo confirmar la asociacion de la fotografia. '
+          'Revisa la publicacion antes de reintentar.',
           productId: productId,
         );
       }
     }
   }
 
-  /// Crea o actualiza el interés del mismo comprador y producto, sin descontar existencias.
+  /// Crea o actualiza el interes del mismo comprador y producto, sin descontar existencias.
   Future<void> registerInterest({
     required String productId,
     required double quantity,
@@ -354,10 +406,10 @@ class ProductsRepository {
     }, onConflict: 'id_producto,id_comprador');
   }
 
-  /// Impide realizar operaciones de escritura cuando ya no hay una sesión disponible.
+  /// Impide realizar operaciones de escritura cuando ya no hay una sesion disponible.
   String _requireUserId() {
     final userId = _supabaseService.currentUser?.id;
-    if (userId == null) throw StateError('La sesión ya no está disponible.');
+    if (userId == null) throw StateError('La sesion ya no esta disponible.');
     return userId;
   }
 }

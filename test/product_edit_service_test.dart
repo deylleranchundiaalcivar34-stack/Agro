@@ -98,7 +98,7 @@ void main() {
             request: request,
           );
         }
-        // El refresco de catálogo usa listas, mientras el detalle devuelve un objeto.
+        // El refresco de catalogo usa listas, mientras el detalle devuelve un objeto.
         if (request.url.path.endsWith('/categorias_agricolas')) {
           return http.Response('[]', 200, request: request);
         }
@@ -154,7 +154,7 @@ void main() {
   );
 
   test(
-    'la creación de preventas mantiene las inserciones de producto y foto',
+    'la creacion de preventas mantiene las inserciones de producto y foto',
     () async {
       final repository = ProductsRepository(
         supabaseService: TestSupabase(client),
@@ -180,7 +180,7 @@ void main() {
   );
 
   test(
-    'actualiza el mismo ID y propietario, conserva fase y fotografías',
+    'actualiza el mismo ID y propietario, conserva fase y fotografias',
     () async {
       final result = await service.updateProduct(edited());
       final write = requests.singleWhere((r) => r.method == 'PATCH');
@@ -253,7 +253,7 @@ void main() {
   });
 
   test(
-    'quitar fecha envía NULL sin crear otro producto ni tocar sus fotografías',
+    'quitar fecha envia NULL sin crear otro producto ni tocar sus fotografias',
     () async {
       row['fecha_estimada_cosecha'] = '2030-01-15';
       final repo = ProductsRepository(supabaseService: TestSupabase(client));
@@ -277,7 +277,7 @@ void main() {
   );
 
   test(
-    'el ViewModel bloquea un segundo guardado mientras se sube la fotografía',
+    'el ViewModel bloquea un segundo guardado mientras se sube la fotografia',
     () async {
       storage.wait = Completer<void>();
       final vm = ProductsViewModel(
@@ -321,7 +321,7 @@ void main() {
   });
 
   test(
-    'un fallo de subida no modifica el producto ni las fotografías',
+    'un fallo de subida no modifica el producto ni las fotografias',
     () async {
       storage.fail = true;
       await expectLater(
@@ -332,7 +332,7 @@ void main() {
     },
   );
 
-  test('reemplaza la relación existente sin borrar fotografías', () async {
+  test('reemplaza la relacion existente sin borrar fotografias', () async {
     final result = await service.updateProduct(
       edited(),
       image: XFile('test.jpg'),
@@ -346,7 +346,7 @@ void main() {
     expect(requests.any((r) => r.method == 'DELETE'), isFalse);
   });
 
-  test('un producto sin fotografía recibe una sola relación nueva', () async {
+  test('un producto sin fotografia recibe una sola relacion nueva', () async {
     noPhoto = true;
     row['fotografias_producto'] = <Object>[];
     await service.updateProduct(edited(), image: XFile('test.jpg'));
@@ -357,7 +357,7 @@ void main() {
   });
 
   test(
-    'informa del guardado parcial si falla la relación y no borra la anterior',
+    'informa del guardado parcial si falla la relacion y no borra la anterior',
     () async {
       failPhoto = true;
       await expectLater(

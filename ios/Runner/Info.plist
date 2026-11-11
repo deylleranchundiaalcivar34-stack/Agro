@@ -24,8 +24,25 @@
 	<string>????</string>
 	<key>CFBundleVersion</key>
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>io.supabase.agro</string>
+			</array>
+		</dict>
+	</array>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Agro+ usa Face ID para confirmar el acceso local.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Agro+ usa tu ubicacion solo cuando eliges medir distancias a productores.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Agro+ permite elegir fotos de perfil y de productos cuando tú lo solicitas.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Agro+ usa la cámara solo cuando eliges tomar una foto de perfil o de producto.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -56,8 +73,6 @@
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>

@@ -1,4 +1,4 @@
-// Pruebas de la confirmación; el callback simulado no ejecuta DELETE ni accede a datos reales.
+// Pruebas de la confirmacion; el callback simulado no ejecuta DELETE ni accede a datos reales.
 import 'dart:async';
 import 'dart:convert';
 
@@ -96,7 +96,7 @@ void main() {
     );
   }
 
-  testWidgets('cancelar cierra el diálogo sin ejecutar el callback', (
+  testWidgets('cancelar cierra el dialogo sin ejecutar el callback', (
     tester,
   ) async {
     var calls = 0;
@@ -106,16 +106,29 @@ void main() {
     });
     await tester.tap(find.text('Eliminar definitivamente'));
     await tester.pumpAndSettle();
-    expect(find.text('¿Eliminar producto?'), findsOneWidget);
+    expect(find.text('¿Eliminar producto definitivamente?'), findsOneWidget);
     expect(
       find.text(
-        '¿Está seguro de que desea eliminar este producto definitivamente?',
+        'Estas a punto de eliminar permanentemente esta publicacion. Esta accion no se puede deshacer y el producto dejara de estar disponible en Agro+.',
       ),
       findsOneWidget,
     );
     expect(find.byIcon(Icons.warning_amber_rounded), findsOneWidget);
-    expect(find.byType(TextField), findsNothing);
-    expect(find.widgetWithText(FilledButton, 'Eliminar'), findsOneWidget);
+    expect(find.byType(TextField), findsOneWidget);
+    expect(
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      isNull,
+    );
+    await tester.enterText(find.byType(TextField), 'Otro producto');
+    await tester.pump();
+    expect(
+      tester.widget<FilledButton>(find.byType(FilledButton)).onPressed,
+      isNull,
+    );
+    expect(
+      find.widgetWithText(FilledButton, 'Eliminar definitivamente'),
+      findsOneWidget,
+    );
     await tester.tap(find.text('Cancelar'));
     await tester.pumpAndSettle();
     expect(calls, 0);
@@ -137,7 +150,11 @@ void main() {
         }, onDeleted: () => removed = true);
         await tester.tap(find.text('Eliminar definitivamente'));
         await tester.pumpAndSettle();
-        await tester.tap(find.widgetWithText(FilledButton, 'Eliminar'));
+        await tester.enterText(find.byType(TextField), 'Tomates');
+        await tester.pump();
+        await tester.tap(
+          find.widgetWithText(FilledButton, 'Eliminar definitivamente'),
+        );
         await tester.pump();
         await tester.pump(const Duration(milliseconds: 400));
         expect(calls, 1);
@@ -154,14 +171,18 @@ void main() {
     );
   }
 
-  testWidgets('un fallo conserva el producto y no anuncia éxito', (
+  testWidgets('un fallo conserva el producto y no anuncia exito', (
     tester,
   ) async {
     var removed = false;
     await open(tester, (_) async => false, onDeleted: () => removed = true);
     await tester.tap(find.text('Eliminar definitivamente'));
     await tester.pumpAndSettle();
-    await tester.tap(find.widgetWithText(FilledButton, 'Eliminar'));
+    await tester.enterText(find.byType(TextField), 'Tomates');
+    await tester.pump();
+    await tester.tap(
+      find.widgetWithText(FilledButton, 'Eliminar definitivamente'),
+    );
     await tester.pumpAndSettle();
     expect(removed, isFalse);
     expect(find.text('Producto eliminado definitivamente'), findsNothing);

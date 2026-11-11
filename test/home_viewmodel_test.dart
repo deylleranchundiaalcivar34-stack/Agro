@@ -43,7 +43,7 @@ void main() {
 
     await viewModel.initialLoad;
 
-    expect(viewModel.summaryLabel, 'Sin conexión');
+    expect(viewModel.summaryLabel, 'Sin conexion');
     expect(viewModel.metrics.every((metric) => metric.value == '—'), isTrue);
     expect(
       viewModel.metrics.every(

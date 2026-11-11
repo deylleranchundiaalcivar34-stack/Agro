@@ -123,7 +123,7 @@ void main() {
     await client.dispose();
   });
 
-  test('respeta los límites y precisión de numeric(10,2), sin redondear', () {
+  test('respeta los limites y precision de numeric(10,2), sin redondear', () {
     for (final text in ['0,01', '99999999.99', '25', '25.50', '.50']) {
       expect(ProductQuantity.validate(text), isNull, reason: text);
     }
@@ -267,7 +267,7 @@ void main() {
     expect(key.currentState!.validate(), isFalse);
     await tester.pump();
     expect(
-      find.text('Para unidades ingresa un número entero positivo.'),
+      find.text('Para unidades ingresa un numero entero positivo.'),
       findsOneWidget,
     );
     rebuild(() => unit = ProductUnit.kg);
@@ -316,7 +316,7 @@ void main() {
     expect(requests.every((r) => r.method == 'GET'), isTrue);
   });
 
-  test('sin sesión no realiza peticiones', () async {
+  test('sin sesion no realiza peticiones', () async {
     supabase.authenticated = false;
     await expectLater(
       service.updateQuantity('product-1', 5),
@@ -343,14 +343,14 @@ void main() {
     expect(requests.every((r) => r.method == 'GET'), isTrue);
   });
 
-  test('no anuncia éxito si la respuesta contiene otra cantidad', () async {
+  test('no anuncia exito si la respuesta contiene otra cantidad', () async {
     invalidResponse = true;
     expect(await vm.updateQuantity('product-1', 5), isFalse);
     expect(vm.errorMessage, contains('No se pudo confirmar'));
   });
 
   test(
-    'el ViewModel bloquea duplicados y refresca la cantidad del catálogo',
+    'el ViewModel bloquea duplicados y refresca la cantidad del catalogo',
     () async {
       await vm.loadCatalogue();
       patchWait = Completer<void>();
@@ -377,14 +377,14 @@ void main() {
   );
 
   testWidgets(
-    'la tarjeta muestra preventa, cantidad y cosecha sin desbordar en móvil',
+    'la tarjeta muestra preventa, cantidad y cosecha sin desbordar en movil',
     (tester) async {
       row['fotografias_producto'] = <Object>[];
       row['nombre_producto'] = 'Tomates de cosecha anunciada';
       row['cantidad_disponible'] = 99999999.99;
       row['unidad_medida'] = 'lb';
       for (final (width, scale) in [
-        // Incluir escritorio y texto ampliado para comprobar ambos tamaños de portada.
+        // Incluir escritorio y texto ampliado para comprobar ambos tamanos de portada.
         for (final width in [134.0, 160.0, 320.0, 640.0])
           for (final scale in [1.0, 1.6, 2.0]) (width, scale),
       ]) {
@@ -431,7 +431,7 @@ void main() {
           tester.getSize(find.byType(ClipRRect)).height,
           width >= 600 ? 160 : 136,
         );
-        // El borde inferior debe quedar junto al margen interior, sin una reserva vacía grande.
+        // El borde inferior debe quedar junto al margen interior, sin una reserva vacia grande.
         final bottomGap =
             tester.getBottomLeft(find.byType(ProductCard)).dy -
             tester.getBottomLeft(find.text('Cosecha: 15/01/2030')).dy;
@@ -456,7 +456,7 @@ void main() {
       expect(future.quantityLabel, 'Cantidad anunciada');
       row['fecha_estimada_cosecha'] = '2020-01-01';
       expect(AgriculturalProduct.fromMap(row).isPresale, isTrue);
-      row['fase'] = {'nombre_fase': 'Comercialización'};
+      row['fase'] = {'nombre_fase': 'Comercializacion'};
       final normal = AgriculturalProduct.fromMap(row);
       expect(normal.isPresale, isFalse);
       expect(normal.quantityLabel, 'Cantidad disponible');
@@ -478,7 +478,7 @@ void main() {
         routes: [
           GoRoute(
             path: '/',
-            builder: (_, _) => const Scaffold(body: Text('Catálogo')),
+            builder: (_, _) => const Scaffold(body: Text('Catalogo')),
             routes: [
               GoRoute(
                 path: 'edit',
@@ -526,7 +526,7 @@ void main() {
         find.text('Cantidad disponible actualizada correctamente'),
         findsOneWidget,
       );
-      expect(find.text('Catálogo'), findsOneWidget);
+      expect(find.text('Catalogo'), findsOneWidget);
     },
   );
 }

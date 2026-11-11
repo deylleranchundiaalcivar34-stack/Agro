@@ -1,22 +1,18 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/skeleton_block.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/network/supabase_service.dart';
+import '../../../main/presentation/views/main_navigation_view.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../../products/data/models/agricultural_product.dart';
+import '../../../products/presentation/viewmodels/products_viewmodel.dart';
+import '../../../products/presentation/widgets/product_card.dart';
 import '../viewmodels/home_viewmodel.dart';
 
-/// Pantalla de Inicio Base (HomeView) de Agro+.
-///
-/// Principios de diseño [ui-ux-pro-max] e [impeccable]:
-/// - Fondo neutro claro #F7F9F6.
-/// - Cabecera con saludo dinámico a la izquierda (Plus Jakarta Sans Bold) y avatar a la derecha.
-/// - Tarjeta flotante moderna con BorderRadius.circular(24) y sombra muy suave (sin elevación nativa).
-/// - Padding general de 24px y arquitectura MVVM limpia conectada a [HomeViewModel].
 class HomeView extends StatelessWidget {
   const HomeView({super.key});
 
@@ -29,290 +25,180 @@ class HomeView extends StatelessWidget {
   }
 }
 
-class _HomeViewContent extends StatelessWidget {
+class _HomeViewContent extends StatefulWidget {
   const _HomeViewContent();
 
   @override
+  State<_HomeViewContent> createState() => _HomeViewContentState();
+}
+
+class _HomeViewContentState extends State<_HomeViewContent> {
+  ModuleRefreshRegistry? _refreshRegistry;
+  final _searchController = TextEditingController();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final products = context.read<ProductsViewModel>();
+      products.loadCatalogue();
+    });
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final registry = ModuleRefreshScope.maybeOf(context);
+    if (identical(registry, _refreshRegistry)) return;
+    _refreshRegistry?.unregister(AppRoutes.home);
+    _refreshRegistry = registry;
+    _refreshRegistry?.register(AppRoutes.home, _refresh);
+  }
+
+  @override
+  void dispose() {
+    _refreshRegistry?.unregister(AppRoutes.home);
+    _searchController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refresh() async {
+    await Future.wait<void>([
+      context.read<HomeViewModel>().refresh(),
+      context.read<ProductsViewModel>().loadCatalogue(force: true),
+    ]);
+  }
+
+  void _openCatalog({String? query, String? category}) {
+    final trimmedQuery = query?.trim() ?? '';
+    final uri = Uri(
+      path: AppRoutes.products,
+      queryParameters: {
+        if (trimmedQuery.isNotEmpty) 'q': trimmedQuery,
+        if (category != null && category.isNotEmpty) 'category': category,
+      },
+    );
+    context.go(uri.toString());
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<HomeViewModel>();
-    final authViewModel = context.watch<AuthViewModel>();
+    final home = context.watch<HomeViewModel>();
+    final auth = context.watch<AuthViewModel>();
+    final products = context.watch<ProductsViewModel>();
+    final isProducer = auth.selectedRole == UserRole.producer;
+    final userId = auth.currentUser?.id;
+    final discoverProducts = products.products
+        .where(
+          (product) =>
+              product.isPublished &&
+              (!isProducer || product.producerId != userId),
+        )
+        .toList();
+    final recentProducts = discoverProducts.take(8).toList();
+    final availableCategories = products.categories
+        .where(
+          (category) => discoverProducts.any(
+            (product) => product.categoryId == category.id,
+          ),
+        )
+        .take(8)
+        .toList();
 
     return Scaffold(
-      backgroundColor: AppColors.background, // #F7F9F6
+      backgroundColor: AppColors.background,
       body: SafeArea(
+        top: false,
         child: RefreshIndicator(
           color: AppColors.primary,
-          onRefresh: viewModel.refresh,
+          onRefresh: _refresh,
           child: ListView(
-            physics: const BouncingScrollPhysics(
-              parent: AlwaysScrollableScrollPhysics(),
-            ),
-            padding: const EdgeInsets.fromLTRB(
-              24,
-              20,
-              24,
-              110,
-            ), // Padding general de 24px
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(20, 18, 20, 24),
             children: [
-              // ─────────────────────────────────────────────────────────
-              // 1. CABECERA: SALUDO DINÁMICO (IZQ) + AVATAR CIRCULAR (DER)
-              // ─────────────────────────────────────────────────────────
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          '¡Hola, ${authViewModel.displayName}! 👋',
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 19,
-                            fontWeight: FontWeight.w800,
-                            color: AppColors.textPrimary,
-                            letterSpacing: -0.4,
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '¿Qué deseas gestionar hoy?',
-                          style: GoogleFonts.inter(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 14),
-
-                  // Avatar circular de perfil en la esquina superior derecha
-                  GestureDetector(
-                    onTap: () => context.go(AppRoutes.profile),
-                    child: Container(
-                      width: 50,
-                      height: 50,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: AppColors.primary.withValues(alpha: 0.20),
-                          width: 1.8,
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 10,
-                            offset: const Offset(0, 3),
-                          ),
-                        ],
-                      ),
-                      alignment: Alignment.center,
-                      child: Text(
-                        authViewModel.userInitial,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.primary,
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ).animate().fadeIn(duration: 400.ms),
-
+              _buildHeader(context, auth, isProducer: isProducer),
+              const SizedBox(height: 20),
+              _buildMarketplaceHero(context, isProducer: isProducer),
+              const SizedBox(height: 20),
+              _buildSearchField(),
               const SizedBox(height: 24),
-
-              // ─────────────────────────────────────────────────────────
-              // 2. CONTENEDOR INICIAL: TARJETA FLOTANTE (circular(24))
-              // ─────────────────────────────────────────────────────────
-              Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(22),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24), // circular(24)
-                      border: Border.all(
-                        color: AppColors.divider.withValues(alpha: 0.40),
-                        width: 1,
+              _buildSectionHeading(
+                context,
+                title: 'Explora por categoria',
+                action: availableCategories.isEmpty
+                    ? null
+                    : TextButton(
+                        onPressed: () => _openCatalog(),
+                        child: const Text('Ver todas'),
                       ),
-                      boxShadow: [
-                        // Sombra muy suave sin elevación nativa
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 20,
-                          spreadRadius: 0,
-                          offset: const Offset(0, 6),
+              ),
+              const SizedBox(height: 10),
+              if (products.catalogueStatus == ProductsStatus.error)
+                _buildInlineProblem(
+                  context,
+                  message: 'No pudimos cargar las categorias.',
+                  action: TextButton(
+                    onPressed: () => products.loadCatalogue(force: true),
+                    child: const Text('Reintentar'),
+                  ),
+                )
+              else if (products.catalogueStatus == ProductsStatus.loading ||
+                  products.catalogueStatus == ProductsStatus.idle)
+                const _CategoryLoadingRow()
+              else if (availableCategories.isEmpty)
+                Text(
+                  'Las categorias apareceran cuando haya publicaciones disponibles.',
+                  style: Theme.of(context).textTheme.bodyMedium
+                      ?.copyWith(color: AppColors.textSecondary),
+                )
+              else
+                SizedBox(
+                  height: 44,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: availableCategories.length,
+                    separatorBuilder: (_, _) => const SizedBox(width: 8),
+                    itemBuilder: (context, index) {
+                      final category = availableCategories[index];
+                      return ActionChip(
+                        avatar: const Icon(
+                          Icons.eco_outlined,
+                          size: 18,
+                          color: AppColors.primaryDark,
                         ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 36,
-                              height: 36,
-                              decoration: BoxDecoration(
-                                color: AppColors.primarySurface,
-                                borderRadius: BorderRadius.circular(10),
-                              ),
-                              child: const Icon(
-                                Icons.eco_rounded,
-                                color: AppColors.primary,
-                                size: 20,
-                              ),
-                            ),
-                            const SizedBox(width: 10),
-                            Expanded(
-                              child: Text(
-                                'Resumen Agrícola',
-                                maxLines: 2,
-                                style: GoogleFonts.plusJakartaSans(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.textPrimary,
-                                ),
-                              ),
-                            ),
-                          ],
+                        label: Text(category.name),
+                        onPressed: () => _openCatalog(category: category.name),
+                        backgroundColor: AppColors.primarySurface,
+                        labelStyle: Theme.of(context).textTheme.labelLarge
+                            ?.copyWith(color: AppColors.primaryDark),
+                        side: BorderSide.none,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
                         ),
-                        const SizedBox(height: 8),
-                        Align(
-                          alignment: Alignment.centerRight,
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppColors.primarySurface,
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: Text(
-                              viewModel.summaryLabel,
-                              style: GoogleFonts.inter(
-                                fontSize: 10,
-                                fontWeight: FontWeight.w700,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Métricas / accesos del contenedor
-                        LayoutBuilder(
-                          builder: (context, constraints) {
-                            final compact = constraints.maxWidth < 420;
-                            final columns = compact ? 2 : 3;
-                            final itemWidth =
-                                (constraints.maxWidth - (columns - 1) * 8) /
-                                columns;
-                            return Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: List.generate(
-                                viewModel.metrics.length,
-                                (index) {
-                                  final metric = viewModel.metrics[index];
-                                  final isLast =
-                                      index == viewModel.metrics.length - 1;
-
-                                  return SizedBox(
-                                    width: compact && isLast
-                                        ? constraints.maxWidth
-                                        : itemWidth,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 10,
-                                        vertical: 12,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: AppColors.background,
-                                        borderRadius: BorderRadius.circular(16),
-                                      ),
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            metric.label,
-                                            maxLines: 2,
-                                            style: GoogleFonts.inter(
-                                              fontSize: 10.5,
-                                              fontWeight: FontWeight.w500,
-                                              color: AppColors.textSecondary,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            metric.value,
-                                            maxLines: 1,
-                                            overflow: TextOverflow.visible,
-                                            style: GoogleFonts.plusJakartaSans(
-                                              fontSize: 14,
-                                              fontWeight: FontWeight.w800,
-                                              color: AppColors.textPrimary,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            metric.change,
-                                            maxLines: 2,
-                                            style: GoogleFonts.inter(
-                                              fontSize: 10.5,
-                                              fontWeight: FontWeight.w600,
-                                              color: AppColors.primary,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  )
-                  .animate(delay: 150.ms)
-                  .fadeIn(duration: 450.ms)
-                  .slideY(begin: 0.08, end: 0, curve: Curves.easeOut),
-
-              const SizedBox(height: 26),
-
-              // ─────────────────────────────────────────────────────────
-              // 3. TARJETA HERO PREVENTA (FASE 0)
-              // ─────────────────────────────────────────────────────────
-              _buildHeroBanner(context)
-                  .animate(delay: 250.ms)
-                  .fadeIn(duration: 450.ms),
-
-              const SizedBox(height: 26),
-
-              // ─────────────────────────────────────────────────────────
-              // 4. ACCESOS RÁPIDOS PRINCIPALES
-              // ─────────────────────────────────────────────────────────
-              Text(
-                'Acciones Inmediatas',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.textPrimary,
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(height: 24),
+              _buildSectionHeading(
+                context,
+                title: 'Cosechas para descubrir',
+                action: TextButton(
+                  onPressed: () => _openCatalog(),
+                  child: const Text('Ver catalogo'),
                 ),
               ),
-              const SizedBox(height: 14),
-
-              _buildQuickActionCards(context)
-                  .animate(delay: 350.ms)
-                  .fadeIn(duration: 450.ms),
+              const SizedBox(height: 10),
+              _buildProductShelf(context, products, recentProducts),
+              const SizedBox(height: 24),
+              _buildMapCard(context),
+              if (!isProducer) ...[
+                const SizedBox(height: 24),
+                _buildSummary(context, home),
+              ],
+              const SizedBox(height: 12),
+              _buildChatShortcut(context),
             ],
           ),
         ),
@@ -320,10 +206,51 @@ class _HomeViewContent extends StatelessWidget {
     );
   }
 
-  Widget _buildHeroBanner(BuildContext context) {
+  Widget _buildHeader(
+    BuildContext context,
+    AuthViewModel auth, {
+    required bool isProducer,
+  }) {
+    final theme = Theme.of(context);
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Hola, ${auth.displayName}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w800,
+                  color: AppColors.textPrimary,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                isProducer
+                    ? 'Gestiona tus cosechas y explora otros productores'
+                    : 'Productos frescos, directo del campo',
+                maxLines: 2,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildMarketplaceHero(
+    BuildContext context, {
+    required bool isProducer,
+  }) {
+    final theme = Theme.of(context);
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(22),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppColors.primary, AppColors.primaryDark],
@@ -331,189 +258,277 @@ class _HomeViewContent extends StatelessWidget {
           end: Alignment.bottomRight,
         ),
         borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.28),
-            blurRadius: 18,
-            offset: const Offset(0, 8),
-          ),
-        ],
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.18),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '🌱 PREVENTA AGRÍCOLA',
-                  style: GoogleFonts.inter(
-                    color: Colors.white,
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.4,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  isProducer
+                      ? 'Tu cosecha tambien encuentra mercado'
+                      : 'Del campo a tu mano',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    color: AppColors.surface,
+                    fontWeight: FontWeight.w800,
+                    height: 1.15,
                   ),
                 ),
-              ),
-              const Icon(
-                Icons.bolt_rounded,
-                color: Colors.amberAccent,
-                size: 22,
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Conecta con compradores mayoristas',
-            style: GoogleFonts.plusJakartaSans(
-              color: Colors.white,
-              fontSize: 19,
-              fontWeight: FontWeight.w800,
-              height: 1.25,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Publica lotes de cosechas futuras y negocia sin intermediarios.',
-            style: GoogleFonts.inter(
-              color: Colors.white.withValues(alpha: 0.9),
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 16),
-          GestureDetector(
-            onTap: () => context.go(AppRoutes.productCreate),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(100),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.08),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+                const SizedBox(height: 8),
+                Text(
+                  isProducer
+                      ? 'Administra tus lotes y descubre productos de otras personas.'
+                      : 'Encuentra cosechas y conecta directamente con productores.',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: AppColors.surface.withValues(alpha: 0.92),
                   ),
-                ],
-              ),
-              child: Text(
-                'Publicar Lote Ahora',
-                style: GoogleFonts.inter(
-                  color: AppColors.primaryDark,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
                 ),
-              ),
+                const SizedBox(height: 16),
+                FilledButton.tonalIcon(
+                  onPressed: () => _openCatalog(),
+                  icon: const Icon(Icons.storefront_outlined),
+                  label: const Text('Explorar productos'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: AppColors.surface,
+                    foregroundColor: AppColors.primaryDark,
+                    minimumSize: const Size(48, 48),
+                  ),
+                ),
+              ],
             ),
+          ),
+          const SizedBox(width: 8),
+          const Icon(
+            Icons.agriculture_rounded,
+            size: 58,
+            color: AppColors.surface,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildQuickActionCards(BuildContext context) {
-    final items = [
-      {
-        'title': 'Catálogo',
-        'subtitle': 'Lotes disponibles',
-        'icon': Icons.grid_view_rounded,
-        'color': AppColors.primary,
-        'route': AppRoutes.products,
-      },
-      {
-        'title': 'Mapa Fincas',
-        'subtitle': 'Productores cerca',
-        'icon': Icons.map_rounded,
-        'color': const Color(0xFF1976D2),
-        'route': AppRoutes.map,
-      },
-      {
-        'title': 'Chat Directo',
-        'subtitle': 'Mensajería activa',
-        'icon': Icons.chat_bubble_rounded,
-        'color': const Color(0xFFF57C00),
-        'route': AppRoutes.chatList,
-      },
-      {
-        'title': 'Mi Perfil',
-        'subtitle': 'Ajustes y cuenta',
-        'icon': Icons.person_rounded,
-        'color': const Color(0xFF795548),
-        'route': AppRoutes.profile,
-      },
-    ];
+  Widget _buildSearchField() {
+    return TextField(
+      controller: _searchController,
+      textInputAction: TextInputAction.search,
+      onSubmitted: (value) => _openCatalog(query: value),
+      decoration: InputDecoration(
+        hintText: 'Buscar productos o categorias',
+        prefixIcon: const Icon(Icons.search_rounded),
+        suffixIcon: IconButton(
+          tooltip: 'Buscar en el catalogo',
+          onPressed: () => _openCatalog(query: _searchController.text),
+          icon: const Icon(Icons.arrow_forward_rounded),
+        ),
+        filled: true,
+        fillColor: AppColors.surface,
+        contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.divider),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: AppColors.divider),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSectionHeading(
+    BuildContext context, {
+    required String title,
+    Widget? action,
+  }) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          title,
+          style: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: AppColors.textPrimary,
+            fontWeight: FontWeight.w800,
+          ),
+        ),
+      ),
+      ?action,
+    ],
+  );
+
+  Widget _buildProductShelf(
+    BuildContext context,
+    ProductsViewModel viewModel,
+    List<AgriculturalProduct> recentProducts, {
+    ProductsStatus? status,
+  }) {
+    final shelfStatus = status ?? viewModel.catalogueStatus;
+    if (shelfStatus == ProductsStatus.loading ||
+        shelfStatus == ProductsStatus.idle) {
+      return const _ProductLoadingRow();
+    }
+    if (shelfStatus == ProductsStatus.error) {
+      return _ProductStateCard(
+        icon: Icons.cloud_off_outlined,
+        message: viewModel.errorMessage ?? 'No se pudo cargar el catalogo.',
+        actionLabel: 'Reintentar',
+        onPressed: () => viewModel.loadCatalogue(force: true),
+      );
+    }
+    if (recentProducts.isEmpty) {
+      return _ProductStateCard(
+        icon: Icons.eco_outlined,
+        message:
+            'Aun no hay publicaciones disponibles. Puedes revisar el catalogo.',
+        actionLabel: 'Abrir catalogo',
+        onPressed: () => _openCatalog(),
+      );
+    }
 
     return LayoutBuilder(
       builder: (context, constraints) {
-        final cardWidth = (constraints.maxWidth - 14) / 2;
-        return Wrap(
-          spacing: 14,
-          runSpacing: 14,
-          children: List.generate(items.length, (index) {
-            final item = items[index];
+        final width = constraints.maxWidth < 360
+            ? constraints.maxWidth * 0.78
+            : 228.0;
+        const imageHeight = 136.0;
+        final products = recentProducts;
+        final height = products.fold<double>(0, (maxHeight, product) {
+          final cardHeight = ProductCard.heightFor(
+            context,
+            product,
+            width: width,
+            imageHeight: imageHeight,
+          );
+          return cardHeight > maxHeight ? cardHeight : maxHeight;
+        });
+        return SizedBox(
+          height: height,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: products.length,
+            separatorBuilder: (_, _) => const SizedBox(width: 12),
+            itemBuilder: (context, index) {
+              final product = products[index];
+              return SizedBox(
+                width: width,
+                child: ProductCard(
+                  product: product,
+                  imageHeight: imageHeight,
+                  onTap: () =>
+                      context.go('${AppRoutes.products}/${product.id}'),
+                ),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
 
-            return SizedBox(
-              width: cardWidth,
-              height: cardWidth / 1.4,
-              child: GestureDetector(
-                onTap: () => context.go(item['route'] as String),
+  Widget _buildMapCard(BuildContext context) => Material(
+    color: AppColors.surface,
+    borderRadius: BorderRadius.circular(18),
+    child: InkWell(
+      onTap: () => context.go(AppRoutes.map),
+      borderRadius: BorderRadius.circular(18),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                color: AppColors.primarySurface,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: const Icon(Icons.map_outlined, color: AppColors.primary),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Productores cerca de ti',
+                    style: Theme.of(context).textTheme.titleSmall
+                        ?.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    'Explora zonas publicas en el mapa',
+                    style: Theme.of(context).textTheme.bodySmall
+                        ?.copyWith(color: AppColors.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(Icons.arrow_forward_ios_rounded, size: 16),
+          ],
+        ),
+      ),
+    ),
+  );
+
+  Widget _buildSummary(BuildContext context, HomeViewModel viewModel) {
+    final theme = Theme.of(context);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(
+                'Actividad del catalogo',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+            if (viewModel.errorMessage != null)
+              TextButton(
+                onPressed: viewModel.refresh,
+                child: const Text('Reintentar'),
+              )
+            else
+              Text(
+                viewModel.summaryLabel,
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            for (var index = 0; index < viewModel.metrics.length; index++) ...[
+              if (index > 0) const SizedBox(width: 8),
+              Expanded(
                 child: Container(
-                  padding: const EdgeInsets.all(14),
+                  constraints: const BoxConstraints(minHeight: 78),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: AppColors.divider.withValues(alpha: 0.4),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.035),
-                        blurRadius: 14,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: AppColors.divider),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: (item['color'] as Color).withValues(
-                            alpha: 0.12,
-                          ),
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Icon(
-                          item['icon'] as IconData,
-                          color: item['color'] as Color,
-                          size: 20,
+                      Text(
+                        viewModel.metrics[index].value,
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          color: AppColors.primaryDark,
+                          fontWeight: FontWeight.w800,
                         ),
                       ),
-                      const Spacer(),
                       Text(
-                        item['title'] as String,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: AppColors.textPrimary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        item['subtitle'] as String,
-                        style: GoogleFonts.inter(
-                          fontSize: 11,
+                        viewModel.metrics[index].label,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.textTheme.bodySmall?.copyWith(
                           color: AppColors.textSecondary,
                         ),
                       ),
@@ -521,10 +536,108 @@ class _HomeViewContent extends StatelessWidget {
                   ),
                 ),
               ),
-            );
-          }),
-        );
-      },
+            ],
+          ],
+        ),
+      ],
     );
   }
+
+  Widget _buildChatShortcut(BuildContext context) => OutlinedButton.icon(
+    onPressed: () => context.go(AppRoutes.chatList),
+    icon: const Icon(Icons.chat_bubble_outline_rounded),
+    label: const Text('Ir a mis conversaciones'),
+    style: OutlinedButton.styleFrom(
+      foregroundColor: AppColors.primaryDark,
+      minimumSize: const Size.fromHeight(48),
+      side: const BorderSide(color: AppColors.divider),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    ),
+  );
+
+  Widget _buildInlineProblem(
+    BuildContext context, {
+    required String message,
+    Widget? action,
+  }) => Row(
+    children: [
+      Expanded(
+        child: Text(
+          message,
+          style: Theme.of(context).textTheme.bodyMedium
+              ?.copyWith(color: AppColors.textSecondary),
+        ),
+      ),
+      ?action,
+    ],
+  );
+}
+
+class _CategoryLoadingRow extends StatelessWidget {
+  const _CategoryLoadingRow();
+
+  @override
+  Widget build(BuildContext context) => Row(
+    children: List.generate(
+      3,
+      (index) => Container(
+        margin: const EdgeInsets.only(right: 8),
+        child: SkeletonBlock(
+          width: 92 + index * 16,
+          height: 36,
+          borderRadius: 12,
+        ),
+      ),
+    ),
+  );
+}
+
+class _ProductLoadingRow extends StatelessWidget {
+  const _ProductLoadingRow();
+
+  @override
+  Widget build(BuildContext context) => SizedBox(
+    height: 300,
+    child: ListView.separated(
+      scrollDirection: Axis.horizontal,
+      itemCount: 3,
+      separatorBuilder: (_, _) => const SizedBox(width: 12),
+      itemBuilder: (_, _) =>
+          const SkeletonBlock(width: 228, height: 300, borderRadius: 18),
+    ),
+  );
+}
+
+class _ProductStateCard extends StatelessWidget {
+  const _ProductStateCard({
+    required this.icon,
+    required this.message,
+    required this.actionLabel,
+    required this.onPressed,
+  });
+
+  final IconData icon;
+  final String message;
+  final String actionLabel;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.all(18),
+    decoration: BoxDecoration(
+      color: AppColors.surface,
+      borderRadius: BorderRadius.circular(18),
+      border: Border.all(color: AppColors.divider),
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, color: AppColors.primary, size: 32),
+        const SizedBox(height: 8),
+        Text(message, style: Theme.of(context).textTheme.bodyMedium),
+        const SizedBox(height: 8),
+        TextButton(onPressed: onPressed, child: Text(actionLabel)),
+      ],
+    ),
+  );
 }

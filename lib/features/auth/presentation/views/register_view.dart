@@ -6,9 +6,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../viewmodels/auth_viewmodel.dart';
+import '../widgets/password_rules.dart';
 
-/// A compact two-step public registration flow. Each step fits a phone screen
-/// before the keyboard is opened, so scrolling is a fallback rather than the UI.
 class RegisterView extends StatefulWidget {
   const RegisterView({super.key});
   @override
@@ -25,15 +24,27 @@ class _RegisterViewState extends State<RegisterView> {
   int _step = 0;
   bool _showPassword = false;
   bool _showConfirmation = false;
+  String _passwordValue = '';
+
+  void _onPasswordChanged() {
+    setState(() => _passwordValue = _password.text);
+  }
 
   @override
   void dispose() {
+    _password.removeListener(_onPasswordChanged);
     _name.dispose();
     _email.dispose();
     _password.dispose();
     _confirmation.dispose();
     _company.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _password.addListener(_onPasswordChanged);
   }
 
   bool _validateFirstStep() =>
@@ -118,7 +129,13 @@ class _RegisterViewState extends State<RegisterView> {
                   step: _step,
                   onBack: _step == 1
                       ? () => setState(() => _step = 0)
-                      : () => context.go(AppRoutes.login),
+                      : () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go(AppRoutes.login);
+                          }
+                        },
                 ),
                 Transform.translate(
                   offset: const Offset(0, -14),
@@ -171,7 +188,7 @@ class _Header extends StatelessWidget {
           left: 8,
           child: IconButton(
             tooltip: step == 0
-                ? 'Volver al inicio de sesión'
+                ? 'Volver al inicio de sesion'
                 : 'Volver al paso anterior',
             onPressed: onBack,
             icon: const Icon(
@@ -197,8 +214,8 @@ class _Header extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 step == 0
-                    ? 'Elige tu perfil y tus datos básicos.'
-                    : 'Un último paso y estarás listo.',
+                    ? 'Elige tu perfil y tus datos basicos.'
+                    : 'Un ultimo paso y estaras listo.',
                 style: Theme.of(context).textTheme.bodyMedium
                     ?.copyWith(color: AppColors.surface),
               ),
@@ -242,13 +259,13 @@ class _IdentityStep extends StatelessWidget {
       const _Progress(active: 0),
       const SizedBox(height: 20),
       Text(
-        '¿Cómo usarás Agro+?',
+        '¿Como usaras Agro+?',
         style: Theme.of(context).textTheme.titleLarge
             ?.copyWith(fontWeight: FontWeight.w800),
       ),
       const SizedBox(height: 6),
       Text(
-        'Solo se muestran perfiles disponibles para registro público.',
+        'Solo se muestran perfiles disponibles para registro publico.',
         style: Theme.of(context).textTheme.bodySmall
             ?.copyWith(color: AppColors.textSecondary),
       ),
@@ -291,7 +308,7 @@ class _IdentityStep extends StatelessWidget {
         validator: state._required,
       ),
       const SizedBox(height: 14),
-      const _Label('Correo electrónico'),
+      const _Label('Correo electronico'),
       const SizedBox(height: 6),
       TextFormField(
         controller: state._email,
@@ -321,45 +338,47 @@ class _SecurityStep extends StatelessWidget {
       const _Progress(active: 1),
       const SizedBox(height: 20),
       Text(
-        'Crea una contraseña',
+        'Crea una contrasena',
         style: Theme.of(context).textTheme.titleLarge
             ?.copyWith(fontWeight: FontWeight.w800),
       ),
       const SizedBox(height: 6),
       Text(
-        'Tu empresa o finca es opcional.',
+        'Usa una contrasena fuerte para proteger tu cuenta.',
         style: Theme.of(context).textTheme.bodySmall
             ?.copyWith(color: AppColors.textSecondary),
       ),
       const SizedBox(height: 20),
-      const _Label('Contraseña'),
+      const _Label('Contrasena'),
       const SizedBox(height: 6),
       TextFormField(
         controller: state._password,
         obscureText: !state._showPassword,
         textInputAction: TextInputAction.next,
         decoration: _passwordField(
-          'Mínimo 6 caracteres',
+          'Crea una contrasena segura',
           state._showPassword,
           state.togglePasswordVisibility,
         ),
         validator: state._passwordValidator,
       ),
+      const SizedBox(height: 8),
+      PasswordRulesView(password: state._passwordValue),
       const SizedBox(height: 14),
-      const _Label('Confirmar contraseña'),
+      const _Label('Confirmar contrasena'),
       const SizedBox(height: 6),
       TextFormField(
         controller: state._confirmation,
         obscureText: !state._showConfirmation,
         textInputAction: TextInputAction.next,
         decoration: _passwordField(
-          'Repite tu contraseña',
+          'Repite tu contrasena',
           state._showConfirmation,
           state.toggleConfirmationVisibility,
         ),
         validator: (value) => value == state._password.text
             ? null
-            : 'Las contraseñas no coinciden.',
+            : 'Las contrasenas no coinciden.',
       ),
       const SizedBox(height: 14),
       Consumer<AuthViewModel>(
@@ -385,7 +404,7 @@ class _SecurityStep extends StatelessWidget {
           ],
         ),
       ),
-      const SizedBox(height: 24),
+      const SizedBox(height: 20),
       Consumer<AuthViewModel>(
         builder: (context, auth, _) => FilledButton(
           onPressed: auth.isLoading ? null : state._submit,
@@ -524,7 +543,7 @@ InputDecoration _field(String hint, IconData icon) => InputDecoration(
 InputDecoration _passwordField(String hint, bool visible, VoidCallback onTap) =>
     _field(hint, Icons.lock_outline_rounded).copyWith(
       suffixIcon: IconButton(
-        tooltip: visible ? 'Ocultar contraseña' : 'Mostrar contraseña',
+        tooltip: visible ? 'Ocultar contrasena' : 'Mostrar contrasena',
         onPressed: onTap,
         icon: Icon(
           visible ? Icons.visibility_off_outlined : Icons.visibility_outlined,
@@ -537,9 +556,11 @@ extension on _RegisterViewState {
       ? 'Este campo es obligatorio.'
       : null;
   String? _emailValidator(String? value) =>
-      _validEmail(value ?? '') ? null : 'Ingresa un correo válido.';
+      _validEmail(value ?? '') ? null : 'Ingresa un correo valido.';
   String? _passwordValidator(String? value) =>
-      value != null && value.length >= 6 ? null : 'Usa al menos 6 caracteres.';
+      PasswordRules.from(value ?? '').isStrong
+      ? null
+      : 'Completa todos los requisitos de la contrasena.';
 }
 
 bool _validEmail(String value) =>

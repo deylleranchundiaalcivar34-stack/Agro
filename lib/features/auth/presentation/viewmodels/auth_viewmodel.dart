@@ -7,7 +7,6 @@ import '../../../../core/network/supabase_service.dart';
 import '../../data/models/user_profile.dart';
 import '../../data/repositories/profile_repository.dart';
 
-/// Roles disponibles en Agro+
 enum UserRole { producer, buyer, admin }
 
 extension UserRoleExtension on UserRole {
@@ -41,15 +40,8 @@ extension UserRoleExtension on UserRole {
   }
 }
 
-/// Estados posibles del proceso de autenticación
 enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
-/// ViewModel de autenticación (MVVM con ChangeNotifier).
-///
-/// Responsabilidades:
-/// - Manejar sign in, sign up y sign out.
-/// - Exponer el estado de carga y errores a la UI.
-/// - Mantener el rol del usuario actual.
 class AuthViewModel extends ChangeNotifier {
   final SupabaseService _supabaseService;
   final ProfileRepository _profileRepository;
@@ -75,18 +67,13 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Estado interno
-  // ---------------------------------------------------------------------------
   AuthStatus _status = AuthStatus.initial;
   String? _errorMessage;
   UserRole _selectedRole = UserRole.buyer;
   User? _currentUser;
   UserProfile? _profile;
+  bool _mfaRequired = false;
 
-  // ---------------------------------------------------------------------------
-  // Getters públicos (la UI solo lee, nunca escribe directamente)
-  // ---------------------------------------------------------------------------
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
   UserRole get selectedRole => _selectedRole;
@@ -96,18 +83,13 @@ class AuthViewModel extends ChangeNotifier {
   String get userInitial => _profile?.initial ?? 'A';
   bool get isLoading => _status == AuthStatus.loading;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
+  bool get mfaRequired => _mfaRequired;
 
-  // ---------------------------------------------------------------------------
-  // Métodos públicos
-  // ---------------------------------------------------------------------------
-
-  /// Actualiza el rol seleccionado en el formulario de registro.
   void setRole(UserRole role) {
     _selectedRole = role;
     notifyListeners();
   }
 
-  /// Actualiza el rol del usuario autenticado en Supabase Auth y en el estado local.
   Future<bool> updateUserRole(UserRole role) async {
     if (role == UserRole.admin) {
       _setError('El rol administrador solo puede ser asignado internamente.');
@@ -129,7 +111,6 @@ class AuthViewModel extends ChangeNotifier {
     }
   }
 
-  /// Inicia sesión con email y contraseña.
   Future<bool> signIn({required String email, required String password}) async {
     _setLoading();
     try {
@@ -139,7 +120,7 @@ class AuthViewModel extends ChangeNotifier {
       );
       final user = response.user;
       if (user == null) {
-        _setError('No se pudo iniciar la sesión. Intenta nuevamente.');
+        _setError('No se pudo iniciar la sesion. Intenta nuevamente.');
         return false;
       }
       _currentUser = user;
@@ -149,12 +130,11 @@ class AuthViewModel extends ChangeNotifier {
       _setError(_mapAuthError(e.message));
       return false;
     } catch (_) {
-      _setError('Error de conexión. Verifica tu red.');
+      _setError('Error de conexion. Verifica tu red.');
       return false;
     }
   }
 
-  /// Registra un nuevo usuario con email, contraseña y rol.
   Future<bool> signUp({
     required String email,
     required String password,
@@ -168,6 +148,7 @@ class AuthViewModel extends ChangeNotifier {
       final response = await _supabaseService.client.auth.signUp(
         email: email.trim(),
         password: password,
+        emailRedirectTo: kIsWeb ? null : 'io.supabase.agro://auth/callback',
         data: {
           'full_name': fullName.trim(),
           'role': role.value,
@@ -176,11 +157,9 @@ class AuthViewModel extends ChangeNotifier {
         },
       );
       _currentUser = response.user;
-      // Supabase puede requerir confirmación de email
       if (response.user != null && response.session != null) {
         await _hydrateAuthenticatedUser(response.user!);
       } else {
-        // Email de confirmación enviado
         _setStatus(AuthStatus.unauthenticated);
         _errorMessage = null;
       }
@@ -189,12 +168,44 @@ class AuthViewModel extends ChangeNotifier {
       _setError(_mapAuthError(e.message));
       return false;
     } catch (_) {
-      _setError('Error de conexión. Verifica tu red.');
+      _setError('Error de conexion. Verifica tu red.');
       return false;
     }
   }
 
-  /// Cierra la sesión del usuario actual.
+  Future<AuthMFAEnrollResponse?> enrollTotp() async {
+    try {
+      return await _supabaseService.client.auth.mfa.enroll(
+        issuer: 'Agro+',
+        friendlyName: 'Google Authenticator',
+      );
+    } on AuthException catch (e) {
+      _setError(_mapAuthError(e.message));
+      return null;
+    }
+  }
+
+  Future<bool> verifyTotp(String factorId, String code) async {
+    try {
+      await _supabaseService.client.auth.mfa.challengeAndVerify(
+        factorId: factorId,
+        code: code,
+      );
+      _mfaRequired = false;
+      notifyListeners();
+      return true;
+    } on AuthException catch (e) {
+      _setError(_mapAuthError(e.message));
+      return false;
+    }
+  }
+
+  Future<bool> verifyCurrentTotp(String code) async {
+    final factors = await _supabaseService.client.auth.mfa.listFactors();
+    if (factors.totp.isEmpty) return false;
+    return verifyTotp(factors.totp.first.id, code);
+  }
+
   Future<void> signOut() async {
     try {
       await _supabaseService.client.auth.signOut();
@@ -205,19 +216,85 @@ class AuthViewModel extends ChangeNotifier {
     } on AuthException catch (e) {
       _setError(_mapAuthError(e.message));
     } catch (_) {
-      _setError('No se pudo cerrar la sesión. Intenta nuevamente.');
+      _setError('No se pudo cerrar la sesion. Intenta nuevamente.');
     }
   }
 
-  /// Limpia el mensaje de error (útil al navegar entre pantallas).
+  Future<bool> updatePassword(String newPassword) async {
+    _setLoading();
+    try {
+      final response = await _supabaseService.client.auth.updateUser(
+        UserAttributes(password: newPassword),
+      );
+      if (response.user != null) {
+        _errorMessage = null;
+        _setStatus(AuthStatus.unauthenticated);
+        return true;
+      }
+      _setError('No se pudo actualizar la contrasena.');
+      return false;
+    } on AuthException catch (e) {
+      _setError(_mapAuthError(e.message));
+      return false;
+    } catch (_) {
+      _setError('Error al actualizar la contrasena.');
+      return false;
+    }
+  }
+
+  Future<bool> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _supabaseService.client.auth.updateUser(
+        UserAttributes(password: newPassword, currentPassword: currentPassword),
+      );
+      if (response.user == null) {
+        _errorMessage = 'No se pudo actualizar la contrasena.';
+        notifyListeners();
+        return false;
+      }
+      _errorMessage = null;
+      notifyListeners();
+      return true;
+    } on AuthException catch (error) {
+      _errorMessage = _mapAuthError(error.message);
+      notifyListeners();
+      return false;
+    } catch (_) {
+      _errorMessage = 'No se pudo actualizar la contrasena. Intenta de nuevo.';
+      notifyListeners();
+      return false;
+    }
+  }
+
+  Future<bool> updateProfileData({
+    required String firstName,
+    required String lastName,
+    required String companyName,
+  }) async {
+    try {
+      _profile = await _profileRepository.updateCurrentData(
+        firstName: firstName,
+        lastName: lastName,
+        companyName: companyName,
+      );
+      _errorMessage = null;
+      notifyListeners();
+      return true;
+    } catch (_) {
+      _errorMessage = 'No se pudieron guardar tus datos. Intenta de nuevo.';
+      notifyListeners();
+      return false;
+    }
+  }
+
   void clearError() {
     _errorMessage = null;
     notifyListeners();
   }
 
-  // ---------------------------------------------------------------------------
-  // Listener del stream de Auth
-  // ---------------------------------------------------------------------------
   void _onAuthStateChanged(AuthState state) {
     if (state.event == AuthChangeEvent.signedOut || state.session == null) {
       _currentUser = null;
@@ -237,21 +314,23 @@ class AuthViewModel extends ChangeNotifier {
     try {
       final profile = await _profileRepository.getCurrentProfile();
       if (profile == null) {
-        _setError('No se encontró el perfil de esta cuenta.');
+        _setError('No se encontro el perfil de esta cuenta.');
         return;
       }
 
       _profile = profile;
       _selectedRole = UserRoleExtension.fromValue(profile.role);
+      final aal = _supabaseService.client.auth.mfa
+          .getAuthenticatorAssuranceLevel();
+      _mfaRequired =
+          aal.currentLevel != AuthenticatorAssuranceLevels.aal2 &&
+          aal.nextLevel == AuthenticatorAssuranceLevels.aal2;
       _setAuthenticated();
     } catch (_) {
-      _setError('No se pudo cargar tu perfil. Verifica tu conexión.');
+      _setError('No se pudo cargar tu perfil. Verifica tu conexion.');
     }
   }
 
-  // ---------------------------------------------------------------------------
-  // Helpers privados de estado
-  // ---------------------------------------------------------------------------
   void _setLoading() {
     _errorMessage = null;
     _setStatus(AuthStatus.loading);
@@ -269,22 +348,21 @@ class AuthViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Traduce mensajes de error de Supabase Auth a español.
   String _mapAuthError(String message) {
     final m = message.toLowerCase();
     if (m.contains('invalid login credentials')) {
-      return 'Correo o contraseña incorrectos.';
+      return 'Correo o contrasena incorrectos.';
     } else if (m.contains('email already registered') ||
         m.contains('user already registered')) {
-      return 'Este correo ya está registrado.';
+      return 'Este correo ya esta registrado.';
     } else if (m.contains('email not confirmed')) {
-      return 'Confirma tu correo antes de iniciar sesión.';
+      return 'Confirma tu correo antes de iniciar sesion.';
     } else if (m.contains('password should be')) {
-      return 'La contraseña debe tener al menos 6 caracteres.';
+      return 'La contrasena debe tener al menos 6 caracteres.';
     } else if (m.contains('rate limit')) {
       return 'Demasiados intentos. Espera un momento.';
     }
-    return 'Error de autenticación. Intenta de nuevo.';
+    return 'Error de autenticacion. Intenta de nuevo.';
   }
 
   @override

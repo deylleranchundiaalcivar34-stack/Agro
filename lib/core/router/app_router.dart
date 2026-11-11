@@ -1,30 +1,37 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../constants/app_durations.dart';
 import '../constants/app_routes.dart';
 import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../features/auth/presentation/views/login_view.dart';
 import '../../features/auth/presentation/views/register_view.dart';
 import '../../features/auth/presentation/views/profile_selection_view.dart';
+import '../../features/auth/presentation/views/forgot_password_view.dart';
+import '../../features/auth/presentation/views/reset_password_view.dart';
+import '../../features/auth/presentation/views/mfa_setup_view.dart';
+import '../../features/auth/presentation/views/mfa_challenge_view.dart';
+import '../../features/auth/presentation/views/email_confirmed_view.dart';
+import '../../features/auth/presentation/views/welcome_view.dart';
 import '../../features/home/presentation/views/home_view.dart';
 import '../../features/products/presentation/views/products_catalog_view.dart';
 import '../../features/products/presentation/views/product_detail_view.dart';
 import '../../features/products/presentation/views/product_create_view.dart';
 import '../../features/products/presentation/views/product_edit_view.dart';
 import '../../features/map/presentation/views/map_view.dart';
+import '../../features/map/presentation/views/public_location_edit_view.dart';
 import '../../features/chat/presentation/views/chat_list_view.dart';
 import '../../features/chat/presentation/views/chat_room_view.dart';
 import '../../features/profile/presentation/views/profile_view.dart';
+import '../../features/profile/presentation/views/profile_orders_view.dart';
+import '../../features/profile/presentation/views/profile_data_view.dart';
+import '../../features/profile/presentation/views/profile_notifications_view.dart';
+import '../../features/profile/presentation/views/profile_security_view.dart';
+import '../../features/profile/presentation/views/profile_support_view.dart';
+import '../../features/profile/presentation/views/public_producer_profile_view.dart';
 import '../../features/splash/splash_view.dart';
 import '../../features/main/presentation/views/main_navigation_view.dart';
 
-/// Router principal de la aplicación usando GoRouter.
-///
-/// Maneja:
-/// - Redirección automática según estado de sesión (Auth Guard).
-/// - [StatefulShellRoute.indexedStack] para persistir el estado de cada vista sin reconstruirlas.
-/// - Barra de navegación flotante centrada (BorderRadius.circular(100)).
-/// - Transiciones suaves de pantalla.
 class AppRouter {
   final AuthViewModel authViewModel;
   final String initialLocation;
@@ -40,9 +47,15 @@ class AppRouter {
       final location = state.matchedLocation;
 
       final publicRoutes = [
+        AppRoutes.welcome,
         AppRoutes.login,
         AppRoutes.register,
         AppRoutes.profileSelection,
+        AppRoutes.forgotPassword,
+        AppRoutes.resetPassword,
+        AppRoutes.mfaSetup,
+        AppRoutes.mfaChallenge,
+        AppRoutes.emailConfirmed,
         AppRoutes.splash,
       ];
 
@@ -50,12 +63,26 @@ class AppRouter {
         (route) => location.startsWith(route),
       );
 
-      // Si no está autenticado y no es pública -> ir a Login
+      if (isAuthenticated &&
+          authViewModel.mfaRequired &&
+          location != AppRoutes.mfaChallenge) {
+        return AppRoutes.mfaChallenge;
+      }
+
+      if (isAuthenticated &&
+          location == AppRoutes.productCreate &&
+          authViewModel.selectedRole != UserRole.producer) {
+        return AppRoutes.products;
+      }
+
+      if (isAuthenticated && location == AppRoutes.welcome) {
+        return AppRoutes.home;
+      }
+
       if (!isAuthenticated && !isPublicRoute) {
         return AppRoutes.login;
       }
 
-      // Si está autenticado e intenta ir a Login o Register -> ir a Home
       if (isAuthenticated &&
           ((location == AppRoutes.login &&
                   state.uri.queryParameters['mode'] != 'admin') ||
@@ -69,20 +96,23 @@ class AppRouter {
     refreshListenable: authViewModel,
 
     routes: [
-      // -----------------------------------------------------------------------
-      // Splash (carga inicial con animación armónica del logo)
-      // -----------------------------------------------------------------------
+      GoRoute(
+        path: AppRoutes.welcome,
+        pageBuilder: (context, state) => _fadeTransition(
+          context: context,
+          state: state,
+          child: const WelcomeView(),
+        ),
+      ),
       GoRoute(
         path: AppRoutes.splash,
         builder: (context, state) => const SplashView(),
       ),
 
-      // -----------------------------------------------------------------------
-      // Autenticación (Split-screen con cabecera curva ondulada)
-      // -----------------------------------------------------------------------
       GoRoute(
         path: AppRoutes.login,
         pageBuilder: (context, state) => _fadeTransition(
+          context: context,
           state: state,
           child: LoginView(
             adminOnly: state.uri.queryParameters['mode'] == 'admin',
@@ -91,24 +121,114 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutes.register,
-        pageBuilder: (context, state) =>
-            _slideTransition(state: state, child: const RegisterView()),
+        pageBuilder: (context, state) => _slideTransition(
+          context: context,
+          state: state,
+          child: const RegisterView(),
+        ),
       ),
       GoRoute(
         path: AppRoutes.profileSelection,
-        pageBuilder: (context, state) =>
-            _slideTransition(state: state, child: const ProfileSelectionView()),
+        pageBuilder: (context, state) => _slideTransition(
+          context: context,
+          state: state,
+          child: const ProfileSelectionView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.forgotPassword,
+        pageBuilder: (context, state) => _slideTransition(
+          context: context,
+          state: state,
+          child: const ForgotPasswordView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.resetPassword,
+        pageBuilder: (context, state) => _slideTransition(
+          context: context,
+          state: state,
+          child: const ResetPasswordView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.mfaSetup,
+        pageBuilder: (context, state) => _slideTransition(
+          context: context,
+          state: state,
+          child: const MfaSetupView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.mfaChallenge,
+        pageBuilder: (context, state) => _slideTransition(
+          context: context,
+          state: state,
+          child: const MfaChallengeView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.emailConfirmed,
+        pageBuilder: (context, state) => _fadeTransition(
+          context: context,
+          state: state,
+          child: const EmailConfirmedView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.publicProducerProfile,
+        pageBuilder: (context, state) => _slideTransition(
+          context: context,
+          state: state,
+          child: PublicProducerProfileView(
+            producerId: state.pathParameters['producerId']!,
+          ),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.profile,
+        builder: (context, state) => const ProfileView(),
+        routes: [
+          GoRoute(
+            path: 'public-location',
+            builder: (context, state) => const PublicLocationEditView(),
+          ),
+          GoRoute(
+            path: 'orders',
+            builder: (context, state) => const ProfileOrdersView(),
+          ),
+          GoRoute(
+            path: 'data',
+            builder: (context, state) => const ProfileDataView(),
+          ),
+          GoRoute(
+            path: 'notifications',
+            builder: (context, state) => const ProfileNotificationsView(),
+          ),
+          GoRoute(
+            path: 'security',
+            builder: (context, state) => const ProfileSecurityView(),
+          ),
+          GoRoute(
+            path: 'support',
+            builder: (context, state) => const ProfileSupportView(),
+          ),
+        ],
       ),
 
-      // -----------------------------------------------------------------------
-      // Shell persistente con IndexedStack (No reconstruye vistas al navegar)
-      // -----------------------------------------------------------------------
-      StatefulShellRoute.indexedStack(
+      StatefulShellRoute(
         builder: (context, state, navigationShell) {
-          return MainNavigationView(navigationShell: navigationShell);
+          return MainNavigationView(
+            navigationShell: navigationShell,
+            locationPath: state.uri.path,
+          );
         },
+        navigatorContainerBuilder: (context, navigationShell, children) =>
+            AnimatedBranchContainer(
+              navigationShell: navigationShell,
+              children: children,
+            ),
         branches: [
-          // Rama 0: Inicio
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -118,16 +238,20 @@ class AppRouter {
             ],
           ),
 
-          // Rama 1: Catálogo de Productos
           StatefulShellBranch(
             routes: [
               GoRoute(
                 path: AppRoutes.products,
-                builder: (context, state) => const ProductsCatalogView(),
+                builder: (context, state) => ProductsCatalogView(
+                  initialQuery: state.uri.queryParameters['q'] ?? '',
+                  initialCategory: state.uri.queryParameters['category'],
+                  initialMine: state.uri.queryParameters['mine'] == 'true',
+                ),
                 routes: [
                   GoRoute(
                     path: 'create',
                     pageBuilder: (context, state) => _slideTransition(
+                      context: context,
                       state: state,
                       child: const ProductCreateView(),
                     ),
@@ -138,6 +262,7 @@ class AppRouter {
                       GoRoute(
                         path: 'edit',
                         pageBuilder: (context, state) => _slideTransition(
+                          context: context,
                           state: state,
                           child: ProductEditView(
                             productId: state.pathParameters['id']!,
@@ -148,6 +273,7 @@ class AppRouter {
                       ),
                     ],
                     pageBuilder: (context, state) => _slideTransition(
+                      context: context,
                       state: state,
                       child: ProductDetailView(
                         productId: state.pathParameters['id']!,
@@ -159,7 +285,6 @@ class AppRouter {
             ],
           ),
 
-          // Rama 2: Mapa de Productores
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -169,7 +294,6 @@ class AppRouter {
             ],
           ),
 
-          // Rama 3: Chat y Mensajería
           StatefulShellBranch(
             routes: [
               GoRoute(
@@ -179,6 +303,7 @@ class AppRouter {
                   GoRoute(
                     path: ':roomId',
                     pageBuilder: (context, state) => _slideTransition(
+                      context: context,
                       state: state,
                       child: ChatRoomView(
                         roomId: state.pathParameters['roomId']!,
@@ -189,22 +314,12 @@ class AppRouter {
               ),
             ],
           ),
-
-          // Rama 4: Perfil de Usuario
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: AppRoutes.profile,
-                builder: (context, state) => const ProfileView(),
-              ),
-            ],
-          ),
         ],
       ),
     ],
 
     errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text('Página no encontrada')),
+      appBar: AppBar(title: const Text('Pagina no encontrada')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -228,26 +343,46 @@ class AppRouter {
   );
 
   static CustomTransitionPage _fadeTransition({
+    required BuildContext context,
     required GoRouterState state,
     required Widget child,
   }) {
     return CustomTransitionPage(
       key: state.pageKey,
       child: child,
+      transitionDuration: AppDurations.resolve(
+        context,
+        AppDurations.routeTransition,
+      ),
+      reverseTransitionDuration: AppDurations.resolve(
+        context,
+        AppDurations.routeTransition,
+      ),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        if (MediaQuery.disableAnimationsOf(context)) return child;
         return FadeTransition(opacity: animation, child: child);
       },
     );
   }
 
   static CustomTransitionPage _slideTransition({
+    required BuildContext context,
     required GoRouterState state,
     required Widget child,
   }) {
     return CustomTransitionPage(
       key: state.pageKey,
       child: child,
+      transitionDuration: AppDurations.resolve(
+        context,
+        AppDurations.routeTransition,
+      ),
+      reverseTransitionDuration: AppDurations.resolve(
+        context,
+        AppDurations.routeTransition,
+      ),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        if (MediaQuery.disableAnimationsOf(context)) return child;
         return SlideTransition(
           position:
               Tween<Offset>(

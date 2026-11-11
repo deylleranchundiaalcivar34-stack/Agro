@@ -1,13 +1,10 @@
-/// Perfil de dominio que complementa la sesión de Supabase Auth.
-///
-/// El UUID siempre corresponde a `auth.users.id`; los permisos se obtienen
-/// desde PostgreSQL/RLS, no desde `user_metadata` editable por el cliente.
 class UserProfile {
   final String id;
   final String firstName;
   final String lastName;
   final String email;
   final String role;
+  final String companyName;
 
   const UserProfile({
     required this.id,
@@ -15,6 +12,7 @@ class UserProfile {
     required this.lastName,
     required this.email,
     required this.role,
+    this.companyName = '',
   });
 
   String get fullName {
@@ -36,6 +34,7 @@ class UserProfile {
       lastName: map['apellidos'] as String? ?? '',
       email: map['correo_electronico'] as String? ?? '',
       role: role ?? 'buyer',
+      companyName: map['nombre_empresa'] as String? ?? '',
     );
   }
 }

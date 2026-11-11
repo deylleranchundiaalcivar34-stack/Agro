@@ -194,14 +194,14 @@ void main() {
     expect(requests, isEmpty);
   });
   for (final code in ['PGRST202', '42501', 'P0001', '23514']) {
-    test('rechazo Supabase $code no confirma transición', () async {
+    test('rechazo Supabase $code no confirma transicion', () async {
       errorCode = code;
       await expectLater(transition(), throwsA(isA<ProductPhaseException>()));
       expect(history, 0);
       expect(row['id_fase_actual'], 701);
     });
   }
-  test('respuesta sin confirmación de historial no anuncia éxito', () async {
+  test('respuesta sin confirmacion de historial no anuncia exito', () async {
     validHistory = false;
     await expectLater(transition(), throwsA(isA<ProductPhaseException>()));
   });
@@ -227,7 +227,7 @@ void main() {
     expect(history, 0);
   });
   for (final unit in [ProductUnit.lb, ProductUnit.unidad]) {
-    test('conserva ${unit.value} y sus cantidades válidas', () async {
+    test('conserva ${unit.value} y sus cantidades validas', () async {
       row['unidad_medida'] = unit.value;
       final quantity = unit == ProductUnit.lb ? 4.25 : 4.0;
       expect(await transition(quantity: quantity, unit: unit), 909);
@@ -235,7 +235,7 @@ void main() {
       expect(row['cantidad_disponible'], quantity);
     });
   }
-  test('informa específicamente que la nueva RPC no está instalada', () async {
+  test('informa especificamente que la nueva RPC no esta instalada', () async {
     errorCode = 'PGRST202';
     await expectLater(
       transition(),
@@ -243,12 +243,12 @@ void main() {
         isA<ProductPhaseException>().having(
           (e) => e.message,
           'mensaje',
-          contains('Canales alternativos aún no está habilitado'),
+          contains('Canales alternativos aun no esta habilitado'),
         ),
       ),
     );
   });
-  test('sin confirmación de historial no cambia el catálogo local', () async {
+  test('sin confirmacion de historial no cambia el catalogo local', () async {
     final vm = ProductsViewModel(
       productsRepository: ProductsRepository(supabaseService: supabase),
     );
@@ -262,7 +262,7 @@ void main() {
     );
     expect(vm.myProducts.single.phaseId, 701);
   });
-  test('el catálogo visible cambia solo después de confirmar la RPC', () async {
+  test('el catalogo visible cambia solo despues de confirmar la RPC', () async {
     row['estado_publicacion'] = true;
     final vm = ProductsViewModel(
       productsRepository: ProductsRepository(supabaseService: supabase),
@@ -287,9 +287,9 @@ void main() {
     expect(vm.products.single.fotografias, original.fotografias);
   });
 
-  // La misma sección debe proteger ambos avances por rol, propiedad y fase.
+  // La misma seccion debe proteger ambos avances por rol, propiedad y fase.
   testWidgets(
-    'solo el propietario productor en Venta directa ve la nueva acción',
+    'solo el propietario productor en Venta directa ve la nueva accion',
     (tester) async {
       final vm = ProductsViewModel(
         productsRepository: ProductsRepository(supabaseService: supabase),
@@ -350,7 +350,7 @@ void main() {
   );
 
   testWidgets(
-    'formulario móvil desplazable valida cantidad, confirma y bloquea duplicados',
+    'formulario movil desplazable valida cantidad, confirma y bloquea duplicados',
     (tester) async {
       tester.view.devicePixelRatio = 1;
       tester.view.physicalSize = const Size(360, 640);

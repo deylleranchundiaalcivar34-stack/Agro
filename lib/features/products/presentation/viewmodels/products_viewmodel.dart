@@ -1,4 +1,4 @@
-// Estado compartido del módulo: catálogo, publicaciones, edición e intereses de compradores.
+// Estado compartido del modulo: catalogo, publicaciones, edicion e intereses de compradores.
 
 import 'dart:async';
 
@@ -12,7 +12,7 @@ import '../../data/repositories/products_repository.dart';
 import '../../data/services/product_storage_service.dart';
 import '../../data/services/product_service.dart';
 
-/// Estados que el catálogo traduce en carga, resultados, vacío o error.
+/// Estados que el catalogo traduce en carga, resultados, vacio o error.
 enum ProductsStatus { idle, loading, ready, error }
 
 /// Coordina el repositorio y notifica a las vistas sin realizar consultas desde los widgets.
@@ -21,7 +21,7 @@ class ProductsViewModel extends ChangeNotifier {
 
   final ProductsRepository _productsRepository;
 
-  // Datos en memoria, mensajes y bloqueos utilizados por las pantallas del módulo.
+  // Datos en memoria, mensajes y bloqueos utilizados por las pantallas del modulo.
   ProductsStatus _catalogueStatus = ProductsStatus.idle;
   List<AgriculturalProduct> _products = const [];
   List<AgriculturalCategory> _categories = const [];
@@ -32,7 +32,7 @@ class ProductsViewModel extends ChangeNotifier {
   ProductUploadException? _lastUploadError;
   Completer<void>? _catalogueLoad;
 
-  // Lectura del estado público; las operaciones inferiores controlan sus actualizaciones.
+  // Lectura del estado publico; las operaciones inferiores controlan sus actualizaciones.
   ProductsStatus get catalogueStatus => _catalogueStatus;
   List<AgriculturalProduct> get products => _products;
   List<AgriculturalCategory> get categories => _categories;
@@ -42,7 +42,7 @@ class ProductsViewModel extends ChangeNotifier {
   bool get publicationRequiresReview => _publicationRequiresReview;
   ProductUploadException? get lastUploadError => _lastUploadError;
 
-  /// Publica en memoria únicamente una transición confirmada con historial por la RPC.
+  /// Publica en memoria unicamente una transicion confirmada con historial por la RPC.
   Future<AgriculturalProduct?> transitionToDirectSale(
     AgriculturalProduct product, {
     required double quantity,
@@ -54,7 +54,7 @@ class ProductsViewModel extends ChangeNotifier {
     alternative: false,
   );
 
-  /// Solo actualiza detalle y listas después de confirmar el historial remoto.
+  /// Solo actualiza detalle y listas despues de confirmar el historial remoto.
   Future<AgriculturalProduct?> transitionToAlternativeChannels(
     AgriculturalProduct product, {
     required double quantity,
@@ -78,7 +78,7 @@ class ProductsViewModel extends ChangeNotifier {
     final owner = _productsRepository.currentUserId;
     notifyListeners();
     try {
-      // No inventar una unidad para productos históricos sin clasificar.
+      // No inventar una unidad para productos historicos sin clasificar.
       if (product.unit == null) {
         throw const ProductPhaseException(
           'Registra primero la unidad del producto mediante Editar.',
@@ -95,7 +95,7 @@ class ProductsViewModel extends ChangeNotifier {
       );
       if (_productsRepository.currentUserId != owner) {
         throw const ProductPhaseException(
-          'La sesión cambió. Actualiza tus publicaciones.',
+          'La sesion cambio. Actualiza tus publicaciones.',
         );
       }
       final withPhase = alternative
@@ -119,7 +119,7 @@ class ProductsViewModel extends ChangeNotifier {
       _errorMessage = error.message;
       return null;
     } catch (_) {
-      _errorMessage = 'No se pudo confirmar el cambio. Revisa tu conexión y actualiza el producto antes de reintentar.';
+      _errorMessage = 'No se pudo confirmar el cambio. Revisa tu conexion y actualiza el producto antes de reintentar.';
       return null;
     } finally {
       _isSubmitting = false;
@@ -127,7 +127,7 @@ class ProductsViewModel extends ChangeNotifier {
     }
   }
 
-  // La lista privada se vincula a la sesión para no mostrar publicaciones de una cuenta anterior.
+  // La lista privada se vincula a la sesion para no mostrar publicaciones de una cuenta anterior.
   List<AgriculturalProduct> _myProducts = const [];
   ProductsStatus _myStatus = ProductsStatus.idle;
   String? _myOwnerId;
@@ -144,13 +144,13 @@ class ProductsViewModel extends ChangeNotifier {
       _myOwnerId == _productsRepository.currentUserId ? _myError : null;
   String? get visibilityWarning => _visibilityWarning;
 
-  // La búsqueda y los filtros no cambian los indicadores de la lista completa.
+  // La busqueda y los filtros no cambian los indicadores de la lista completa.
   int get myPublicationsTotal => myProducts.length;
   int get myPublicationsVisible =>
       myProducts.where((p) => p.isPublished).length;
   int get myPublicationsHidden => myPublicationsTotal - myPublicationsVisible;
 
-  /// Carga privada con control de solicitudes simultáneas y de cambios de sesión.
+  /// Carga privada con control de solicitudes simultaneas y de cambios de sesion.
   Future<void> loadMyPublications({bool force = false}) async {
     final owner = _productsRepository.currentUserId;
     if (_myLoad != null && _myLoadingOwner == owner) {
@@ -193,13 +193,13 @@ class ProductsViewModel extends ChangeNotifier {
     }
   }
 
-  /// Conservar la separación entre el catálogo público y la lista del propietario.
+  /// Conservar la separacion entre el catalogo publico y la lista del propietario.
   Future<void> _refreshLists() async {
     await loadCatalogue(force: true);
     if (_myOwnerId != null) await loadMyPublications(force: true);
   }
 
-  /// Registra qué consulta o mapeo falló y su traza, únicamente durante el desarrollo.
+  /// Registra que consulta o mapeo fallo y su traza, unicamente durante el desarrollo.
   Future<T> _catalogueOperation<T>(
     String operation,
     Future<T> Function() action,
@@ -218,7 +218,7 @@ class ProductsViewModel extends ChangeNotifier {
     }
   }
 
-  /// Reutiliza la carga en curso y permite forzar un refresco explícito.
+  /// Reutiliza la carga en curso y permite forzar un refresco explicito.
   Future<void> loadCatalogue({bool force = false}) async {
     if (_catalogueStatus == ProductsStatus.loading) {
       await _catalogueLoad?.future;
@@ -234,7 +234,7 @@ class ProductsViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
     try {
-      // Productos y categorías se consultan en paralelo y se aplican si ambas cargas terminan bien.
+      // Productos y categorias se consultan en paralelo y se aplican si ambas cargas terminan bien.
       final results = await Future.wait([
         _catalogueOperation(
           'getPublishedProducts / productos y relaciones',
@@ -250,17 +250,17 @@ class ProductsViewModel extends ChangeNotifier {
       _catalogueStatus = ProductsStatus.ready;
     } catch (error) {
       if (kDebugMode) {
-        debugPrint('[ProductsCatalogue] loadCatalogue falló: $error');
+        debugPrint('[ProductsCatalogue] loadCatalogue fallo: $error');
       }
       _catalogueStatus = ProductsStatus.error;
       _errorMessage =
-          'No pudimos cargar el catálogo. Intenta actualizarlo de nuevo.';
+          'No pudimos cargar el catalogo. Intenta actualizarlo de nuevo.';
     }
     completion.complete();
     notifyListeners();
   }
 
-  /// Publica una preventa y distingue fallos de subida, creación incierta y guardado parcial.
+  /// Publica una preventa y distingue fallos de subida, creacion incierta y guardado parcial.
   Future<bool> createPreorderProduct({
     required String name,
     XFile? image,
@@ -270,7 +270,7 @@ class ProductsViewModel extends ChangeNotifier {
     ProductUnit? unit,
     DateTime? estimatedHarvestDate,
   }) async {
-    // Evita doble envío y nuevos intentos cuando una escritura requiere revisión manual.
+    // Evita doble envio y nuevos intentos cuando una escritura requiere revision manual.
     if (_isSubmitting || _publicationRequiresReview) return false;
     _publicationWarning = null;
     _lastUploadError = null;
@@ -289,7 +289,7 @@ class ProductsViewModel extends ChangeNotifier {
       );
       await _refreshLists();
       if (_catalogueStatus == ProductsStatus.error) {
-        _publicationWarning = 'La preventa se guardó, pero no se pudo actualizar el catálogo. Recarga tus publicaciones; no vuelvas a publicarla.';
+        _publicationWarning = 'La preventa se guardo, pero no se pudo actualizar el catalogo. Recarga tus publicaciones; no vuelvas a publicarla.';
       }
       return true;
     } on ProductUploadException catch (error) {
@@ -298,7 +298,7 @@ class ProductsViewModel extends ChangeNotifier {
       return false;
     } on ProductPublicationException catch (error) {
       _publicationRequiresReview = error.requiresReview;
-      // El producto ya existe: devolver éxito con advertencia evita que el formulario lo duplique.
+      // El producto ya existe: devolver exito con advertencia evita que el formulario lo duplique.
       if (error.productId != null) {
         await _refreshLists();
         _publicationWarning = error.message;
@@ -315,16 +315,16 @@ class ProductsViewModel extends ChangeNotifier {
     }
   }
 
-  /// Obtiene el detalle actualizado sin reemplazar toda la lista del catálogo.
+  /// Obtiene el detalle actualizado sin reemplazar toda la lista del catalogo.
   Future<AgriculturalProduct?> getProduct(String productId) {
     return _productsRepository.getProduct(productId);
   }
 
-  /// Compatibilidad con llamadas anteriores: siempre es ocultación lógica, nunca borrado.
+  /// Compatibilidad con llamadas anteriores: siempre es ocultacion logica, nunca borrado.
   Future<bool> deleteProduct(String productId) =>
       setVisibility(productId, false);
 
-  /// Cambia únicamente la visibilidad y mantiene sincronizadas las dos listas.
+  /// Cambia unicamente la visibilidad y mantiene sincronizadas las dos listas.
   Future<bool> setVisibility(String productId, bool visible) async {
     if (_isSubmitting) return false;
     _isSubmitting = true;
@@ -348,7 +348,7 @@ class ProductsViewModel extends ChangeNotifier {
       await _refreshLists();
       if (_catalogueStatus == ProductsStatus.error ||
           _myStatus == ProductsStatus.error) {
-        _visibilityWarning = 'El producto se actualizó, pero no se pudieron refrescar todas las listas. Intenta actualizarlas.';
+        _visibilityWarning = 'El producto se actualizo, pero no se pudieron refrescar todas las listas. Intenta actualizarlas.';
       }
       return true;
     } catch (error, stackTrace) {
@@ -398,7 +398,7 @@ class ProductsViewModel extends ChangeNotifier {
     }
   }
 
-  /// Guarda cambios completos y vuelve a consultar el catálogo para mostrar datos actuales.
+  /// Guarda cambios completos y vuelve a consultar el catalogo para mostrar datos actuales.
   Future<bool> updateProduct({
     required String productId,
     required String name,
@@ -438,12 +438,12 @@ class ProductsViewModel extends ChangeNotifier {
       _errorMessage = error.message;
       return false;
     } catch (error, stackTrace) {
-      // El diagnóstico real ayuda a revisar permisos o conectividad sin mostrar datos internos.
+      // El diagnostico real ayuda a revisar permisos o conectividad sin mostrar datos internos.
       if (kDebugMode) {
         debugPrint('[ProductsViewModel.updateProduct] $error');
         debugPrintStack(stackTrace: stackTrace);
       }
-      _errorMessage = 'No se pudo confirmar la actualización. Revisa la publicación antes de reintentar.';
+      _errorMessage = 'No se pudo confirmar la actualizacion. Revisa la publicacion antes de reintentar.';
       return false;
     } finally {
       _isSubmitting = false;
@@ -466,7 +466,7 @@ class ProductsViewModel extends ChangeNotifier {
       _errorMessage = error.message;
       return false;
     } catch (_) {
-      _errorMessage = 'No se pudo confirmar la eliminación. Revisa tu conexión y la publicación. Puedes utilizar «Ocultar producto».';
+      _errorMessage = 'No se pudo confirmar la eliminacion. Revisa tu conexion y la publicacion. Puedes utilizar «Ocultar producto».';
       return false;
     } finally {
       _isSubmitting = false;
@@ -489,7 +489,7 @@ class ProductsViewModel extends ChangeNotifier {
       );
       return true;
     } catch (_) {
-      _errorMessage = 'No se pudo registrar tu interés. Intenta de nuevo.';
+      _errorMessage = 'No se pudo registrar tu interes. Intenta de nuevo.';
       return false;
     } finally {
       _isSubmitting = false;

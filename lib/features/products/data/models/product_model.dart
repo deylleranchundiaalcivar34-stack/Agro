@@ -3,9 +3,9 @@
 import 'product_quantity.dart';
 import 'product_unit.dart';
 
-/// Representación de escritura y edición; las fotografías se guardan por separado.
+/// Representacion de escritura y edicion; las fotografias se guardan por separado.
 class ProductModel {
-  /// Exige una unidad explícita y aplica las reglas de cantidad antes de escribir.
+  /// Exige una unidad explicita y aplica las reglas de cantidad antes de escribir.
   bool get hasValidQuantity =>
       unidadMedida != null &&
       ProductQuantity.isValid(cantidadDisponible, unit: unidadMedida);
@@ -23,7 +23,7 @@ class ProductModel {
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
-  // URLs de las fotografías almacenadas en Cloudinary
+  // URLs de las fotografias almacenadas en Cloudinary
   final List<String> fotografias;
 
   /// Usa la primera URL como portada sin crear una imagen ficticia.
@@ -73,7 +73,7 @@ class ProductModel {
   }
 
   // Convertir el objeto Dart en JSON para Supabase
-  // La escritura omite ID, marcas de tiempo y fotografías; la cosecha se envía sin hora.
+  // La escritura omite ID, marcas de tiempo y fotografias; la cosecha se envia sin hora.
   Map<String, dynamic> toJson() {
     return {
       'id_productor': idProductor,

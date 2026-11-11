@@ -1,4 +1,4 @@
-// Confirmación destructiva independiente de la ocultación lógica del catálogo.
+// Confirmacion destructiva independiente de la ocultacion logica del catalogo.
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
@@ -7,7 +7,7 @@ import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../data/models/agricultural_product.dart';
 
 /// El llamador debe confirmar el DELETE real del servidor antes de devolver true.
-/// Este componente no elimina registros ni archivos remotos por sí mismo.
+/// Este componente no elimina registros ni archivos remotos por si mismo.
 class ProductPermanentDeleteButton extends StatefulWidget {
   const ProductPermanentDeleteButton({
     super.key,
@@ -34,7 +34,7 @@ class _ProductPermanentDeleteButtonState
   bool _confirming = false;
   bool _deleting = false;
 
-  // Volver a comprobar la sesión después del diálogo evita usar permisos anteriores.
+  // Volver a comprobar la sesion despues del dialogo evita usar permisos anteriores.
   bool _isOwner(AuthViewModel auth) =>
       auth.selectedRole == UserRole.producer &&
       auth.currentUser?.id == widget.product.producerId;
@@ -74,7 +74,7 @@ class _ProductPermanentDeleteButtonState
           content: Text(
             deleted
                 ? 'Producto eliminado definitivamente'
-                : widget.errorMessage?.call() ?? 'No se pudo confirmar la eliminación. Puedes utilizar «Ocultar producto».',
+                : widget.errorMessage?.call() ?? 'No se pudo confirmar la eliminacion. Puedes utilizar «Ocultar producto».',
           ),
         ),
       );
@@ -84,7 +84,7 @@ class _ProductPermanentDeleteButtonState
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'No se pudo confirmar la eliminación. Puedes utilizar «Ocultar producto».',
+            'No se pudo confirmar la eliminacion. Puedes utilizar «Ocultar producto».',
           ),
         ),
       );
@@ -123,18 +123,42 @@ class _ProductPermanentDeleteButtonState
   }
 }
 
-/// Conserva el nombre capturado para el flujo seguro tras confirmar la acción.
-class _PermanentDeleteDialog extends StatelessWidget {
+/// Solo devuelve una confirmacion explicita cuando coincide el nombre completo.
+class _PermanentDeleteDialog extends StatefulWidget {
   const _PermanentDeleteDialog({required this.productName});
   final String productName;
+  @override
+  State<_PermanentDeleteDialog> createState() => _PermanentDeleteDialogState();
+}
 
+class _PermanentDeleteDialogState extends State<_PermanentDeleteDialog> {
+  String _typedName = '';
   @override
   Widget build(BuildContext context) => AlertDialog(
+    scrollable: true,
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
     icon: const Icon(Icons.warning_amber_rounded, color: AppColors.error),
-    title: const Text('¿Eliminar producto?'),
-    content: const Text(
-      '¿Está seguro de que desea eliminar este producto definitivamente?',
+    title: const Text('¿Eliminar producto definitivamente?'),
+    content: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Estas a punto de eliminar permanentemente esta publicacion. Esta accion no se puede deshacer y el producto dejara de estar disponible en Agro+.',
+        ),
+        const SizedBox(height: 12),
+        const Text('Las fotografias pueden permanecer en Cloudinary.'),
+        const SizedBox(height: 16),
+        Text('Escribe el nombre del producto: ${widget.productName}'),
+        const SizedBox(height: 8),
+        TextField(
+          decoration: const InputDecoration(
+            labelText: 'Nombre del producto',
+            helperText: 'Debe coincidir exactamente con el nombre mostrado.',
+          ),
+          onChanged: (value) => setState(() => _typedName = value),
+        ),
+      ],
     ),
     actions: [
       TextButton(
@@ -146,8 +170,12 @@ class _PermanentDeleteDialog extends StatelessWidget {
           backgroundColor: AppColors.error,
           foregroundColor: Colors.white,
         ),
-        onPressed: () => Navigator.pop(context, productName),
-        child: const Text('Eliminar'),
+        onPressed:
+            _typedName.trim().isNotEmpty &&
+                _typedName.trim() == widget.productName.trim()
+            ? () => Navigator.pop(context, _typedName.trim())
+            : null,
+        child: const Text('Eliminar definitivamente'),
       ),
     ],
   );

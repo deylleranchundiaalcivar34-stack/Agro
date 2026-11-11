@@ -1,18 +1,18 @@
-// Modelo de lectura del catálogo y detalle, con categoría, fase y fotografías relacionadas.
+// Modelo de lectura del catalogo y detalle, con categoria, fase y fotografias relacionadas.
 
 import 'product_quantity.dart';
 import 'product_unit.dart';
 
-/// Datos de una publicación y textos de presentación compartidos por las vistas.
+/// Datos de una publicacion y textos de presentacion compartidos por las vistas.
 class AgriculturalProduct {
-  // La creación existente identifica esta fase por nombre, nunca por un ID fijo.
+  // La creacion existente identifica esta fase por nombre, nunca por un ID fijo.
   bool get isPresale => phaseName.trim().toLowerCase() == 'preventa';
   bool get isDirectSale => phaseName.trim().toLowerCase() == 'venta directa';
   String get quantityLabel =>
       isPresale ? 'Cantidad anunciada' : 'Cantidad disponible';
   String get formattedQuantity => ProductQuantity.format(availableQuantity);
 
-  /// Presenta la cantidad sin inventar unidades para registros históricos con NULL.
+  /// Presenta la cantidad sin inventar unidades para registros historicos con NULL.
   String get quantityWithUnit => unit == null
       ? '$formattedQuantity (unidad sin registrar)'
       : '$formattedQuantity ${unit!.symbol}';
@@ -20,11 +20,11 @@ class AgriculturalProduct {
   /// Corresponde a productos.unidad_medida; NULL no implica una unidad por defecto.
   final ProductUnit? unit;
 
-  /// Añade la unidad al precio solo cuando está registrada.
+  /// Anade la unidad al precio solo cuando esta registrada.
   String get priceWithUnit =>
       '\$${unitPrice.toStringAsFixed(2)}${unit == null ? '' : '/${unit!.symbol}'}';
 
-  /// Formatea la fecha de cosecha como día/mes/año cuando está disponible.
+  /// Formatea la fecha de cosecha como dia/mes/ano cuando esta disponible.
   String? get harvestLabel {
     final date = estimatedHarvestDate;
     if (date == null) return null;
@@ -48,7 +48,7 @@ class AgriculturalProduct {
     this.fotografias = const [],
   });
 
-  // Datos de identificación, relaciones y valores mostrados en la publicación.
+  // Datos de identificacion, relaciones y valores mostrados en la publicacion.
   final String? imagenUrl;
   final List<String> fotografias;
   final String id;
@@ -61,7 +61,7 @@ class AgriculturalProduct {
   final bool isPublished;
   String get visibilityLabel => isPublished ? 'Visible' : 'Oculto';
 
-  /// Refleja un cambio confirmado de visibilidad sin perder datos ni fotografías locales.
+  /// Refleja un cambio confirmado de visibilidad sin perder datos ni fotografias locales.
   AgriculturalProduct withVisibility(bool visible) => AgriculturalProduct(
     unit: unit,
     id: id,
@@ -80,7 +80,7 @@ class AgriculturalProduct {
   );
   final String categoryName;
 
-  /// Refleja la fase confirmada sin alterar visibilidad, unidad, fechas ni fotografías.
+  /// Refleja la fase confirmada sin alterar visibilidad, unidad, fechas ni fotografias.
   AgriculturalProduct withDirectSale({
     required int phaseId,
     required double quantity,
@@ -126,7 +126,7 @@ class AgriculturalProduct {
   final String phaseName;
   final DateTime? estimatedHarvestDate;
 
-  /// Actualiza el estado local con la cantidad confirmada y conserva los demás datos.
+  /// Actualiza el estado local con la cantidad confirmada y conserva los demas datos.
   AgriculturalProduct withQuantity(double quantity, {ProductUnit? unit}) =>
       AgriculturalProduct(
         unit: unit ?? this.unit,
@@ -150,7 +150,7 @@ class AgriculturalProduct {
     final fotos = List<dynamic>.from(
       map['fotografias_producto'] as List? ?? [],
     );
-    // Orden estable para elegir la misma fotografía principal en cada lectura.
+    // Orden estable para elegir la misma fotografia principal en cada lectura.
     fotos.sort(
       (a, b) => a['id_fotografia'].toString().compareTo(
         b['id_fotografia'].toString(),
@@ -159,7 +159,7 @@ class AgriculturalProduct {
     final String? imagenUrl = fotos.isNotEmpty
         ? fotos.first['url_fotografia'] as String?
         : null;
-    // Los alias categoria y fase corresponden a la selección del repositorio.
+    // Los alias categoria y fase corresponden a la seleccion del repositorio.
     final category = map['categoria'] as Map<String, dynamic>?;
     final phase = map['fase'] as Map<String, dynamic>?;
     return AgriculturalProduct(
@@ -177,7 +177,7 @@ class AgriculturalProduct {
       availableQuantity: (map['cantidad_disponible'] as num).toDouble(),
       unitPrice: (map['precio_unitario'] as num).toDouble(),
       isPublished: map['estado_publicacion'] as bool? ?? false,
-      categoryName: category?['nombre_categoria'] as String? ?? 'Sin categoría',
+      categoryName: category?['nombre_categoria'] as String? ?? 'Sin categoria',
       phaseName: phase?['nombre_fase'] as String? ?? 'Sin fase',
       estimatedHarvestDate: map['fecha_estimada_cosecha'] == null
           ? null

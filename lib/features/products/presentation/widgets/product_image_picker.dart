@@ -1,4 +1,4 @@
-// Selección y vista previa local de fotografías; la subida se realiza al guardar el formulario.
+// Seleccion y vista previa local de fotografias; la subida se realiza al guardar el formulario.
 
 import 'package:flutter/material.dart';
 
@@ -6,9 +6,9 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/skeleton_block.dart';
 
 import 'package:image_picker/image_picker.dart';
 
@@ -30,7 +30,7 @@ class ProductImagePicker extends StatefulWidget {
   final bool enabled;
   final String? initialImageUrl;
   final ValueChanged<bool>? onLoadingChanged;
-  // La edición activa la cabecera compacta; la creación conserva su selector actual.
+  // La edicion activa la cabecera compacta; la creacion conserva su selector actual.
   final String? productName;
   final ProductStorageService? storageService;
 
@@ -45,15 +45,15 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
   @override
   void initState() {
     super.initState();
-    // La inyección permite probar la selección sin abrir una galería ni subir archivos.
+    // La inyeccion permite probar la seleccion sin abrir una galeria ni subir archivos.
     _storageService = widget.storageService ?? ProductStorageService();
   }
 
-  // Bytes para la vista previa y bloqueo temporal de los controles durante la selección.
+  // Bytes para la vista previa y bloqueo temporal de los controles durante la seleccion.
   Uint8List? _imageBytes;
   bool _isLoading = false;
 
-  /// Abre galería o cámara, valida el archivo y conserva la selección previa si falla.
+  /// Abre galeria o camara, valida el archivo y conserva la seleccion previa si falla.
   Future<void> _selectImage([ImageSource source = ImageSource.gallery]) async {
     if (_isLoading || !widget.enabled) return;
     setState(() {
@@ -69,10 +69,10 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
 
       if (image == null) return;
 
-      // Validar el contenido y tamaño antes de aceptar el archivo para la publicación.
+      // Validar el contenido y tamano antes de aceptar el archivo para la publicacion.
       final bytes = await image.readAsBytes();
       ProductStorageService.validateImageBytes(bytes);
-      // Una firma válida no basta: rechazar imágenes corruptas antes de aceptar la vista previa.
+      // Una firma valida no basta: rechazar imagenes corruptas antes de aceptar la vista previa.
       try {
         final codec = await ui.instantiateImageCodec(bytes);
         try {
@@ -83,7 +83,7 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
         }
       } catch (_) {
         throw const ProductUploadException(
-          'No se pudo leer la fotografía. Selecciona una imagen válida.',
+          'No se pudo leer la fotografia. Selecciona una imagen valida.',
         );
       }
 
@@ -103,13 +103,13 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
       if (!mounted) return;
       setState(
         () => _selectionError =
-            'No se pudo seleccionar la fotografía. Intenta nuevamente.',
+            'No se pudo seleccionar la fotografia. Intenta nuevamente.',
       );
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(
-            'No se pudo seleccionar la imagen. Revisa los permisos de la galería.',
+            'No se pudo seleccionar la imagen. Revisa los permisos de la galeria.',
           ),
         ),
       );
@@ -121,7 +121,7 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
     }
   }
 
-  /// Descarta la selección local sin borrar fotografías de Supabase ni de Cloudinary.
+  /// Descarta la seleccion local sin borrar fotografias de Supabase ni de Cloudinary.
   void _removeImage() {
     setState(() {
       _imageBytes = null;
@@ -131,7 +131,7 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
     widget.onChanged(null);
   }
 
-  /// Cabecera de edición: restaurar la imagen original solo descarta el archivo local.
+  /// Cabecera de edicion: restaurar la imagen original solo descarta el archivo local.
   Widget _editHeader(BuildContext context) {
     final preview = Container(
       width: 110,
@@ -174,13 +174,13 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
                   child: CircularProgressIndicator(strokeWidth: 2),
                 )
               : const Icon(Icons.image_outlined),
-          label: Text(_isLoading ? 'Cargando...' : 'Cambiar fotografía'),
+          label: Text(_isLoading ? 'Cargando...' : 'Cambiar fotografia'),
         ),
         if (_imageBytes != null)
           TextButton.icon(
             onPressed: _isLoading || !widget.enabled ? null : _removeImage,
             icon: const Icon(Icons.undo),
-            label: const Text('Cancelar cambio de fotografía'),
+            label: const Text('Cancelar cambio de fotografia'),
           ),
       ],
     );
@@ -223,12 +223,12 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Fotografía del producto',
+          'Fotografia del producto',
           style: Theme.of(context).textTheme.titleMedium,
         ),
         const SizedBox(height: 12),
 
-        // BoxFit.contain mantiene la fotografía completa dentro de una altura limitada.
+        // BoxFit.contain mantiene la fotografia completa dentro de una altura limitada.
         Container(
           width: double.infinity,
           constraints: const BoxConstraints(minHeight: 150, maxHeight: 240),
@@ -244,14 +244,7 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
               ? CachedNetworkImage(
                   imageUrl: widget.initialImageUrl!,
                   fit: BoxFit.contain,
-                  placeholder: (_, _) => Shimmer.fromColors(
-                    baseColor: AppColors.surfaceVariant,
-                    highlightColor: AppColors.surface,
-                    child: const SizedBox(
-                      height: 190,
-                      child: ColoredBox(color: AppColors.surface),
-                    ),
-                  ),
+                  placeholder: (_, _) => const SkeletonBlock(height: 190),
                   errorWidget: (_, _, _) => const SizedBox(
                     height: 190,
                     child: Icon(Icons.broken_image_outlined),
@@ -259,7 +252,7 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
                 )
               : const SizedBox(
                   height: 190,
-                  child: Center(child: Text('Selecciona una fotografía')),
+                  child: Center(child: Text('Selecciona una fotografia')),
                 ),
         ),
 
@@ -283,7 +276,7 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
               ),
             ),
 
-            // La cámara se ofrece en Android e iOS; Chrome utiliza el selector de archivos.
+            // La camara se ofrece en Android e iOS; Chrome utiliza el selector de archivos.
             if (!kIsWeb &&
                 (defaultTargetPlatform == TargetPlatform.android ||
                     defaultTargetPlatform == TargetPlatform.iOS))
@@ -292,7 +285,7 @@ class _ProductImagePickerState extends State<ProductImagePicker> {
                     ? null
                     : () => _selectImage(ImageSource.camera),
                 icon: const Icon(Icons.camera_alt_outlined),
-                tooltip: 'Tomar fotografía',
+                tooltip: 'Tomar fotografia',
               ),
             if (_imageBytes != null) ...[
               const SizedBox(width: 8),

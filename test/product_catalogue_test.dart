@@ -60,7 +60,7 @@ void main() {
     request: r,
   );
 
-  test('catálogo sin columna unidad: reintenta conservando filtros, orden y relaciones', () async {
+  test('catalogo sin columna unidad: reintenta conservando filtros, orden y relaciones', () async {
     final calls = <http.Request>[];
     final repo = repository((r) async {
       calls.add(r);
@@ -205,7 +205,7 @@ void main() {
     expect(vm.errorMessage, isNot(contains('42501')));
   });
 
-  test('errores de mapeo se identifican por su operación', () async {
+  test('errores de mapeo se identifican por su operacion', () async {
     final logs = <String>[];
     final previous = debugPrint;
     debugPrint = (String? message, {int? wrapWidth}) {
@@ -217,7 +217,7 @@ void main() {
         jsonEncode(
           r.url.path.endsWith('/productos')
               ? [
-                  {...row, 'cantidad_disponible': 'inválida'},
+                  {...row, 'cantidad_disponible': 'invalida'},
                 ]
               : [],
         ),

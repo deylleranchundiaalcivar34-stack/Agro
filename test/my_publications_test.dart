@@ -47,7 +47,7 @@ void main() {
           'precio_unitario': 2,
           'estado_publicacion': i == 0,
           'categoria': {
-            'nombre_categoria': i == 0 ? 'Hortalizas' : 'Tubérculos',
+            'nombre_categoria': i == 0 ? 'Hortalizas' : 'Tuberculos',
           },
           'fase': {'nombre_fase': 'Preventa'},
           'fotografias_producto': [],
@@ -95,7 +95,7 @@ void main() {
         } else if (r.url.path.endsWith('/categorias_agricolas')) {
           body = [
             {'id_categoria': 1, 'nombre_categoria': 'Hortalizas'},
-            {'id_categoria': 2, 'nombre_categoria': 'Tubérculos'},
+            {'id_categoria': 2, 'nombre_categoria': 'Tuberculos'},
           ];
         } else {
           body = r.url.queryParameters.containsKey('id_producto')
@@ -188,14 +188,14 @@ void main() {
       await tester.tap(find.byKey(const ValueKey('visibility-Ocultos')));
       await tester.pumpAndSettle();
       expect(names(tester), ['Papas']);
-      await tester.enterText(find.byType(TextField), 'tubérculos');
+      await tester.enterText(find.byType(TextField), 'tuberculos');
       await tester.pumpAndSettle();
       expect(names(tester), ['Papas']);
       await tester.tap(find.widgetWithText(ChoiceChip, 'Hortalizas'));
       await tester.pumpAndSettle();
       expect(find.text('No encontramos resultados'), findsOneWidget);
       expect(find.text('Total de publicaciones: 2'), findsOneWidget);
-      expect(find.text('Crear primera publicación'), findsNothing);
+      expect(find.text('Crear primera publicacion'), findsNothing);
       await tester.enterText(find.byType(TextField), '');
       await tester.tap(find.byKey(const ValueKey('visibility-Todos')));
       await tester.pumpAndSettle();
@@ -205,14 +205,14 @@ void main() {
     },
   );
 
-  testWidgets('lista vacía ofrece crear la primera publicación', (
+  testWidgets('lista vacia ofrece crear la primera publicacion', (
     tester,
   ) async {
     await open(tester, empty: true);
     expect(find.text('Total de publicaciones: 0'), findsOneWidget);
-    expect(find.text('Aún no tienes publicaciones'), findsOneWidget);
+    expect(find.text('Aun no tienes publicaciones'), findsOneWidget);
     expect(
-      find.widgetWithText(FilledButton, 'Crear primera publicación'),
+      find.widgetWithText(FilledButton, 'Crear primera publicacion'),
       findsOneWidget,
     );
     expect(tester.takeException(), isNull);
@@ -231,7 +231,7 @@ void main() {
     'cantidad': const ProductEditView(productId: 'p0', quantityOnly: true),
     'detalle': const ProductDetailView(productId: 'p0'),
   }.entries) {
-    testWidgets('${entry.key} en móvil pequeño con texto ampliado', (
+    testWidgets('${entry.key} en movil pequeno con texto ampliado', (
       tester,
     ) async {
       await open(
@@ -273,7 +273,7 @@ void main() {
   }
   for (final enabled in [true, false]) {
     testWidgets(
-      'transición confirma servidor y refresca detalle, habilitada=$enabled',
+      'transicion confirma servidor y refresca detalle, habilitada=$enabled',
       (tester) async {
         phaseEnabled = enabled;
         await open(
@@ -302,7 +302,7 @@ void main() {
         await tester.tap(review);
         await tester.pumpAndSettle();
         expect(find.text('¿Cambiar a Venta directa?'), findsOneWidget);
-        // Cancelar la confirmación final no envía ninguna escritura.
+        // Cancelar la confirmacion final no envia ninguna escritura.
         await tester.tap(find.widgetWithText(TextButton, 'Cancelar').last);
         await tester.pumpAndSettle();
         expect(transitions, 0);
@@ -323,7 +323,7 @@ void main() {
           expect(find.text('Cantidad disponible'), findsOneWidget);
         } else {
           expect(
-            find.textContaining('La transición aún no está habilitada'),
+            find.textContaining('La transicion aun no esta habilitada'),
             findsOneWidget,
           );
           expect(

@@ -1,4 +1,4 @@
-// Selección local y subida de fotografías a Cloudinary, sin guardar filas en Supabase.
+// Seleccion local y subida de fotografias a Cloudinary, sin guardar filas en Supabase.
 
 import 'dart:async';
 import 'dart:convert';
@@ -7,7 +7,7 @@ import 'dart:typed_data';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 
-/// Separa el mensaje visible del estado HTTP y el detalle técnico devuelto por Cloudinary.
+/// Separa el mensaje visible del estado HTTP y el detalle tecnico devuelto por Cloudinary.
 class ProductUploadException implements Exception {
   const ProductUploadException(
     this.message, {
@@ -19,9 +19,9 @@ class ProductUploadException implements Exception {
   final String? cloudinaryMessage;
 }
 
-/// Centraliza límites, formatos y envío multipart de fotografías de productos.
+/// Centraliza limites, formatos y envio multipart de fotografias de productos.
 class ProductStorageService {
-  // Configuración de destino y preset de subida; no se utilizan secretos de firma en el cliente.
+  // Configuracion de destino y preset de subida; no se utilizan secretos de firma en el cliente.
   static const String cloudName = 'ktfyc8rj';
   static const String uploadPreset = 'agroproductos';
   static const int maxImageBytes = 5 * 1024 * 1024;
@@ -30,15 +30,15 @@ class ProductStorageService {
   ProductStorageService({this._httpClient});
   final http.Client? _httpClient;
 
-  /// Comprueba tamaño y firmas JPG, PNG o WebP sin confiar en la extensión del archivo.
+  /// Comprueba tamano y firmas JPG, PNG o WebP sin confiar en la extension del archivo.
   static String validateImageBytes(Uint8List bytes) {
     if (bytes.isEmpty) {
-      throw const ProductUploadException('La imagen seleccionada está vacía.');
+      throw const ProductUploadException('La imagen seleccionada esta vacia.');
     }
     if (bytes.length > maxImageBytes) {
       throw const ProductUploadException('La imagen no debe superar los 5 MB.');
     }
-    // La firma identifica el formato; la decodificación final corresponde al visor o al servidor.
+    // La firma identifica el formato; la decodificacion final corresponde al visor o al servidor.
     bool startsWith(List<int> signature) =>
         bytes.length >= signature.length &&
         List.generate(
@@ -59,7 +59,7 @@ class ProductStorageService {
 
   final ImagePicker _picker = ImagePicker();
 
-  // Seleccionar una fotografía.
+  // Seleccionar una fotografia.
   Future<XFile?> seleccionarImagen({
     ImageSource source = ImageSource.gallery,
   }) async {
@@ -70,7 +70,17 @@ class ProductStorageService {
     );
   }
 
-  // Subir la fotografía a Cloudinary.
+  /// Selects a compact profile image while leaving product-image selection unchanged.
+  Future<XFile?> seleccionarAvatar({
+    ImageSource source = ImageSource.gallery,
+  }) async => _picker.pickImage(
+    source: source,
+    imageQuality: 82,
+    maxWidth: 512,
+    maxHeight: 512,
+  );
+
+  // Subir la fotografia a Cloudinary.
   Future<String> subirImagen(XFile imagen) async {
     if (cloudName.trim().isEmpty || uploadPreset.trim().isEmpty) {
       throw const ProductUploadException('Falta configurar Cloudinary.');
@@ -82,7 +92,7 @@ class ProductStorageService {
     final bytes = await imagen.readAsBytes();
     final format = validateImageBytes(bytes);
 
-    // El preset y el archivo se envían como multipart, compatible con Chrome y móviles.
+    // El preset y el archivo se envian como multipart, compatible con Chrome y moviles.
     final request = http.MultipartRequest('POST', uri);
 
     request.fields['upload_preset'] = uploadPreset;
@@ -101,7 +111,7 @@ class ProductStorageService {
         const Duration(seconds: 60),
       );
 
-      // Clasificar el rechazo sin mostrar el cuerpo completo; conservar el diagnóstico técnico.
+      // Clasificar el rechazo sin mostrar el cuerpo completo; conservar el diagnostico tecnico.
       if (response.statusCode < 200 || response.statusCode >= 300) {
         String? detail;
         try {
@@ -115,14 +125,14 @@ class ProductStorageService {
         }
         final reason = (detail ?? '').toLowerCase();
         final message = reason.contains('preset') || reason.contains('unsigned')
-            ? 'Cloudinary no aceptó el preset. Comprueba que agroproductos permita subidas unsigned.'
+            ? 'Cloudinary no acepto el preset. Comprueba que agroproductos permita subidas unsigned.'
             : response.statusCode == 413 || reason.contains('too large')
-            ? 'Cloudinary rechazó el tamaño de la fotografía.'
+            ? 'Cloudinary rechazo el tamano de la fotografia.'
             : reason.contains('format') || reason.contains('image file')
-            ? 'Cloudinary no aceptó el formato. Usa JPG, PNG o WebP.'
+            ? 'Cloudinary no acepto el formato. Usa JPG, PNG o WebP.'
             : response.statusCode == 429
             ? 'Demasiadas solicitudes. Espera antes de reintentar.'
-            : 'Cloudinary no pudo subir la fotografía. Intenta más tarde.';
+            : 'Cloudinary no pudo subir la fotografia. Intenta mas tarde.';
         throw ProductUploadException(
           '$message (HTTP ${response.statusCode})',
           statusCode: response.statusCode,
@@ -135,10 +145,10 @@ class ProductStorageService {
         data = jsonDecode(responseBody);
       } on FormatException {
         throw const ProductUploadException(
-          'Cloudinary devolvió una respuesta inválida.',
+          'Cloudinary devolvio una respuesta invalida.',
         );
       }
-      // Solo una secure_url HTTPS válida se devuelve al repositorio para su asociación.
+      // Solo una secure_url HTTPS valida se devuelve al repositorio para su asociacion.
       final url = data is Map ? data['secure_url'] : null;
       final parsedUrl = url is String ? Uri.tryParse(url) : null;
       if (url is! String ||
@@ -146,22 +156,25 @@ class ProductStorageService {
           parsedUrl.scheme != 'https' ||
           parsedUrl.host.isEmpty) {
         throw const ProductUploadException(
-          'Cloudinary no devolvió una URL válida.',
+          'Cloudinary no devolvio una URL valida.',
         );
       }
 
       return url;
     } on TimeoutException {
       throw const ProductUploadException(
-        'La subida tardó demasiado. Revisa tu conexión e intenta de nuevo.',
+        'La subida tardo demasiado. Revisa tu conexion e intenta de nuevo.',
       );
     } on http.ClientException {
       throw const ProductUploadException(
-        'No se pudo conectar con Cloudinary. Revisa tu conexión y los errores de red o CORS en Chrome.',
+        'No se pudo conectar con Cloudinary. Revisa tu conexion y los errores de red o CORS en Chrome.',
       );
     } finally {
       // Un cliente inyectado pertenece al llamador y debe permanecer abierto.
       if (_httpClient == null) client.close();
     }
   }
+
+  /// Uploads a bounded avatar through the same unsigned preset as product photos.
+  Future<String> subirAvatar(XFile imagen) => subirImagen(imagen);
 }

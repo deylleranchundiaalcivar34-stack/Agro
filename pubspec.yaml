@@ -1,5 +1,5 @@
 name: proyecto_agro
-description: "Agro+ - Plataforma de comercio agrícola que conecta productores y compradores."
+description: "Agro+ - Plataforma de comercio agricola que conecta productores y compradores."
 publish_to: 'none'
 
 version: 1.0.0+1
@@ -13,31 +13,27 @@ dependencies:
 
   cupertino_icons: ^1.0.8
 
-  # Backend
   supabase_flutter: ^2.18.3
 
-  # Variables de entorno (seguridad de credenciales)
   flutter_dotenv: ^5.2.1
+  app_links: ^7.2.2
+  local_auth: ^3.0.2
+  qr_flutter: ^4.1.0
+  shared_preferences: ^2.5.4
 
-  # Navegación declarativa
   go_router: ^14.8.1
 
-  # Gestión de estado (MVVM)
   provider: ^6.1.2
 
-  # UI y utilidades
   cached_network_image: ^3.4.1
-  shimmer: ^3.0.0
   image_picker: ^1.1.2
   uuid: ^4.5.1
 
-  # Animaciones (skill: impeccable)
   flutter_animate: ^4.5.0
 
-  # Tipografías Google ('Plus Jakarta Sans' e 'Inter')
   google_fonts: ^6.2.1
+  url_launcher: ^6.3.3
 
-  # Mapa y geolocalización (Bloque 4)
   geolocator: ^13.0.2
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
@@ -48,21 +44,15 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
 
-  # Generador de íconos de la app
   flutter_launcher_icons: ^0.14.3
 
 flutter:
   uses-material-design: true
 
-  # Assets - Declaración de .env e imágenes
   assets:
     - .env
     - assets/images/
 
-# ==============================================================================
-# CONFIGURACIÓN DEL ÍCONO DE INICIO (flutter_launcher_icons)
-# Genera los íconos adaptativos y estándar para Android e iOS
-# ==============================================================================
 flutter_launcher_icons:
   android: "launcher_icon"
   ios: true

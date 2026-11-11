@@ -1,16 +1,16 @@
-// Tarjeta compacta del catálogo; solo presenta el lote y comunica su pulsación al llamador.
+// Tarjeta compacta del catalogo; solo presenta el lote y comunica su pulsacion al llamador.
 
 import 'package:flutter/material.dart';
 
 import 'product_status_badge.dart';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/skeleton_block.dart';
 import '../../data/models/agricultural_product.dart';
 
-/// Ordena portada, fase, nombre, cantidad, categoría y precio sin separadores flexibles.
+/// Ordena portada, fase, nombre, cantidad, categoria y precio sin separadores flexibles.
 class ProductCard extends StatelessWidget {
   const ProductCard({
     super.key,
@@ -22,14 +22,14 @@ class ProductCard extends StatelessWidget {
   final AgriculturalProduct product;
   final VoidCallback onTap;
   final double imageHeight;
-  // La gestión privada muestra Visible/Oculto; el catálogo conserva su etiqueta de fase.
+  // La gestion privada muestra Visible/Oculto; el catalogo conserva su etiqueta de fase.
   final bool showVisibility;
 
-  // Elegir la portada por ancho disponible, también en Chrome con ventana estrecha.
+  // Elegir la portada por ancho disponible, tambien en Chrome con ventana estrecha.
   static double imageHeightFor(BuildContext context) =>
       MediaQuery.sizeOf(context).width >= 600 ? 160 : 136;
 
-  // Compartir estilos entre la medición y el dibujo evita reservar alturas arbitrarias.
+  // Compartir estilos entre la medicion y el dibujo evita reservar alturas arbitrarias.
   static TextStyle? _bodyStyle(TextTheme theme) =>
       theme.bodyMedium?.copyWith(fontSize: 12, height: 1.25);
   static TextStyle? _titleStyle(TextTheme theme) =>
@@ -64,7 +64,7 @@ class ProductCard extends StatelessWidget {
       return height;
     }
 
-    // 20 de margen interior, 6 de la etiqueta y 20 de separación entre secciones.
+    // 20 de margen interior, 6 de la etiqueta y 20 de separacion entre secciones.
     var height =
         imageHeight +
         46 +
@@ -102,13 +102,13 @@ class ProductCard extends StatelessWidget {
             2,
           );
     }
-    // Un pequeño margen absorbe diferencias de redondeo de los píxeles del navegador.
+    // Un pequeno margen absorbe diferencias de redondeo de los pixeles del navegador.
     return height.ceilToDouble() + 2;
   }
 
   @override
   Widget build(BuildContext context) {
-    // Tipografía compacta con alturas de línea previsibles para el grid adaptable.
+    // Tipografia compacta con alturas de linea previsibles para el grid adaptable.
     final theme = Theme.of(context).textTheme;
     final bodyStyle = _bodyStyle(theme);
     final titleStyle = _titleStyle(theme);
@@ -129,7 +129,7 @@ class ProductCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Reservar la misma portada para imágenes, cargas e iconos sin fotografía.
+              // Reservar la misma portada para imagenes, cargas e iconos sin fotografia.
               ClipRRect(
                 borderRadius: const BorderRadius.vertical(
                   top: Radius.circular(17),
@@ -146,7 +146,7 @@ class ProductCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // Detalles agrupados con separación fija para evitar grandes espacios en blanco.
+              // Detalles agrupados con separacion fija para evitar grandes espacios en blanco.
               Padding(
                 padding: const EdgeInsets.all(10),
                 child: Column(
@@ -204,7 +204,7 @@ class ProductCard extends StatelessWidget {
                         color: AppColors.primary,
                       ),
                     ),
-                    // Conservar la cosecha como dato complementario cuando está registrada.
+                    // Conservar la cosecha como dato complementario cuando esta registrada.
                     if (product.harvestLabel != null) ...[
                       const SizedBox(height: 4),
                       Text(
@@ -237,11 +237,7 @@ Widget imagenProducto(String? imagenUrl, {double height = 100}) {
     width: double.infinity,
     height: height,
     fit: BoxFit.cover,
-    placeholder: (_, _) => Shimmer.fromColors(
-      baseColor: AppColors.surfaceVariant,
-      highlightColor: AppColors.surface,
-      child: const ColoredBox(color: AppColors.surface),
-    ),
+    placeholder: (_, _) => const SkeletonBlock(),
     errorWidget: (context, url, error) => const Center(
       child: Icon(Icons.broken_image, color: AppColors.textSecondary),
     ),

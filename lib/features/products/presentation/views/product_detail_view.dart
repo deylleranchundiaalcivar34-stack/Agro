@@ -17,10 +17,11 @@ import '../widgets/product_permanent_delete_button.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../../chat/presentation/widgets/contact_producer_button.dart';
 import '../../data/models/agricultural_product.dart';
 import '../viewmodels/products_viewmodel.dart';
 
-/// Carga una publicación por ID y actualiza su lectura al regresar de la edición.
+/// Carga una publicacion por ID y actualiza su lectura al regresar de la edicion.
 class ProductDetailView extends StatefulWidget {
   const ProductDetailView({super.key, required this.productId});
   final String productId;
@@ -51,7 +52,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
         }
         final product = snapshot.data;
         if (snapshot.hasError || product == null) {
-          return const Center(child: Text('Este lote no está disponible.'));
+          return const Center(child: Text('Este lote no esta disponible.'));
         }
         return _Detail(
           product: product,
@@ -84,7 +85,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
     ),
   );
 
-  /// Abre la edición reducida y vuelve a consultar el producto al regresar.
+  /// Abre la edicion reducida y vuelve a consultar el producto al regresar.
   Future<void> _editQuantity(String productId) async {
     await context.push<bool>(
       '${AppRoutes.products}/$productId/edit?quantity=1',
@@ -99,7 +100,7 @@ class _ProductDetailViewState extends State<ProductDetailView> {
   }
 }
 
-/// Contenido del detalle y permisos visuales de edición, retirada e interés.
+/// Contenido del detalle y permisos visuales de edicion, retirada e interes.
 class _Detail extends StatelessWidget {
   const _Detail({
     required this.product,
@@ -122,7 +123,7 @@ class _Detail extends StatelessWidget {
     // La interfaz distingue al propietario; el servicio y RLS siguen controlando las escrituras.
     final owner = userId == product.producerId;
     // La barra compartida se superpone: 72 de alto y 14 de margen inferior.
-    // SafeArea ya reserva el área del sistema; no se suma otra vez al scroll.
+    // SafeArea ya reserva el area del sistema; no se suma otra vez al scroll.
     const navigationOverlayHeight = 72.0 + 14.0;
     final screenSize = MediaQuery.sizeOf(context);
     // Reducir la portada en pantallas bajas sin deformar la imagen (BoxFit.cover).
@@ -138,7 +139,7 @@ class _Detail extends StatelessWidget {
           navigationOverlayHeight + 28,
         ),
         children: [
-          // Portada y datos informativos del lote, con icono alternativo si no hay fotografía.
+          // Portada y datos informativos del lote, con icono alternativo si no hay fotografia.
           Container(
             height: imageHeight,
             alignment: Alignment.center,
@@ -184,7 +185,7 @@ class _Detail extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 20),
-          // La sección distingue fase comercial de visibilidad y permisos de gestión.
+          // La seccion distingue fase comercial de visibilidad y permisos de gestion.
           ProductPhaseSection(product: product, onChanged: onPhaseChanged),
           _Row(
             icon: Icons.inventory_2_outlined,
@@ -211,18 +212,18 @@ class _Detail extends StatelessWidget {
               label: 'Visibilidad',
               value: product.visibilityLabel,
             ),
-          // Las acciones de gestión se muestran únicamente al productor propietario.
+          // Las acciones de gestion se muestran unicamente al productor propietario.
           if (owner && role == UserRole.producer)
-            const ProductSectionHeading('Gestionar publicación'),
+            const ProductSectionHeading('Gestionar publicacion'),
           if (owner && role == UserRole.producer)
             FilledButton.icon(
               onPressed: context.watch<ProductsViewModel>().isSubmitting
                   ? null
                   : onEdit,
               icon: const Icon(Icons.edit_outlined),
-              label: const Text('Editar publicación'),
+              label: const Text('Editar publicacion'),
             ),
-          // Las acciones de gestión se muestran únicamente al productor propietario.
+          // Las acciones de gestion se muestran unicamente al productor propietario.
           if (owner && role == UserRole.producer) ...[
             const SizedBox(height: 8),
             OutlinedButton.icon(
@@ -252,121 +253,147 @@ class _Detail extends StatelessWidget {
           ],
           if (owner)
             const _Notice(
-              text: 'Esta es tu publicación. Los intereses de compradores se guardan de forma privada.',
+              text: 'Esta es tu publicacion. Los intereses se guardan de forma privada.',
             )
-          else if (role == UserRole.buyer)
+          else if ((role == UserRole.buyer || role == UserRole.producer) &&
+              product.isPublished &&
+              product.availableQuantity > 0) ...[
             FilledButton.icon(
               onPressed: () => _interestSheet(context),
               icon: const Icon(Icons.handshake_outlined),
-              label: const Text('Registrar interés'),
-            )
-          else
+              label: const Text('Registrar interes'),
+            ),
+            if (product.isPublished && product.availableQuantity > 0) ...[
+              const SizedBox(height: 8),
+              ContactProducerButton(productId: product.id),
+            ],
+          ] else
             const _Notice(
-              text: 'El registro de interés está disponible para cuentas compradoras.',
+              text: 'El interes esta disponible en publicaciones activas de otras personas con unidades disponibles.',
             ),
         ],
       ),
     );
   }
 
-  /// Recoge una cantidad proyectada; registrar interés no descuenta existencias.
+  /// Recoge una cantidad proyectada; registrar interes no descuenta existencias.
   Future<void> _interestSheet(BuildContext context) async {
-    // Recursos temporales del formulario modal; el controlador se libera al cerrarlo.
-    final controller = TextEditingController();
-    final key = GlobalKey<FormState>();
+    final messenger = ScaffoldMessenger.of(context);
     await showModalBottomSheet<void>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
-      builder: (sheet) => Padding(
-        padding: EdgeInsets.fromLTRB(
-          20,
-          20,
-          20,
-          MediaQuery.viewInsetsOf(sheet).bottom + 24,
-        ),
-        child: Form(
-          key: key,
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Interés de preventa',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'Indica la cantidad que te interesaría adquirir de ${product.name}.',
-                style: GoogleFonts.inter(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 18),
-              TextFormField(
-                controller: controller,
-                autofocus: true,
-                keyboardType: const TextInputType.numberWithOptions(
-                  decimal: true,
-                ),
-                decoration: const InputDecoration(
-                  labelText: 'Cantidad proyectada',
-                ),
-                validator: (value) {
-                  final q = double.tryParse((value ?? '').replaceAll(',', '.'));
-                  return q == null || q <= 0
-                      ? 'Ingresa una cantidad mayor a 0.'
-                      : null;
-                },
-              ),
-              const SizedBox(height: 20),
-              Consumer<ProductsViewModel>(
-                builder: (context, vm, _) => FilledButton(
-                  onPressed: vm.isSubmitting
-                      ? null
-                      : () async {
-                          if (!key.currentState!.validate()) return;
-                          final ok = await vm.registerInterest(
-                            productId: product.id,
-                            quantity: double.parse(
-                              controller.text.replaceAll(',', '.'),
-                            ),
-                          );
-                          if (!sheet.mounted) return;
-                          if (ok) {
-                            Navigator.pop(sheet);
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('Tu interés fue registrado.'),
-                              ),
-                            );
-                          } else {
-                            ScaffoldMessenger.of(sheet).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  vm.errorMessage ?? 'No se pudo registrar.',
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                  child: Text(
-                    vm.isSubmitting ? 'Guardando...' : 'Confirmar interés',
-                  ),
-                ),
-              ),
-            ],
-          ),
+      builder: (_) => _InterestFormSheet(
+        product: product,
+        onRegistered: () => messenger.showSnackBar(
+          const SnackBar(content: Text('Tu interes fue registrado.')),
         ),
       ),
     );
-    controller.dispose();
   }
 
-  /// Muestra día, mes y año para la fecha de cosecha.
+  /// Muestra dia, mes y ano para la fecha de cosecha.
   String _date(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+}
+
+class _InterestFormSheet extends StatefulWidget {
+  const _InterestFormSheet({required this.product, required this.onRegistered});
+
+  final AgriculturalProduct product;
+  final VoidCallback onRegistered;
+
+  @override
+  State<_InterestFormSheet> createState() => _InterestFormSheetState();
+}
+
+class _InterestFormSheetState extends State<_InterestFormSheet> {
+  final _controller = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: EdgeInsets.fromLTRB(
+      20,
+      20,
+      20,
+      MediaQuery.viewInsetsOf(context).bottom + 24,
+    ),
+    child: Form(
+      key: _formKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Interes de preventa',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 20,
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            'Indica la cantidad que te interesaria adquirir de ${widget.product.name}.',
+            style: GoogleFonts.inter(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 18),
+          TextFormField(
+            controller: _controller,
+            autofocus: true,
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            decoration: const InputDecoration(labelText: 'Cantidad proyectada'),
+            validator: (value) {
+              final quantity = double.tryParse(
+                (value ?? '').replaceAll(',', '.'),
+              );
+              return quantity == null || quantity <= 0
+                  ? 'Ingresa una cantidad mayor a 0.'
+                  : null;
+            },
+          ),
+          const SizedBox(height: 20),
+          Consumer<ProductsViewModel>(
+            builder: (context, viewModel, _) => FilledButton(
+              onPressed: viewModel.isSubmitting
+                  ? null
+                  : () => _submit(viewModel),
+              child: Text(
+                viewModel.isSubmitting ? 'Guardando...' : 'Confirmar interes',
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
+
+  Future<void> _submit(ProductsViewModel viewModel) async {
+    if (!_formKey.currentState!.validate()) return;
+
+    final saved = await viewModel.registerInterest(
+      productId: widget.product.id,
+      quantity: double.parse(_controller.text.replaceAll(',', '.')),
+    );
+    if (!mounted) return;
+
+    if (saved) {
+      Navigator.pop(context);
+      widget.onRegistered();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(viewModel.errorMessage ?? 'No se pudo registrar.'),
+        ),
+      );
+    }
+  }
 }
 
 /// Fila informativa reutilizable con icono, etiqueta y valor.
@@ -400,7 +427,7 @@ class _Row extends StatelessWidget {
   );
 }
 
-/// Aviso contextual para el propietario o cuentas sin acceso al registro de interés.
+/// Aviso contextual para el propietario o cuentas sin acceso al registro de interes.
 class _Notice extends StatelessWidget {
   const _Notice({required this.text});
   final String text;

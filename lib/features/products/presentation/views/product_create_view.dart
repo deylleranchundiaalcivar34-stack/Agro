@@ -1,10 +1,9 @@
-// Pantalla de alta: recoge datos y fotografía, valida y solicita publicar una preventa.
+// Pantalla de alta: recoge datos y fotografia, valida y solicita publicar una preventa.
 
 import 'package:flutter/material.dart';
 
 import '../widgets/product_scaffold.dart';
 
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
@@ -27,7 +26,7 @@ class ProductCreateView extends StatefulWidget {
 
 // Estado local del formulario; la persistencia y los bloqueos compartidos viven en el ViewModel.
 class _ProductCreateViewState extends State<ProductCreateView> {
-  // Controladores, selección de unidad/categoría y fotografía pendiente de subir.
+  // Controladores, seleccion de unidad/categoria y fotografia pendiente de subir.
   final _key = GlobalKey<FormState>();
   final _name = TextEditingController();
   final _quantity = TextEditingController();
@@ -40,7 +39,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
   @override
   void initState() {
     super.initState();
-    // Carga las categorías que se mostrarán en el selector del formulario.
+    // Carga las categorias que se mostraran en el selector del formulario.
     WidgetsBinding.instance.addPostFrameCallback(
       (_) => context.read<ProductsViewModel>().loadCatalogue(),
     );
@@ -55,9 +54,9 @@ class _ProductCreateViewState extends State<ProductCreateView> {
     super.dispose();
   }
 
-  /// Abre el selector de la fecha opcional sin guardar cambios todavía.
+  /// Abre el selector de la fecha opcional sin guardar cambios todavia.
   Future<void> _pickDate() async {
-    // La fecha de cosecha es opcional y se limita a los próximos cinco años.
+    // La fecha de cosecha es opcional y se limita a los proximos cinco anos.
     final value = await showDatePicker(
       context: context,
       firstDate: DateTime.now(),
@@ -67,22 +66,22 @@ class _ProductCreateViewState extends State<ProductCreateView> {
     if (value != null && mounted) setState(() => _harvest = value);
   }
 
-  /// Evita envíos simultáneos, valida los campos y muestra el resultado de la publicación.
+  /// Evita envios simultaneos, valida los campos y muestra el resultado de la publicacion.
   Future<void> _submit() async {
     final vm = context.read<ProductsViewModel>();
     if (vm.isSubmitting || vm.publicationRequiresReview || _isSelectingImage) {
       return;
     }
-    // Valida el formulario y delega la publicación en el ViewModel.
+    // Valida el formulario y delega la publicacion en el ViewModel.
     if (!_key.currentState!.validate() || _category == null) {
       if (_category == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Selecciona una categoría.')),
+          const SnackBar(content: Text('Selecciona una categoria.')),
         );
       }
       return;
     }
-    // La imagen sigue siendo local aquí; el repositorio coordina su subida y asociación.
+    // La imagen sigue siendo local aqui; el repositorio coordina su subida y asociacion.
     final ok = await context.read<ProductsViewModel>().createPreorderProduct(
       name: _name.text,
       image: _selectedImage,
@@ -98,7 +97,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
         SnackBar(
           content: Text(
             context.read<ProductsViewModel>().publicationWarning ??
-                'Tu lote quedó publicado en preventa.',
+                'Tu lote quedo publicado en preventa.',
           ),
         ),
       );
@@ -124,7 +123,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
     if (!producer) {
       return ProductScaffold(
         appBar: AppBar(title: const Text('Publicar preventa')),
-        body: const Center(child: Text('Esta acción es para productores.')),
+        body: const Center(child: Text('Esta accion es para productores.')),
       );
     }
     return ProductScaffold(
@@ -138,21 +137,21 @@ class _ProductCreateViewState extends State<ProductCreateView> {
               padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
               children: [
                 Text(
-                  'Un lote, información clara',
+                  'Un lote, informacion clara',
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 22,
                     fontWeight: FontWeight.w800,
                   ),
-                ).animate().fadeIn(duration: 220.ms).slideY(begin: .04, end: 0),
+                ),
                 const SizedBox(height: 6),
                 Text(
-                  'Se mostrará como preventa a compradores con sesión iniciada.',
+                  'Se mostrara como preventa a compradores con sesion iniciada.',
                   style: GoogleFonts.inter(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 24),
-                // Identificación del lote y categoría agrícola para su clasificación.
+                // Identificacion del lote y categoria agricola para su clasificacion.
                 const ProductSectionHeading(
-                  'Información del producto',
+                  'Informacion del producto',
                   subtitle: 'Los campos indicados como obligatorios deben completarse.',
                 ),
                 TextFormField(
@@ -171,11 +170,11 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                 const SizedBox(height: 16),
                 DropdownButtonFormField<int>(
                   validator: (value) =>
-                      value == null ? 'Selecciona una categoría.' : null,
+                      value == null ? 'Selecciona una categoria.' : null,
                   initialValue: _category,
                   isExpanded: true,
                   decoration: const InputDecoration(
-                    labelText: 'Categoría agrícola',
+                    labelText: 'Categoria agricola',
                     helperText: 'Obligatorio',
                     prefixIcon: Icon(Icons.category_outlined),
                   ),
@@ -190,7 +189,7 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                       : (value) => setState(() => _category = value),
                 ),
                 const SizedBox(height: 16),
-                // Cantidad y unidad comparten la validación con el formulario de edición.
+                // Cantidad y unidad comparten la validacion con el formulario de edicion.
                 const ProductSectionHeading('Disponibilidad y precio'),
                 ProductQuantityFields(
                   controller: _quantity,
@@ -227,9 +226,9 @@ class _ProductCreateViewState extends State<ProductCreateView> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                // Selección y vista previa; se impide publicar mientras se lee la imagen.
+                // Seleccion y vista previa; se impide publicar mientras se lee la imagen.
                 const ProductSectionHeading(
-                  'Fotografía',
+                  'Fotografia',
                   subtitle: 'Opcional · Una imagen clara ayuda a presentar tu producto.',
                 ),
                 ProductImagePicker(
@@ -289,11 +288,11 @@ class _ProductCreateViewState extends State<ProductCreateView> {
     // El precio admite cero; se normaliza la coma decimal antes de analizarlo.
     final n = double.tryParse((v ?? '').replaceAll(',', '.'));
     return n == null || !n.isFinite || n < 0
-        ? 'Ingresa un precio válido.'
+        ? 'Ingresa un precio valido.'
         : null;
   }
 
-  /// Presenta fechas en formato día/mes/año sin alterar el valor seleccionado.
+  /// Presenta fechas en formato dia/mes/ano sin alterar el valor seleccionado.
   String _date(DateTime d) =>
       '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 }

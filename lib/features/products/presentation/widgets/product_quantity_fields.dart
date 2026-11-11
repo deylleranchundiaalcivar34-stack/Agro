@@ -17,7 +17,7 @@ class ProductQuantityInputFormatter extends TextInputFormatter {
       : oldValue;
 }
 
-/// Agrupa cantidad positiva y selección obligatoria de unidad con disposición adaptable.
+/// Agrupa cantidad positiva y seleccion obligatoria de unidad con disposicion adaptable.
 class ProductQuantityFields extends StatelessWidget {
   const ProductQuantityFields({
     super.key,
@@ -35,7 +35,7 @@ class ProductQuantityFields extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // El teclado facilita números; el validador aplica límites, decimales y enteros por unidad.
+    // El teclado facilita numeros; el validador aplica limites, decimales y enteros por unidad.
     final quantity = TextFormField(
       controller: controller,
       enabled: enabled,
@@ -49,7 +49,7 @@ class ProductQuantityFields extends StatelessWidget {
         hintText: '5',
         helperText: unit == ProductUnit.unidad
             ? 'Solo enteros positivos'
-            : 'Máximo 2 decimales',
+            : 'Maximo 2 decimales',
       ),
       validator: (value) => ProductQuantity.validate(value, unit: unit),
     );
@@ -61,7 +61,7 @@ class ProductQuantityFields extends StatelessWidget {
       decoration: const InputDecoration(
         labelText: 'Unidad de medida',
         prefixIcon: Icon(Icons.straighten_outlined),
-        helperText: 'Selecciona una opción',
+        helperText: 'Selecciona una opcion',
       ),
       items: ProductUnit.values
           .map((u) => DropdownMenuItem(value: u, child: Text(u.label)))

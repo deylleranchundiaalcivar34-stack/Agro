@@ -1,4 +1,4 @@
-// Verifica la edición con HTTP y selección de archivos simulados; no modifica servicios reales.
+// Verifica la edicion con HTTP y seleccion de archivos simulados; no modifica servicios reales.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:ui' as ui;
@@ -49,7 +49,7 @@ class EditPickerStorage extends ProductStorageService {
       throw StateError('La vista previa no debe subir archivos');
 }
 
-// Imagen válida generada en memoria para verificar también la decodificación previa.
+// Imagen valida generada en memoria para verificar tambien la decodificacion previa.
 Future<XFile> localPhoto() async {
   final recorder = ui.PictureRecorder();
   Canvas(recorder)
@@ -89,7 +89,7 @@ void main() {
           ),
         );
         await tester.pumpAndSettle();
-        expect(find.text('Cambiar fotografía'), findsOneWidget);
+        expect(find.text('Cambiar fotografia'), findsOneWidget);
         expect(find.byIcon(Icons.eco_outlined), findsOneWidget);
         final preview = find.byWidgetPredicate(
           (w) =>
@@ -110,7 +110,7 @@ void main() {
       storage.selected = await tester.runAsync(localPhoto);
       late Completer<void> selected;
       final changes = <XFile?>[];
-      // La portada anterior se resuelve desde memoria: no se abre red ni caché de disco en pruebas.
+      // La portada anterior se resuelve desde memoria: no se abre red ni cache de disco en pruebas.
       final originalImage = await tester.runAsync(() async {
         final codec = await ui.instantiateImageCodec(
           await storage.selected!.readAsBytes(),
@@ -143,14 +143,14 @@ void main() {
       );
       await tester.runAsync(() async {
         selected = Completer<void>();
-        await tester.tap(find.text('Cambiar fotografía'));
+        await tester.tap(find.text('Cambiar fotografia'));
         await selected.future.timeout(const Duration(seconds: 5));
       });
       await tester.pumpAndSettle();
       expect(changes.single, storage.selected);
       expect(tester.widget<Image>(find.byType(Image)).fit, BoxFit.contain);
-      expect(find.text('Cancelar cambio de fotografía'), findsOneWidget);
-      await tester.tap(find.text('Cancelar cambio de fotografía'));
+      expect(find.text('Cancelar cambio de fotografia'), findsOneWidget);
+      await tester.tap(find.text('Cancelar cambio de fotografia'));
       await tester.pumpAndSettle();
       expect(changes.last, isNull);
       expect(
@@ -159,12 +159,12 @@ void main() {
             .imageUrl,
         'https://example.com/old.jpg',
       );
-      expect(find.text('Cancelar cambio de fotografía'), findsNothing);
+      expect(find.text('Cancelar cambio de fotografia'), findsNothing);
       expect(tester.takeException(), isNull);
     },
   );
 
-  testWidgets('un archivo inválido conserva la imagen y muestra el error', (
+  testWidgets('un archivo invalido conserva la imagen y muestra el error', (
     tester,
   ) async {
     final storage = EditPickerStorage()
@@ -184,7 +184,7 @@ void main() {
         ),
       ),
     );
-    await tester.tap(find.text('Cambiar fotografía'));
+    await tester.tap(find.text('Cambiar fotografia'));
     await tester.pumpAndSettle();
     expect(changes, 0);
     expect(find.textContaining('Formato no admitido'), findsWidgets);
@@ -192,7 +192,7 @@ void main() {
   });
 
   // Montaje real del formulario con Supabase simulado para verificar precarga y PATCH.
-  group('formulario de edición', () {
+  group('formulario de edicion', () {
     late SupabaseClient client;
     late EditSupabase supabase;
     late ProductsViewModel vm;
@@ -299,10 +299,10 @@ void main() {
     }
 
     testWidgets(
-      'precarga, guarda el mismo ID, quita fecha y conserva la fotografía',
+      'precarga, guarda el mismo ID, quita fecha y conserva la fotografia',
       (tester) async {
         await open(tester);
-        expect(find.text('Cambiar fotografía'), findsOneWidget);
+        expect(find.text('Cambiar fotografia'), findsOneWidget);
         expect(
           tester
               .widget<TextFormField>(find.byType(TextFormField).first)
@@ -333,7 +333,7 @@ void main() {
           isFalse,
         );
         expect(
-          find.text('Publicación actualizada correctamente'),
+          find.text('Publicacion actualizada correctamente'),
           findsOneWidget,
         );
         expect(find.text('Detalle actualizado'), findsOneWidget);
@@ -346,6 +346,29 @@ void main() {
       await tester.pumpAndSettle();
       expect(requests.every((r) => r.method == 'GET'), isTrue);
       expect(find.text('Detalle actualizado'), findsOneWidget);
+    });
+
+    testWidgets('acciones de edicion quedan visibles con teclado abierto', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(360, 720);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      await open(tester);
+      await tester.tap(find.byType(TextFormField).first);
+      tester.view.viewInsets = const FakeViewPadding(bottom: 280);
+      await tester.pumpAndSettle();
+
+      expect(find.byType(AnimatedPadding), findsNothing);
+      expect(find.text('Guardar cambios'), findsOneWidget);
+      expect(find.text('Cancelar'), findsOneWidget);
+      expect(
+        tester.getRect(find.text('Guardar cambios')).bottom,
+        lessThan(440),
+      );
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('un producto ajeno no abre los campos editables', (
@@ -370,7 +393,7 @@ void main() {
       await tester.tap(find.text('Guardar cambios'));
       await tester.pumpAndSettle();
       expect(requests.every((r) => r.method == 'GET'), isTrue);
-      expect(find.text('Ingresa un precio válido.'), findsOneWidget);
+      expect(find.text('Ingresa un precio valido.'), findsOneWidget);
       expect(find.text('Guardar cambios'), findsOneWidget);
     });
   });

@@ -115,7 +115,7 @@ void main() {
   tearDown(() async => client.dispose());
 
   test(
-    'eliminación lógica filtra ID y propietario y conserva fase y fotos',
+    'eliminacion logica filtra ID y propietario y conserva fase y fotos',
     () async {
       final photos = jsonEncode(row['fotografias_producto']);
       await service.deleteProduct('product-1');
@@ -136,7 +136,7 @@ void main() {
     },
   );
 
-  test('sin sesión no consulta ni modifica registros', () async {
+  test('sin sesion no consulta ni modifica registros', () async {
     supabase.authenticated = false;
     await expectLater(
       service.deleteProduct('product-1'),
@@ -163,7 +163,7 @@ void main() {
     expect(requests.every((r) => r.method == 'GET'), isTrue);
   });
 
-  test('no confirma éxito si Supabase devuelve otro registro', () async {
+  test('no confirma exito si Supabase devuelve otro registro', () async {
     invalidResponse = true;
     await expectLater(
       service.deleteProduct('product-1'),
@@ -171,7 +171,7 @@ void main() {
     );
   });
 
-  test('las consultas públicas filtran activos y ocultan detalles inactivos ajenos', () async {
+  test('las consultas publicas filtran activos y ocultan detalles inactivos ajenos', () async {
     await repository.getPublishedProducts();
     expect(requests.last.url.queryParameters['estado_publicacion'], 'eq.true');
     row['estado_publicacion'] = false;
@@ -179,7 +179,7 @@ void main() {
     expect(await repository.getProduct('product-1'), isNull);
   });
 
-  test('el ViewModel retira el producto y refresca automáticamente', () async {
+  test('el ViewModel retira el producto y refresca automaticamente', () async {
     final vm = ProductsViewModel(productsRepository: repository);
     addTearDown(vm.dispose);
     await vm.loadCatalogue();
@@ -202,7 +202,7 @@ void main() {
     );
   });
 
-  // Ambas direcciones solo escriben estado_publicacion y conservan las fotografías.
+  // Ambas direcciones solo escriben estado_publicacion y conservan las fotografias.
   test(
     'volver a mostrar filtra propietario y conserva todos los datos',
     () async {
@@ -241,7 +241,7 @@ void main() {
   );
 
   test(
-    'ocultar y restaurar sincronizan catálogo y lista privada sin perder fotos',
+    'ocultar y restaurar sincronizan catalogo y lista privada sin perder fotos',
     () async {
       final vm = ProductsViewModel(productsRepository: repository);
       addTearDown(vm.dispose);
@@ -259,7 +259,7 @@ void main() {
     },
   );
 
-  test('la lista privada no se expone después de cerrar sesión', () async {
+  test('la lista privada no se expone despues de cerrar sesion', () async {
     final vm = ProductsViewModel(productsRepository: repository);
     addTearDown(vm.dispose);
     await vm.loadMyPublications();
@@ -327,7 +327,7 @@ void main() {
     );
   }
 
-  testWidgets('cancelar no modifica datos ni muestra éxito', (tester) async {
+  testWidgets('cancelar no modifica datos ni muestra exito', (tester) async {
     await showButton(tester);
     await tester.tap(find.text('Ocultar producto'));
     await tester.pumpAndSettle();
@@ -338,13 +338,13 @@ void main() {
     expect(find.text('Producto ocultado correctamente'), findsNothing);
   });
 
-  testWidgets('compradores no ven el botón', (tester) async {
+  testWidgets('compradores no ven el boton', (tester) async {
     role = 'buyer';
     await showButton(tester);
     expect(find.text('Ocultar producto'), findsNothing);
   });
 
-  testWidgets('un productor no ve el botón en publicaciones ajenas', (
+  testWidgets('un productor no ve el boton en publicaciones ajenas', (
     tester,
   ) async {
     row['id_productor'] = 'someone-else';
@@ -352,7 +352,7 @@ void main() {
     expect(find.text('Ocultar producto'), findsNothing);
   });
 
-  testWidgets('confirmar guarda una vez, bloquea repetición y muestra éxito', (
+  testWidgets('confirmar guarda una vez, bloquea repeticion y muestra exito', (
     tester,
   ) async {
     bool navigated = false;

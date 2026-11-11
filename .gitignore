@@ -7,6 +7,9 @@
 .env.production
 .env.staging
 
+# Estado local de Supabase CLI
+/supabase/.temp/
+
 # Miscellaneous
 *.class
 *.log

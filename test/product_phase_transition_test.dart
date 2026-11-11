@@ -166,14 +166,14 @@ void main() {
     expect(requests, isEmpty);
   });
   for (final code in ['PGRST202', '42501', 'P0001', '23514']) {
-    test('rechazo Supabase $code no confirma transición', () async {
+    test('rechazo Supabase $code no confirma transicion', () async {
       errorCode = code;
       await expectLater(transition(), throwsA(isA<ProductPhaseException>()));
       expect(history, 0);
       expect(row['id_fase_actual'], 31);
     });
   }
-  test('respuesta sin confirmación de historial no anuncia éxito', () async {
+  test('respuesta sin confirmacion de historial no anuncia exito', () async {
     validHistory = false;
     await expectLater(transition(), throwsA(isA<ProductPhaseException>()));
   });
