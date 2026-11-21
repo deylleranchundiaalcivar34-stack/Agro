@@ -97,14 +97,9 @@ class _HomeViewContentState extends State<_HomeViewContent> {
         )
         .toList();
     final recentProducts = discoverProducts.take(8).toList();
-    final availableCategories = products.categories
-        .where(
-          (category) => discoverProducts.any(
-            (product) => product.categoryId == category.id,
-          ),
-        )
-        .take(8)
-        .toList();
+    // Mostrar el catálogo completo aunque todavía no haya publicaciones en
+    // una categoría (por ejemplo, cuando un productor recién va a ofrecerla).
+    final availableCategories = products.categories;
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -148,7 +143,7 @@ class _HomeViewContentState extends State<_HomeViewContent> {
                 const _CategoryLoadingRow()
               else if (availableCategories.isEmpty)
                 Text(
-                  'Las categorias apareceran cuando haya publicaciones disponibles.',
+                  'Todavia no hay categorias disponibles.',
                   style: Theme.of(context).textTheme.bodyMedium
                       ?.copyWith(color: AppColors.textSecondary),
                 )

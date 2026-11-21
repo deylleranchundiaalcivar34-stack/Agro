@@ -30,7 +30,7 @@ class ProductPublicationException implements Exception {
   final bool requiresReview;
 }
 
-/// Fuente de datos para el catalogo, publicaciones e intereses del marketplace.
+/// Fuente de datos para el catalogo y las publicaciones del marketplace.
 /// Las vistas delegan sus operaciones; no consultan Supabase directamente.
 class ProductsRepository {
   ProductsRepository({
@@ -359,19 +359,6 @@ class ProductsRepository {
         );
       }
     }
-  }
-
-  /// Crea o actualiza el interes del mismo comprador y producto, sin descontar existencias.
-  Future<void> registerInterest({
-    required String productId,
-    required double quantity,
-  }) async {
-    final userId = _requireUserId();
-    await _supabaseService.client.from('intereses_preventa').upsert({
-      'id_producto': productId,
-      'id_comprador': userId,
-      'cantidad_proyectada': quantity,
-    }, onConflict: 'id_producto,id_comprador');
   }
 
   /// Impide realizar operaciones de escritura cuando ya no hay una sesion disponible.

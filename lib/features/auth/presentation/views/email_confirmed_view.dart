@@ -41,26 +41,19 @@ class EmailConfirmedView extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Tu cuenta ya esta lista. Puedes protegerla con Google Authenticator.',
+                  'Tu cuenta ya esta lista. Ya puedes iniciar sesion en Agro+.',
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 24),
                 FilledButton.icon(
                   onPressed: () => context.go(
-                    loggedIn ? AppRoutes.mfaSetup : AppRoutes.login,
+                    loggedIn ? AppRoutes.home : AppRoutes.login,
                   ),
-                  icon: const Icon(Icons.security_rounded),
-                  label: const Text('Activar Google Authenticator'),
+                  icon: const Icon(Icons.arrow_forward_rounded),
+                  label: Text(loggedIn ? 'Ir al inicio' : 'Iniciar sesion'),
                   style: FilledButton.styleFrom(
                     minimumSize: const Size(double.infinity, 52),
                   ),
-                ),
-                const SizedBox(height: 8),
-                TextButton(
-                  onPressed: () => context.go(
-                    loggedIn ? AppRoutes.home : AppRoutes.login,
-                  ),
-                  child: const Text('Continuar por ahora'),
                 ),
               ],
             ).animate().fadeIn(duration: 350.ms).slideY(begin: .05),

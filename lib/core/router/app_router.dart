@@ -3,14 +3,13 @@ import 'package:go_router/go_router.dart';
 
 import '../constants/app_durations.dart';
 import '../constants/app_routes.dart';
+import '../widgets/agro_page_app_bar.dart';
 import '../../features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../features/auth/presentation/views/login_view.dart';
 import '../../features/auth/presentation/views/register_view.dart';
 import '../../features/auth/presentation/views/profile_selection_view.dart';
 import '../../features/auth/presentation/views/forgot_password_view.dart';
 import '../../features/auth/presentation/views/reset_password_view.dart';
-import '../../features/auth/presentation/views/mfa_setup_view.dart';
-import '../../features/auth/presentation/views/mfa_challenge_view.dart';
 import '../../features/auth/presentation/views/email_confirmed_view.dart';
 import '../../features/auth/presentation/views/welcome_view.dart';
 import '../../features/home/presentation/views/home_view.dart';
@@ -22,8 +21,8 @@ import '../../features/map/presentation/views/map_view.dart';
 import '../../features/map/presentation/views/public_location_edit_view.dart';
 import '../../features/chat/presentation/views/chat_list_view.dart';
 import '../../features/chat/presentation/views/chat_room_view.dart';
-import '../../features/profile/presentation/views/profile_view.dart';
 import '../../features/profile/presentation/views/profile_orders_view.dart';
+import '../../features/favorites/presentation/views/favorites_view.dart';
 import '../../features/profile/presentation/views/profile_data_view.dart';
 import '../../features/profile/presentation/views/profile_notifications_view.dart';
 import '../../features/profile/presentation/views/profile_security_view.dart';
@@ -53,8 +52,6 @@ class AppRouter {
         AppRoutes.profileSelection,
         AppRoutes.forgotPassword,
         AppRoutes.resetPassword,
-        AppRoutes.mfaSetup,
-        AppRoutes.mfaChallenge,
         AppRoutes.emailConfirmed,
         AppRoutes.splash,
       ];
@@ -62,12 +59,6 @@ class AppRouter {
       final isPublicRoute = publicRoutes.any(
         (route) => location.startsWith(route),
       );
-
-      if (isAuthenticated &&
-          authViewModel.mfaRequired &&
-          location != AppRoutes.mfaChallenge) {
-        return AppRoutes.mfaChallenge;
-      }
 
       if (isAuthenticated &&
           location == AppRoutes.productCreate &&
@@ -152,22 +143,6 @@ class AppRouter {
         ),
       ),
       GoRoute(
-        path: AppRoutes.mfaSetup,
-        pageBuilder: (context, state) => _slideTransition(
-          context: context,
-          state: state,
-          child: const MfaSetupView(),
-        ),
-      ),
-      GoRoute(
-        path: AppRoutes.mfaChallenge,
-        pageBuilder: (context, state) => _slideTransition(
-          context: context,
-          state: state,
-          child: const MfaChallengeView(),
-        ),
-      ),
-      GoRoute(
         path: AppRoutes.emailConfirmed,
         pageBuilder: (context, state) => _fadeTransition(
           context: context,
@@ -187,33 +162,63 @@ class AppRouter {
       ),
       GoRoute(
         path: AppRoutes.profile,
-        builder: (context, state) => const ProfileView(),
-        routes: [
-          GoRoute(
-            path: 'public-location',
-            builder: (context, state) => const PublicLocationEditView(),
-          ),
-          GoRoute(
-            path: 'orders',
-            builder: (context, state) => const ProfileOrdersView(),
-          ),
-          GoRoute(
-            path: 'data',
-            builder: (context, state) => const ProfileDataView(),
-          ),
-          GoRoute(
-            path: 'notifications',
-            builder: (context, state) => const ProfileNotificationsView(),
-          ),
-          GoRoute(
-            path: 'security',
-            builder: (context, state) => const ProfileSecurityView(),
-          ),
-          GoRoute(
-            path: 'support',
-            builder: (context, state) => const ProfileSupportView(),
-          ),
-        ],
+        redirect: (context, state) => AppRoutes.profileData,
+      ),
+      GoRoute(
+        path: AppRoutes.publicLocation,
+        pageBuilder: (context, state) => _accountTransition(
+          context: context,
+          state: state,
+          child: const PublicLocationEditView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.profileOrders,
+        pageBuilder: (context, state) => _accountTransition(
+          context: context,
+          state: state,
+          child: const ProfileOrdersView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.profileFavorites,
+        pageBuilder: (context, state) => _accountTransition(
+          context: context,
+          state: state,
+          child: const FavoritesView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.profileData,
+        pageBuilder: (context, state) => _accountTransition(
+          context: context,
+          state: state,
+          child: const ProfileDataView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.profileNotifications,
+        pageBuilder: (context, state) => _accountTransition(
+          context: context,
+          state: state,
+          child: const ProfileNotificationsView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.profileSecurity,
+        pageBuilder: (context, state) => _accountTransition(
+          context: context,
+          state: state,
+          child: const ProfileSecurityView(),
+        ),
+      ),
+      GoRoute(
+        path: AppRoutes.profileSupport,
+        pageBuilder: (context, state) => _accountTransition(
+          context: context,
+          state: state,
+          child: const ProfileSupportView(),
+        ),
       ),
 
       StatefulShellRoute(
@@ -301,6 +306,17 @@ class AppRouter {
                 builder: (context, state) => const ChatListView(),
                 routes: [
                   GoRoute(
+                    path: 'requests',
+                    pageBuilder: (context, state) => _slideTransition(
+                      context: context,
+                      state: state,
+                      child: const ChatListView(
+                        key: ValueKey('contact-requests-route'),
+                        showRequestsInitially: true,
+                      ),
+                    ),
+                  ),
+                  GoRoute(
                     path: ':roomId',
                     pageBuilder: (context, state) => _slideTransition(
                       context: context,
@@ -319,7 +335,10 @@ class AppRouter {
     ],
 
     errorBuilder: (context, state) => Scaffold(
-      appBar: AppBar(title: const Text('Pagina no encontrada')),
+      appBar: const AgroPageAppBar(
+        title: 'Pagina no encontrada',
+        showBackButton: false,
+      ),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -365,6 +384,41 @@ class AppRouter {
     );
   }
 
+  static CustomTransitionPage _accountTransition({
+    required BuildContext context,
+    required GoRouterState state,
+    required Widget child,
+  }) {
+    final duration = AppDurations.resolve(
+      context,
+      AppDurations.accountTransition,
+    );
+    return CustomTransitionPage(
+      key: state.pageKey,
+      child: child,
+      transitionDuration: duration,
+      reverseTransitionDuration: duration,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        if (MediaQuery.disableAnimationsOf(context)) return child;
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(.025, 0),
+              end: Offset.zero,
+            ).animate(curved),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+
   static CustomTransitionPage _slideTransition({
     required BuildContext context,
     required GoRouterState state,
@@ -383,15 +437,20 @@ class AppRouter {
       ),
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         if (MediaQuery.disableAnimationsOf(context)) return child;
-        return SlideTransition(
-          position:
-              Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-              ),
-          child: child,
+        final curved = CurvedAnimation(
+          parent: animation,
+          curve: Curves.easeOutCubic,
+          reverseCurve: Curves.easeInCubic,
+        );
+        return FadeTransition(
+          opacity: curved,
+          child: SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(.035, 0),
+              end: Offset.zero,
+            ).animate(curved),
+            child: child,
+          ),
         );
       },
     );

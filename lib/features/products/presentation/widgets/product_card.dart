@@ -2,10 +2,13 @@
 
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:provider/provider.dart';
 
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/widgets/skeleton_block.dart';
 import '../../data/models/agricultural_product.dart';
+import '../../../favorites/presentation/widgets/favorite_toggle_button.dart';
+import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 
 /// Ordena portada, fase, nombre, cantidad, categoria y precio sin separadores flexibles.
 class ProductCard extends StatelessWidget {
@@ -106,6 +109,9 @@ class ProductCard extends StatelessWidget {
     final theme = Theme.of(context).textTheme;
     final bodyStyle = _bodyStyle(theme);
     final titleStyle = _titleStyle(theme);
+    final isOwner = context.select<AuthViewModel, bool>(
+      (auth) => auth.currentUser?.id == product.producerId,
+    );
     return Material(
       color: AppColors.surface,
       borderRadius: BorderRadius.circular(18),
@@ -131,9 +137,25 @@ class ProductCard extends StatelessWidget {
                   height: imageHeight,
                   child: ColoredBox(
                     color: AppColors.primarySurface,
-                    child: imagenProducto(
-                      product.imagenUrl,
-                      height: imageHeight,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        imagenProducto(product.imagenUrl, height: imageHeight),
+                        if (!showVisibility && !isOwner)
+                          Positioned(
+                            top: 9,
+                            right: 9,
+                            child: Material(
+                              color: AppColors.surface.withValues(alpha: .96),
+                              shape: const CircleBorder(),
+                              elevation: 2,
+                              child: FavoriteToggleButton(
+                                product: product,
+                                compact: true,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ),

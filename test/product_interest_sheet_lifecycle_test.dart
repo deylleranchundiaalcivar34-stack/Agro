@@ -68,9 +68,9 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Registrar interes'));
+      await tester.tap(find.text('Consultar al productor'));
       await tester.pumpAndSettle();
-      await tester.showKeyboard(find.byType(TextFormField));
+      await tester.showKeyboard(find.byType(TextFormField).first);
       await tester.pump();
 
       await tester.tapAt(const Offset(8, 8));

@@ -14,6 +14,8 @@ import 'features/products/data/repositories/products_repository.dart';
 import 'features/products/presentation/viewmodels/products_viewmodel.dart';
 import 'features/splash/splash_view.dart';
 import 'features/profile/data/services/local_biometric_lock.dart';
+import 'features/favorites/data/repositories/favorites_repository.dart';
+import 'features/favorites/presentation/viewmodels/favorites_viewmodel.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -135,6 +137,13 @@ class _AgroBootstrapState extends State<_AgroBootstrap> {
                 providers: [
                   ChangeNotifierProvider<AuthViewModel>.value(value: auth),
                   ChangeNotifierProvider(create: (_) => LocalBiometricLock()),
+                  ChangeNotifierProvider(
+                    create: (_) => FavoritesViewModel(
+                      repository: FavoritesRepository(
+                        supabaseService: SupabaseService(),
+                      ),
+                    ),
+                  ),
                   ChangeNotifierProvider(
                     create: (_) => ProductsViewModel(
                       productsRepository: ProductsRepository(

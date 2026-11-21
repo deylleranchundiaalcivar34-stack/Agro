@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/constants/app_routes.dart';
 import '../../../../core/network/supabase_service.dart';
 import '../../data/models/profile_notification.dart';
 import '../../data/repositories/profile_notifications_repository.dart';
@@ -62,6 +64,8 @@ class _ProfileNotificationsViewState extends State<ProfileNotificationsView> {
                 title: item.title,
                 message: item.message,
                 isRead: true,
+                referenceType: item.referenceType,
+                referenceId: item.referenceId,
               )
             else
               item,
@@ -123,9 +127,15 @@ class _ProfileNotificationsViewState extends State<ProfileNotificationsView> {
                     ),
                   ),
                   child: ListTile(
-                    onTap: notification.isRead
-                        ? null
-                        : () => _markAsRead(notification),
+                    onTap: () async {
+                      if (!notification.isRead) {
+                        await _markAsRead(notification);
+                      }
+                      if (notification.referenceType == 'solicitud_contacto' &&
+                          context.mounted) {
+                        context.go(AppRoutes.contactRequests);
+                      }
+                    },
                     leading: Icon(
                       notification.isRead
                           ? Icons.notifications_none_rounded

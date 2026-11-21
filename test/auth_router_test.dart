@@ -12,18 +12,15 @@ import 'package:proyecto_agro/core/router/app_router.dart';
 import 'package:proyecto_agro/app.dart';
 import 'package:proyecto_agro/features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'package:proyecto_agro/features/auth/presentation/views/login_view.dart';
+import 'package:proyecto_agro/features/chat/presentation/views/chat_list_view.dart';
 
 class _AuthState extends ChangeNotifier implements AuthViewModel {
-  _AuthState({required this.authenticated, required this.pendingTotp});
+  _AuthState({required this.authenticated});
 
   bool authenticated;
-  bool pendingTotp;
 
   @override
   bool get isAuthenticated => authenticated;
-
-  @override
-  bool get mfaRequired => pendingTotp;
 
   @override
   UserRole get selectedRole => UserRole.buyer;
@@ -43,7 +40,6 @@ class _AuthState extends ChangeNotifier implements AuthViewModel {
   @override
   Future<void> signOut() async {
     authenticated = false;
-    pendingTotp = false;
     notifyListeners();
   }
 
@@ -100,7 +96,7 @@ void main() {
   testWidgets('las rutas usan duracion cero si el sistema reduce movimiento', (
     tester,
   ) async {
-    final auth = _AuthState(authenticated: false, pendingTotp: false);
+    final auth = _AuthState(authenticated: false);
     final router = AppRouter(
       authViewModel: auth,
       initialLocation: AppRoutes.welcome,
@@ -132,7 +128,7 @@ void main() {
   testWidgets(
     'la bienvenida es publica sin sesion y rutas protegidas abren login',
     (tester) async {
-      final auth = _AuthState(authenticated: false, pendingTotp: false);
+      final auth = _AuthState(authenticated: false);
       final router = await _pumpRouter(tester, auth, AppRoutes.welcome);
       addTearDown(router.dispose);
 
@@ -149,82 +145,59 @@ void main() {
   testWidgets('una sesion activa abre Inicio en vez de la bienvenida', (
     tester,
   ) async {
-    final auth = _AuthState(authenticated: true, pendingTotp: false);
+    final auth = _AuthState(authenticated: true);
     final router = await _pumpRouter(tester, auth, AppRoutes.welcome);
     addTearDown(router.dispose);
 
     expect(router.routeInformationProvider.value.uri.path, AppRoutes.home);
   });
 
-  testWidgets(
-    'una sesion con TOTP pendiente abre el desafio desde bienvenida',
-    (tester) async {
-      final auth = _AuthState(authenticated: true, pendingTotp: true);
-      final router = await _pumpRouter(tester, auth, AppRoutes.welcome);
-      addTearDown(router.dispose);
-
-      expect(
-        router.routeInformationProvider.value.uri.path,
-        AppRoutes.mfaChallenge,
-      );
-    },
-  );
-
-  testWidgets('a pending TOTP session cannot open a deep chat link', (
+  testWidgets('una sesion activa puede abrir una ruta protegida del chat', (
     tester,
   ) async {
-    final auth = _AuthState(authenticated: true, pendingTotp: true);
-    final router = await _pumpRouter(tester, auth, '/chat/room-id');
-    addTearDown(router.dispose);
-
-    expect(
-      router.routeInformationProvider.value.uri.path,
-      AppRoutes.mfaChallenge,
-    );
-    expect(find.text('Verificacion en dos pasos'), findsOneWidget);
-  });
-
-  testWidgets('a pending TOTP session cannot skip challenge via login', (
-    tester,
-  ) async {
-    final auth = _AuthState(authenticated: true, pendingTotp: true);
-    final router = await _pumpRouter(tester, auth, AppRoutes.login);
-    addTearDown(router.dispose);
-
-    expect(
-      router.routeInformationProvider.value.uri.path,
-      AppRoutes.mfaChallenge,
-    );
-  });
-
-  testWidgets('a session without TOTP can open a protected chat route', (
-    tester,
-  ) async {
-    final auth = _AuthState(authenticated: true, pendingTotp: false);
+    final auth = _AuthState(authenticated: true);
     final router = await _pumpRouter(tester, auth, '/chat/room-id');
     addTearDown(router.dispose);
 
     expect(router.routeInformationProvider.value.uri.path, '/chat/room-id');
   });
 
-  testWidgets('a user can sign out from the TOTP challenge', (tester) async {
-    final auth = _AuthState(authenticated: true, pendingTotp: true);
-    final router = await _pumpRouter(tester, auth, AppRoutes.mfaChallenge);
+  testWidgets('las pantallas del menu de cuenta cambian en 150 ms', (
+    tester,
+  ) async {
+    final auth = _AuthState(authenticated: true);
+    final router = await _pumpRouter(tester, auth, AppRoutes.profileSupport);
     addTearDown(router.dispose);
 
-    await tester.tap(find.text('Cerrar sesion'));
-    await tester.pumpAndSettle();
-
-    expect(auth.authenticated, isFalse);
-    expect(router.routeInformationProvider.value.uri.path, AppRoutes.login);
+    final route = ModalRoute.of(
+      tester.element(find.text('Preguntas frecuentes')),
+    );
+    expect(route?.transitionDuration, const Duration(milliseconds: 150));
+    expect(tester.takeException(), isNull);
   });
+
+  testWidgets(
+    'solicitudes de chat tiene transicion breve y encabezado propio',
+    (tester) async {
+      final auth = _AuthState(authenticated: true);
+      final router = await _pumpRouter(tester, auth, AppRoutes.contactRequests);
+      addTearDown(router.dispose);
+
+      final chatPages = find.byType(ChatListView);
+      final route = ModalRoute.of(tester.element(chatPages.last));
+      expect(route?.transitionDuration, const Duration(milliseconds: 180));
+      expect(find.text('Solicitudes de contacto'), findsOneWidget);
+      expect(find.byTooltip('Volver'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+    },
+  );
 
   testWidgets('login footer fits a narrow phone after signing out', (
     tester,
   ) async {
     await tester.binding.setSurfaceSize(const Size(360, 800));
     addTearDown(() => tester.binding.setSurfaceSize(null));
-    final auth = _AuthState(authenticated: false, pendingTotp: false);
+    final auth = _AuthState(authenticated: false);
     final router = await _pumpRouter(tester, auth, AppRoutes.login);
     addTearDown(router.dispose);
 

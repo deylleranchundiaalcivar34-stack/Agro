@@ -1,4 +1,5 @@
 import '../../../../core/network/supabase_service.dart';
+import '../models/ecuador_mobile_phone.dart';
 import '../models/public_contact_profile.dart';
 
 class PublicContactProfileRepository {
@@ -72,9 +73,11 @@ class PublicContactProfileRepository {
         : null;
     if (whatsappVisible &&
         (normalizedPhone == null ||
-            !RegExp(r'^\+[1-9][0-9]{7,14}$').hasMatch(normalizedPhone))) {
+            !EcuadorMobilePhone.internationalPattern.hasMatch(
+              normalizedPhone,
+            ))) {
       throw ArgumentError(
-        'Escribe el numero en formato internacional, por ejemplo +593...',
+        'Escribe un celular ecuatoriano en formato +593 seguido de 9 dígitos.',
       );
     }
 

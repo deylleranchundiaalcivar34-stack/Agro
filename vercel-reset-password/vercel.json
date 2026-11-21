@@ -1,3 +1,7 @@
 {
-  "cleanUrls": true
+  "cleanUrls": true,
+  "rewrites": [
+    { "source": "/auth/confirm", "destination": "/auth/confirm.html" },
+    { "source": "/auth/reset-password", "destination": "/index.html" }
+  ]
 }

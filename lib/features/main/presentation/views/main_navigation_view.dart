@@ -5,7 +5,9 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_routes.dart';
+import '../../../../core/widgets/agro_page_app_bar.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
+import '../../../profile/presentation/widgets/account_navigation_drawer.dart';
 import '../../../profile/presentation/widgets/profile_avatar_action.dart';
 import '../../../profile/presentation/widgets/public_profile_avatar.dart';
 
@@ -102,27 +104,7 @@ class MainNavigationView extends StatefulWidget {
   State<MainNavigationView> createState() => _MainNavigationViewState();
 }
 
-class ModulePageSwipeScope extends InheritedWidget {
-  const ModulePageSwipeScope({
-    super.key,
-    required this.enabled,
-    required super.child,
-  });
-
-  final bool enabled;
-
-  static bool enabledOf(BuildContext context) =>
-      context
-          .dependOnInheritedWidgetOfExactType<ModulePageSwipeScope>()
-          ?.enabled ??
-      false;
-
-  @override
-  bool updateShouldNotify(ModulePageSwipeScope oldWidget) =>
-      enabled != oldWidget.enabled;
-}
-
-/// Presents GoRouter's persistent branch Navigators as finger-tracked pages.
+/// Presents GoRouter's persistent branch Navigators with tab-selection motion.
 class AnimatedBranchContainer extends StatefulWidget {
   const AnimatedBranchContainer({
     super.key,
@@ -188,9 +170,7 @@ class _AnimatedBranchContainerState extends State<AnimatedBranchContainer> {
   Widget build(BuildContext context) => PageView(
     key: const Key('module-page-view'),
     controller: _pageController,
-    physics: ModulePageSwipeScope.enabledOf(context)
-        ? null
-        : const NeverScrollableScrollPhysics(),
+    physics: const NeverScrollableScrollPhysics(),
     onPageChanged: _onPageChanged,
     children: [
       for (var index = 0; index < widget.children.length; index++)
@@ -204,7 +184,6 @@ class _AnimatedBranchContainerState extends State<AnimatedBranchContainer> {
 }
 
 class _MainNavigationViewState extends State<MainNavigationView> {
-  static const double _scrollThreshold = 24;
   final _refreshRegistry = ModuleRefreshRegistry();
   final _chatHeaderController = ChatRoomHeaderController();
 
@@ -231,10 +210,6 @@ class _MainNavigationViewState extends State<MainNavigationView> {
     ),
   ];
 
-  bool _isNavigationVisible = true;
-  bool _metricsVisibilityScheduled = false;
-  double? _lastScrollPixels;
-  double _accumulatedScroll = 0;
   bool _isMainDestination(String location) => const {
     AppRoutes.home,
     AppRoutes.products,
@@ -243,7 +218,8 @@ class _MainNavigationViewState extends State<MainNavigationView> {
   }.contains(location);
 
   bool _isChatRoomRoute(String location) =>
-      location.startsWith('${AppRoutes.chatList}/');
+      location.startsWith('${AppRoutes.chatList}/') &&
+      location != AppRoutes.contactRequests;
 
   String _moduleTitle(String location) => switch (location) {
     AppRoutes.home => 'Agro+',
@@ -264,107 +240,11 @@ class _MainNavigationViewState extends State<MainNavigationView> {
     await _refreshRegistry.refresh(module);
   }
 
-  bool _handleScroll(ScrollNotification notification, bool isMainDestination) {
-    if (!isMainDestination || notification.metrics.axis != Axis.vertical) {
-      return false;
-    }
-
-    final metrics = notification.metrics;
-    final hasScrollableContent =
-        metrics.maxScrollExtent > metrics.minScrollExtent + 1;
-    final atTop = metrics.pixels <= metrics.minScrollExtent + 1;
-    final atBottom = hasScrollableContent && metrics.extentAfter <= 1;
-
-    if (notification is ScrollStartNotification) {
-      _lastScrollPixels = notification.metrics.pixels;
-      _accumulatedScroll = 0;
-      if (atTop || !hasScrollableContent) {
-        _setNavigationVisible(true);
-      }
-      return false;
-    }
-
-    if (notification is ScrollUpdateNotification) {
-      if (atTop || atBottom || !hasScrollableContent) {
-        _accumulatedScroll = 0;
-        _setNavigationVisible(true);
-      }
-
-      final pixels = notification.metrics.pixels;
-      final previousPixels = _lastScrollPixels;
-      _lastScrollPixels = pixels;
-      if (atTop || atBottom || !hasScrollableContent) return false;
-      if (previousPixels == null) return false;
-
-      final delta = pixels - previousPixels;
-      if (delta == 0) return false;
-
-      if (_accumulatedScroll.sign != delta.sign) {
-        _accumulatedScroll = delta;
-      } else {
-        _accumulatedScroll += delta;
-      }
-
-      if (_accumulatedScroll.abs() >= _scrollThreshold) {
-        _setNavigationVisible(_accumulatedScroll < 0);
-        _accumulatedScroll = 0;
-      }
-      return false;
-    }
-
-    if (notification is OverscrollNotification) {
-      final pulledPastBottom =
-          notification.overscroll > 0 && hasScrollableContent;
-      if ((atBottom && notification.overscroll >= 0) || pulledPastBottom) {
-        _lastScrollPixels = null;
-        _accumulatedScroll = 0;
-        _setNavigationVisible(true);
-      }
-      return false;
-    }
-
-    if (notification is ScrollEndNotification) {
-      if (atBottom || !hasScrollableContent) {
-        _setNavigationVisible(true);
-      }
-      _lastScrollPixels = null;
-      _accumulatedScroll = 0;
-    }
-    return false;
-  }
-
-  void _setNavigationVisible(bool visible) {
-    if (_isNavigationVisible == visible || !mounted) return;
-    setState(() => _isNavigationVisible = visible);
-  }
-
-  bool _handleMetrics(ScrollMetricsNotification notification) {
-    final metrics = notification.metrics;
-    if (_isMainDestination(widget.locationPath) &&
-        metrics.axis == Axis.vertical &&
-        metrics.maxScrollExtent <= metrics.minScrollExtent + 1 &&
-        !_isNavigationVisible &&
-        !_metricsVisibilityScheduled) {
-      _metricsVisibilityScheduled = true;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _metricsVisibilityScheduled = false;
-        if (!mounted || !_isMainDestination(widget.locationPath)) return;
-        _accumulatedScroll = 0;
-        _lastScrollPixels = null;
-        _setNavigationVisible(true);
-      });
-    }
-    return false;
-  }
-
   @override
   void didUpdateWidget(covariant MainNavigationView oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.locationPath != widget.locationPath) {
       _chatHeaderController.clear();
-      _isNavigationVisible = true;
-      _lastScrollPixels = null;
-      _accumulatedScroll = 0;
     }
   }
 
@@ -375,9 +255,6 @@ class _MainNavigationViewState extends State<MainNavigationView> {
   }
 
   void _onTabSelected(int index) {
-    _lastScrollPixels = null;
-    _accumulatedScroll = 0;
-    _setNavigationVisible(true);
     widget.navigationShell.goBranch(
       index,
       initialLocation: index == widget.navigationShell.currentIndex,
@@ -388,43 +265,41 @@ class _MainNavigationViewState extends State<MainNavigationView> {
   Widget build(BuildContext context) {
     final location = widget.locationPath;
     final isMainDestination = _isMainDestination(location);
+    final isContactRequests = location == AppRoutes.contactRequests;
     final isChatRoom = _isChatRoomRoute(location);
-    final allowModulePaging =
-        isMainDestination && widget.navigationShell.currentIndex != 2;
-
     return Scaffold(
       backgroundColor: AppColors.background,
       appBar: isMainDestination
-          ? AppBar(
-              key: const Key('persistent-module-app-bar'),
-              title: Text(_moduleTitle(location)),
+          ? AgroPageAppBar(
+              appBarKey: const Key('persistent-module-app-bar'),
+              logoKey: const Key('agro-app-logo'),
+              title: _moduleTitle(location),
+              showBackButton: false,
               actions: [
-                const ProfileAvatarAction(),
                 IconButton(
                   tooltip: 'Actualizar ${_moduleTitle(location)}',
                   onPressed: _refreshCurrentModule,
                   icon: const Icon(Icons.refresh_rounded),
                 ),
+                const ProfileAvatarAction(),
               ],
+            )
+          : isContactRequests
+          ? AgroPageAppBar(
+              appBarKey: const Key('persistent-module-app-bar'),
+              logoKey: const Key('agro-app-logo'),
+              title: 'Solicitudes de contacto',
+              onBack: () => context.go(AppRoutes.chatList),
             )
           : isChatRoom
           ? _buildChatRoomAppBar(context)
           : null,
-      body: NotificationListener<ScrollMetricsNotification>(
-        onNotification: _handleMetrics,
-        child: NotificationListener<ScrollNotification>(
-          onNotification: (notification) =>
-              _handleScroll(notification, isMainDestination),
-          child: ModulePageSwipeScope(
-            enabled: allowModulePaging,
-            child: ChatRoomHeaderScope(
-              controller: _chatHeaderController,
-              child: ModuleRefreshScope(
-                registry: _refreshRegistry,
-                child: widget.navigationShell,
-              ),
-            ),
-          ),
+      endDrawer: isMainDestination ? const AccountNavigationDrawer() : null,
+      body: ChatRoomHeaderScope(
+        controller: _chatHeaderController,
+        child: ModuleRefreshScope(
+          registry: _refreshRegistry,
+          child: widget.navigationShell,
         ),
       ),
       bottomNavigationBar: isMainDestination
@@ -433,62 +308,66 @@ class _MainNavigationViewState extends State<MainNavigationView> {
     );
   }
 
-  PreferredSizeWidget _buildChatRoomAppBar(BuildContext context) => AppBar(
-    key: const Key('persistent-module-app-bar'),
-    leading: IconButton(
-      tooltip: 'Volver a conversaciones',
-      onPressed: () => context.pop(),
-      icon: const Icon(Icons.arrow_back_rounded),
-    ),
-    titleSpacing: 0,
-    title: ValueListenableBuilder<ChatRoomHeaderData?>(
-      valueListenable: _chatHeaderController,
-      builder: (context, data, _) => InkWell(
-        onTap: data?.onOpenContact,
-        borderRadius: BorderRadius.circular(24),
-        child: Row(
-          children: [
-            PublicProfileAvatar(
-              radius: 18,
-              initial: data?.initial ?? 'A',
-              imageUrl: data?.avatarUrl,
-            ),
-            const SizedBox(width: 10),
-            Expanded(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    data?.name ?? 'Conversacion',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+  PreferredSizeWidget _buildChatRoomAppBar(BuildContext context) =>
+      AgroPageAppBar(
+        appBarKey: const Key('persistent-module-app-bar'),
+        logoKey: const Key('agro-app-logo'),
+        title: 'Conversacion',
+        backTooltip: 'Volver a conversaciones',
+        onBack: () => context.pop(),
+        titleContent: ValueListenableBuilder<ChatRoomHeaderData?>(
+          valueListenable: _chatHeaderController,
+          builder: (context, data, _) => InkWell(
+            onTap: data?.onOpenContact,
+            borderRadius: BorderRadius.circular(24),
+            child: Row(
+              children: [
+                PublicProfileAvatar(
+                  radius: 18,
+                  initial: data?.initial ?? 'A',
+                  imageUrl: data?.avatarUrl,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        data?.name ?? 'Conversacion',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                          color: AppColors.surface,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        data?.subtitle ?? 'Mensajes Agro+',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: AppColors.surface.withValues(alpha: .82),
+                        ),
+                      ),
+                    ],
                   ),
-                  Text(
-                    data?.subtitle ?? 'Mensajes Agro+',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: Theme.of(context).textTheme.labelSmall
-                        ?.copyWith(color: AppColors.surface),
-                  ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
-      ),
-    ),
-    actions: [
-      ValueListenableBuilder<ChatRoomHeaderData?>(
-        valueListenable: _chatHeaderController,
-        builder: (context, data, _) => IconButton(
-          tooltip: 'Informacion del contacto',
-          onPressed: data?.onOpenContact,
-          icon: const Icon(Icons.info_outline_rounded),
-        ),
-      ),
-    ],
-  );
+        actions: [
+          ValueListenableBuilder<ChatRoomHeaderData?>(
+            valueListenable: _chatHeaderController,
+            builder: (context, data, _) => IconButton(
+              tooltip: 'Informacion del contacto',
+              onPressed: data?.onOpenContact,
+              icon: const Icon(Icons.info_outline_rounded),
+            ),
+          ),
+        ],
+      );
 
   Widget _buildNavigationBar(BuildContext context) {
     final role = context.watch<AuthViewModel>().selectedRole;
@@ -513,70 +392,82 @@ class _MainNavigationViewState extends State<MainNavigationView> {
             backgroundColor: AppColors.surface,
             indicatorColor: AppColors.primarySurface,
             elevation: 0,
+            height: 72,
             labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
           );
-    return _withVisibilityAnimation(context, bar);
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        border: Border(
+          top: BorderSide(color: AppColors.divider.withValues(alpha: .55)),
+        ),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Align(
+          heightFactor: 1,
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 600),
+            child: SizedBox(width: double.infinity, child: bar),
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildProducerNavigation(BuildContext context) {
-    return Container(
-      color: AppColors.surface,
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 76,
-          child: Row(
-            children: [
-              _producerDestination(
-                context,
-                branchIndex: 0,
-                label: 'Inicio',
-                icon: Icons.home_outlined,
-                selectedIcon: Icons.home_rounded,
-              ),
-              _producerDestination(
-                context,
-                branchIndex: 1,
-                label: 'Comprar',
-                icon: Icons.grid_view_outlined,
-                selectedIcon: Icons.grid_view_rounded,
-              ),
-              Expanded(
-                child: Center(
-                  child: Semantics(
-                    button: true,
-                    label: 'Publicar producto',
-                    child: IconButton(
-                      onPressed: () => context.go(AppRoutes.productCreate),
-                      tooltip: 'Publicar producto',
-                      style: IconButton.styleFrom(
-                        minimumSize: const Size(48, 48),
-                        backgroundColor: AppColors.info,
-                        foregroundColor: AppColors.surface,
-                        shape: const CircleBorder(),
-                      ),
-                      icon: const Icon(Icons.add_rounded, size: 30),
-                    ),
+    return SizedBox(
+      height: 76,
+      child: Row(
+        children: [
+          _producerDestination(
+            context,
+            branchIndex: 0,
+            label: 'Inicio',
+            icon: Icons.home_outlined,
+            selectedIcon: Icons.home_rounded,
+          ),
+          _producerDestination(
+            context,
+            branchIndex: 1,
+            label: 'Comprar',
+            icon: Icons.grid_view_outlined,
+            selectedIcon: Icons.grid_view_rounded,
+          ),
+          Expanded(
+            child: Center(
+              child: Semantics(
+                button: true,
+                label: 'Publicar producto',
+                child: IconButton(
+                  onPressed: () => context.go(AppRoutes.productCreate),
+                  tooltip: 'Publicar producto',
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(48, 48),
+                    backgroundColor: AppColors.primary,
+                    foregroundColor: AppColors.surface,
+                    shape: const CircleBorder(),
                   ),
+                  icon: const Icon(Icons.add_rounded, size: 28),
                 ),
               ),
-              _producerDestination(
-                context,
-                branchIndex: 2,
-                label: 'Mapa',
-                icon: Icons.map_outlined,
-                selectedIcon: Icons.map_rounded,
-              ),
-              _producerDestination(
-                context,
-                branchIndex: 3,
-                label: 'Chat',
-                icon: Icons.chat_bubble_outline_rounded,
-                selectedIcon: Icons.chat_bubble_rounded,
-              ),
-            ],
+            ),
           ),
-        ),
+          _producerDestination(
+            context,
+            branchIndex: 2,
+            label: 'Mapa',
+            icon: Icons.map_outlined,
+            selectedIcon: Icons.map_rounded,
+          ),
+          _producerDestination(
+            context,
+            branchIndex: 3,
+            label: 'Chat',
+            icon: Icons.chat_bubble_outline_rounded,
+            selectedIcon: Icons.chat_bubble_rounded,
+          ),
+        ],
       ),
     );
   }
@@ -639,38 +530,6 @@ class _MainNavigationViewState extends State<MainNavigationView> {
                     ),
                   ),
                 ],
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _withVisibilityAnimation(BuildContext context, Widget bar) {
-    final animationsDisabled = MediaQuery.disableAnimationsOf(context);
-
-    if (animationsDisabled) {
-      return _isNavigationVisible ? bar : const SizedBox.shrink();
-    }
-
-    return AnimatedSize(
-      key: const Key('navigation-bar-slot'),
-      duration: AppDurations.resolve(context, AppDurations.routeTransition),
-      curve: Curves.easeInOutCubic,
-      alignment: Alignment.topCenter,
-      child: ClipRect(
-        child: Align(
-          heightFactor: _isNavigationVisible ? 1 : 0,
-          child: AnimatedOpacity(
-            duration: AppDurations.resolve(context, AppDurations.stateChange),
-            curve: Curves.easeOut,
-            opacity: _isNavigationVisible ? 1 : 0,
-            child: IgnorePointer(
-              ignoring: !_isNavigationVisible,
-              child: ExcludeSemantics(
-                excluding: !_isNavigationVisible,
-                child: bar,
               ),
             ),
           ),

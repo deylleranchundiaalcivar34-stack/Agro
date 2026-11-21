@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../../../core/constants/app_colors.dart';
@@ -12,6 +14,7 @@ import '../../data/models/chat_conversation.dart';
 import '../../data/models/chat_message.dart';
 import '../../data/repositories/chat_repository.dart';
 import '../../data/repositories/chat_typing_service.dart';
+import '../../utils/chat_timestamp_formatter.dart';
 
 class ChatRoomView extends StatefulWidget {
   const ChatRoomView({super.key, required this.roomId, this.repository});
@@ -29,7 +32,9 @@ class _ChatRoomViewState extends State<ChatRoomView>
   final _draft = TextEditingController();
   final _draftFocus = FocusNode();
   final _scroll = ScrollController();
+  final _imagePicker = ImagePicker();
   StreamSubscription<List<ChatMessage>>? _subscription;
+  StreamSubscription<DateTime?>? _readSubscription;
   ChatTypingService? _typingService;
   ChatRoomHeaderController? _headerController;
   Timer? _typingDebounce;
@@ -39,7 +44,12 @@ class _ChatRoomViewState extends State<ChatRoomView>
   List<ChatMessage> _messages = const [];
   bool _loading = true;
   bool _sending = false;
+  bool _sendingImage = false;
   bool _remoteTyping = false;
+  bool _isAppResumed = true;
+  int _unreadNewMessages = 0;
+  DateTime? _participantReadAt;
+  DateTime? _lastMarkedReadAt;
   String? _error;
   int _generation = 0;
 
@@ -48,6 +58,7 @@ class _ChatRoomViewState extends State<ChatRoomView>
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     _draftFocus.addListener(_onFocusChanged);
+    _scroll.addListener(_onScrollChanged);
     _start();
   }
 
@@ -74,6 +85,8 @@ class _ChatRoomViewState extends State<ChatRoomView>
     final generation = ++_generation;
     await _subscription?.cancel();
     _subscription = null;
+    await _readSubscription?.cancel();
+    _readSubscription = null;
     await _typingService?.dispose();
     _typingService = null;
     _typingDebounce?.cancel();
@@ -81,7 +94,9 @@ class _ChatRoomViewState extends State<ChatRoomView>
 
     try {
       final cachedChat = _repository.cachedConversation(widget.roomId);
-      final cachedMessages = _repository.cachedMessages(widget.roomId);
+      final cachedMessages = _orderedMessages(
+        _repository.cachedMessages(widget.roomId),
+      );
       if (mounted) {
         setState(() {
           _chat = cachedChat;
@@ -89,6 +104,9 @@ class _ChatRoomViewState extends State<ChatRoomView>
           _messages = cachedMessages;
           _loading = cachedMessages.isEmpty;
           _remoteTyping = false;
+          _participantReadAt = null;
+          _lastMarkedReadAt = null;
+          _unreadNewMessages = 0;
           _error = null;
         });
         _publishHeader();
@@ -116,17 +134,45 @@ class _ChatRoomViewState extends State<ChatRoomView>
       });
       _publishHeader();
 
+      final otherParticipantId = chat.participantId;
+      if (otherParticipantId != null && otherParticipantId.isNotEmpty) {
+        _readSubscription = _repository
+            .watchReadAt(chat.id, otherParticipantId)
+            .listen((readAt) {
+              if (!mounted || generation != _generation) return;
+              setState(() => _participantReadAt = readAt);
+            });
+      }
+
       _subscription = _repository
           .watchMessages(widget.roomId)
           .listen(
-            (messages) {
+            (incomingMessages) {
               if (!mounted || generation != _generation) return;
+              final messages = _orderedMessages(incomingMessages);
+              final wasNearLatest = _isNearLatest;
+              final oldIds = _messages.map((message) => message.id).toSet();
+              final newIncoming = messages
+                  .where(
+                    (message) =>
+                        !oldIds.contains(message.id) &&
+                        message.senderId != _repository.currentUserId,
+                  )
+                  .length;
               setState(() {
                 _messages = messages;
                 _loading = false;
                 _error = null;
+                if (wasNearLatest) {
+                  _unreadNewMessages = 0;
+                } else {
+                  _unreadNewMessages += newIncoming;
+                }
               });
-              _scrollToBottom();
+              if (wasNearLatest) {
+                _scrollToLatest(animate: false);
+                _markLatestIncomingRead();
+              }
             },
             onError: (Object _) {
               if (!mounted || generation != _generation) return;
@@ -190,9 +236,12 @@ class _ChatRoomViewState extends State<ChatRoomView>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
+    _isAppResumed = state == AppLifecycleState.resumed;
     if (state != AppLifecycleState.resumed) {
       _typingDebounce?.cancel();
       _typingService?.setLocalTyping(false);
+    } else if (_isNearLatest) {
+      _markLatestIncomingRead();
     }
   }
 
@@ -212,7 +261,7 @@ class _ChatRoomViewState extends State<ChatRoomView>
             ..sort((a, b) => a.sentAt.compareTo(b.sentAt));
         }
       });
-      _scrollToBottom();
+      _scrollToLatest();
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -248,6 +297,40 @@ class _ChatRoomViewState extends State<ChatRoomView>
   String _initialFor(String userId) {
     final name = _nameFor(userId).trim();
     return name.isEmpty ? 'A' : name[0].toUpperCase();
+  }
+
+  Future<void> _attachImage() async {
+    if (_sendingImage || _chat == null) return;
+    try {
+      final image = await _imagePicker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 80,
+        maxWidth: 1600,
+        maxHeight: 1600,
+      );
+      if (image == null || !mounted) return;
+      setState(() => _sendingImage = true);
+      _typingService?.setLocalTyping(false);
+      final persisted = await _repository.sendImage(widget.roomId, image);
+      if (!mounted) return;
+      setState(() {
+        if (!_messages.any((message) => message.id == persisted.id)) {
+          _messages = [..._messages, persisted]
+            ..sort((a, b) => a.sentAt.compareTo(b.sentAt));
+        }
+      });
+      _scrollToLatest();
+    } catch (error) {
+      if (mounted) {
+        final message = error is ChatFailure
+            ? error.message
+            : 'No se pudo adjuntar la imagen. Intenta de nuevo.';
+        ScaffoldMessenger.of(context)
+            .showSnackBar(SnackBar(content: Text(message)));
+      }
+    } finally {
+      if (mounted) setState(() => _sendingImage = false);
+    }
   }
 
   void _publishHeader() {
@@ -334,11 +417,53 @@ class _ChatRoomViewState extends State<ChatRoomView>
     }
   }
 
-  void _scrollToBottom() {
+  bool get _isNearLatest =>
+      !_scroll.hasClients || _scroll.position.pixels <= 72;
+
+  void _onScrollChanged() {
+    if (!_isNearLatest) return;
+    if (_unreadNewMessages > 0 && mounted) {
+      setState(() => _unreadNewMessages = 0);
+    }
+    _markLatestIncomingRead();
+  }
+
+  void _markLatestIncomingRead() {
+    if (!_isAppResumed || !_isNearLatest || _chat == null) return;
+    final currentUserId = _repository.currentUserId;
+    ChatMessage? latestIncoming;
+    for (final message in _messages.reversed) {
+      if (message.senderId != currentUserId) {
+        latestIncoming = message;
+        break;
+      }
+    }
+    if (latestIncoming == null ||
+        (_lastMarkedReadAt != null &&
+            !latestIncoming.sentAt.isAfter(_lastMarkedReadAt!))) {
+      return;
+    }
+    final readThrough = latestIncoming.sentAt;
+    final chatId = _chat!.id;
+    _lastMarkedReadAt = readThrough;
+    unawaited(
+      _repository.markRead(chatId, readThrough).catchError((_) {
+        if (mounted && _lastMarkedReadAt == readThrough) {
+          _lastMarkedReadAt = null;
+        }
+      }),
+    );
+  }
+
+  void _scrollToLatest({bool animate = true}) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scroll.hasClients) {
+      if (mounted && _scroll.hasClients) {
+        if (!animate) {
+          _scroll.jumpTo(0);
+          return;
+        }
         _scroll.animateTo(
-          _scroll.position.maxScrollExtent,
+          0,
           duration: const Duration(milliseconds: 180),
           curve: Curves.easeOutCubic,
         );
@@ -350,6 +475,7 @@ class _ChatRoomViewState extends State<ChatRoomView>
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
     _draftFocus.removeListener(_onFocusChanged);
+    _scroll.removeListener(_onScrollChanged);
     _typingDebounce?.cancel();
     _remoteTypingExpiry?.cancel();
     final activeChatId = _chat?.id;
@@ -357,6 +483,7 @@ class _ChatRoomViewState extends State<ChatRoomView>
       _headerController?.clear();
     }
     _subscription?.cancel();
+    _readSubscription?.cancel();
     unawaited(_typingService?.dispose() ?? Future<void>.value());
     _draft.dispose();
     _draftFocus.dispose();
@@ -371,7 +498,27 @@ class _ChatRoomViewState extends State<ChatRoomView>
       top: false,
       child: Column(
         children: [
-          Expanded(child: _buildMessages()),
+          Expanded(
+            child: Stack(
+              children: [
+                Positioned.fill(child: _buildMessages()),
+                if (_unreadNewMessages > 0)
+                  Positioned(
+                    right: 16,
+                    bottom: 14,
+                    child: FilledButton.tonalIcon(
+                      onPressed: _scrollToLatest,
+                      icon: const Icon(Icons.south_rounded),
+                      label: Text(
+                        _unreadNewMessages == 1
+                            ? '1 mensaje nuevo'
+                            : '$_unreadNewMessages mensajes nuevos',
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
           if (_error != null && _messages.isNotEmpty)
             MaterialBanner(
               content: Text(_error!),
@@ -387,17 +534,33 @@ class _ChatRoomViewState extends State<ChatRoomView>
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  IconButton(
+                    onPressed: _chat == null || _sendingImage || _sending
+                        ? null
+                        : _attachImage,
+                    tooltip: 'Adjuntar imagen',
+                    icon: _sendingImage
+                        ? const SizedBox.square(
+                            dimension: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.primary,
+                            ),
+                          )
+                        : const Icon(Icons.add_photo_alternate_outlined),
+                    color: AppColors.primary,
+                  ),
                   Expanded(
                     child: TextField(
                       controller: _draft,
                       focusNode: _draftFocus,
-                      enabled: _chat != null,
+                      enabled: _chat != null && !_sendingImage,
                       maxLength: 2000,
                       minLines: 1,
                       maxLines: 4,
                       onChanged: _onDraftChanged,
                       decoration: InputDecoration(
-                        hintText: 'Mensaje',
+                        hintText: 'Escribe un mensaje',
                         counterText: '',
                         filled: true,
                         fillColor: AppColors.surface,
@@ -415,12 +578,14 @@ class _ChatRoomViewState extends State<ChatRoomView>
                   ),
                   const SizedBox(width: 8),
                   IconButton.filled(
-                    onPressed: _chat == null || _sending ? null : _send,
+                    onPressed: _chat == null || _sending || _sendingImage
+                        ? null
+                        : _send,
                     style: IconButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       foregroundColor: AppColors.surface,
                     ),
-                    icon: _sending
+                    icon: _sending || _sendingImage
                         ? const SizedBox.square(
                             dimension: 18,
                             child: CircularProgressIndicator(
@@ -484,11 +649,36 @@ class _ChatRoomViewState extends State<ChatRoomView>
       );
     }
 
+    final timeline = <_ChatTimelineEntry>[];
+    for (var index = 0; index < _messages.length; index++) {
+      if (index == 0 ||
+          !_isSameEcuadorianDay(
+            _messages[index - 1].sentAt,
+            _messages[index].sentAt,
+          )) {
+        timeline.add(
+          _ChatTimelineEntry.divider(
+            index,
+            _dateDividerLabel(_messages[index].sentAt),
+          ),
+        );
+      }
+      timeline.add(_ChatTimelineEntry.message(index));
+    }
+    // Mantener el índice cero como mensaje más reciente al fondo del chat.
+    final reversedTimeline = timeline.reversed.toList(growable: false);
+
     return ListView.builder(
       controller: _scroll,
+      reverse: true,
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 18),
-      itemCount: _messages.length,
-      itemBuilder: (context, index) => _buildMessage(index),
+      itemCount: reversedTimeline.length,
+      itemBuilder: (context, index) {
+        final entry = reversedTimeline[index];
+        return entry.isDivider
+            ? _DateDivider(label: entry.label)
+            : _buildMessage(entry.messageIndex);
+      },
     );
   }
 
@@ -500,6 +690,10 @@ class _ChatRoomViewState extends State<ChatRoomView>
     final nextSameSender =
         index < _messages.length - 1 &&
         _messages[index + 1].senderId == message.senderId;
+    final metadata = _buildMessageMetadata(message, mine, index);
+    final imageWidth = (MediaQuery.sizeOf(context).width * 0.76 - 17)
+        .clamp(0.0, 250.0)
+        .toDouble();
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(18),
       topRight: const Radius.circular(18),
@@ -533,26 +727,63 @@ class _ChatRoomViewState extends State<ChatRoomView>
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.sizeOf(context).width * 0.76,
               ),
-              padding: const EdgeInsets.fromLTRB(12, 9, 12, 7),
+              padding: const EdgeInsets.fromLTRB(7, 7, 10, 7),
               decoration: BoxDecoration(
                 color: mine ? AppColors.primarySurface : AppColors.surface,
                 borderRadius: radius,
+                border: Border.all(
+                  color: mine
+                      ? AppColors.primarySurface
+                      : AppColors.divider.withValues(alpha: .55),
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    message.content,
-                    style: Theme.of(context).textTheme.bodyMedium,
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    _formatTime(message.sentAt),
-                    style: Theme.of(context).textTheme.labelSmall
-                        ?.copyWith(color: AppColors.textSecondary),
-                  ),
-                ],
-              ),
+              child: message.isImage
+                  ? SizedBox(
+                      width: imageWidth,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          _MessageImage(
+                            width: imageWidth,
+                            imageUrl: message.attachmentUrl,
+                            onTap: message.attachmentUrl == null
+                                ? null
+                                : () => _showImage(message),
+                          ),
+                          if (message.content.trim().isNotEmpty &&
+                              message.content != 'Foto adjunta') ...[
+                            const SizedBox(height: 6),
+                            Text(
+                              message.content,
+                              style: Theme.of(context).textTheme.bodyMedium,
+                            ),
+                          ],
+                          const SizedBox(height: 3),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: metadata,
+                          ),
+                        ],
+                      ),
+                    )
+                  : IntrinsicWidth(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            message.content,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                          const SizedBox(height: 3),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: metadata,
+                          ),
+                        ],
+                      ),
+                    ),
             ),
           ),
           if (mine) ...[
@@ -573,11 +804,215 @@ class _ChatRoomViewState extends State<ChatRoomView>
     );
   }
 
-  String _formatTime(DateTime dateTime) {
-    final local = dateTime.toLocal();
-    return '${local.hour.toString().padLeft(2, '0')}:'
-        '${local.minute.toString().padLeft(2, '0')}';
+  Widget _buildMessageMetadata(ChatMessage message, bool mine, int index) {
+    final textStyle = Theme.of(context).textTheme.labelSmall;
+    final isRead = _isRead(message);
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          _formatTime(message.sentAt),
+          style: textStyle?.copyWith(color: AppColors.textSecondary),
+        ),
+        if (mine && _isLastOutgoingMessage(index)) ...[
+          const SizedBox(width: 6),
+          Text(
+            isRead ? 'Leído' : 'Enviado',
+            style: textStyle?.copyWith(
+              color: isRead ? AppColors.primaryDark : AppColors.textSecondary,
+              fontWeight: isRead ? FontWeight.w700 : FontWeight.w400,
+            ),
+          ),
+        ],
+      ],
+    );
   }
+
+  String _formatTime(DateTime dateTime) {
+    return ChatTimestampFormatter.time(dateTime);
+  }
+
+  List<ChatMessage> _orderedMessages(Iterable<ChatMessage> messages) {
+    // La vista depende de este orden y descarta eventos de otra conversación.
+    final scoped = messages
+        .where((message) => message.chatId == widget.roomId)
+        .toList();
+    scoped.sort((a, b) {
+      final sentAtOrder = a.sentAt.compareTo(b.sentAt);
+      return sentAtOrder != 0 ? sentAtOrder : a.id.compareTo(b.id);
+    });
+    return scoped;
+  }
+
+  bool _isLastOutgoingMessage(int index) =>
+      _messages.lastIndexWhere(
+        (message) => message.senderId == _repository.currentUserId,
+      ) ==
+      index;
+
+  bool _isRead(ChatMessage message) =>
+      _participantReadAt != null &&
+      !_participantReadAt!.isBefore(message.sentAt);
+
+  bool _isSameEcuadorianDay(DateTime first, DateTime second) {
+    final a = first.toUtc().add(const Duration(hours: -5));
+    final b = second.toUtc().add(const Duration(hours: -5));
+    return a.year == b.year && a.month == b.month && a.day == b.day;
+  }
+
+  String _dateDividerLabel(DateTime dateTime) {
+    final date = dateTime.toUtc().add(const Duration(hours: -5));
+    final now = DateTime.now().toUtc().add(const Duration(hours: -5));
+    final today = DateTime.utc(now.year, now.month, now.day);
+    final day = DateTime.utc(date.year, date.month, date.day);
+    if (day == today) return 'Hoy';
+    if (day == today.subtract(const Duration(days: 1))) return 'Ayer';
+    return '${date.day.toString().padLeft(2, '0')}/'
+        '${date.month.toString().padLeft(2, '0')}/'
+        '${date.year}';
+  }
+
+  Future<void> _showImage(ChatMessage message) async {
+    final url = message.attachmentUrl;
+    if (url == null) return;
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => Dialog(
+        backgroundColor: AppColors.textPrimary,
+        insetPadding: const EdgeInsets.all(20),
+        child: Stack(
+          children: [
+            InteractiveViewer(
+              child: CachedNetworkImage(
+                imageUrl: url,
+                fit: BoxFit.contain,
+                placeholder: (_, _) => const Center(
+                  child: CircularProgressIndicator(color: AppColors.surface),
+                ),
+                errorWidget: (_, _, _) => const Center(
+                  child: Icon(
+                    Icons.broken_image_outlined,
+                    size: 56,
+                    color: AppColors.surface,
+                  ),
+                ),
+              ),
+            ),
+            Positioned(
+              top: 6,
+              right: 6,
+              child: IconButton.filledTonal(
+                onPressed: () => Navigator.pop(dialogContext),
+                tooltip: 'Cerrar imagen',
+                icon: const Icon(Icons.close_rounded),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatTimelineEntry {
+  const _ChatTimelineEntry.message(this.messageIndex)
+    : isDivider = false,
+      label = '';
+  const _ChatTimelineEntry.divider(this.messageIndex, this.label)
+    : isDivider = true;
+
+  final int messageIndex;
+  final bool isDivider;
+  final String label;
+}
+
+class _DateDivider extends StatelessWidget {
+  const _DateDivider({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.symmetric(vertical: 14),
+    child: Center(
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: AppColors.divider.withValues(alpha: .7)),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+          child: Text(
+            label,
+            style: Theme.of(context).textTheme.labelSmall?.copyWith(
+              color: AppColors.textSecondary,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+class _MessageImage extends StatelessWidget {
+  const _MessageImage({
+    required this.width,
+    required this.imageUrl,
+    required this.onTap,
+  });
+  final double width;
+  final String? imageUrl;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) => Semantics(
+    label: 'Imagen adjunta al mensaje',
+    button: onTap != null,
+    child: GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: SizedBox(
+          width: width,
+          height: width * 0.76,
+          child: imageUrl == null
+              ? const ColoredBox(
+                  color: AppColors.surfaceVariant,
+                  child: Center(
+                    child: Icon(
+                      Icons.image_not_supported_outlined,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                )
+              : CachedNetworkImage(
+                  imageUrl: imageUrl!,
+                  fit: BoxFit.cover,
+                  placeholder: (_, _) => const ColoredBox(
+                    color: AppColors.surfaceVariant,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                  errorWidget: (_, _, _) => const ColoredBox(
+                    color: AppColors.surfaceVariant,
+                    child: Center(
+                      child: Icon(
+                        Icons.broken_image_outlined,
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+                ),
+        ),
+      ),
+    ),
+  );
 }
 
 class _ChatRoomSkeleton extends StatelessWidget {

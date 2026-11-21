@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:proyecto_agro/core/constants/app_colors.dart';
 import 'package:proyecto_agro/core/network/supabase_service.dart';
 import 'package:proyecto_agro/features/auth/data/repositories/profile_repository.dart';
 import 'package:proyecto_agro/features/auth/presentation/viewmodels/auth_viewmodel.dart';
@@ -56,6 +57,68 @@ void main() {
     expect(find.text('Mapa'), findsOneWidget);
     expect(find.text('Chat'), findsOneWidget);
     expect(find.text('Perfil'), findsNothing);
+    final appBar = tester.widget<AppBar>(
+      find.byKey(const Key('persistent-module-app-bar')),
+    );
+    expect(appBar.centerTitle, isFalse);
+    expect(appBar.titleTextStyle?.color, AppColors.surface);
+    expect(find.byKey(const Key('agro-app-logo')), findsOneWidget);
+  });
+
+  testWidgets('conserva la misma composicion horizontal en ventanas anchas', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(testApp());
+
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.byType(NavigationRail), findsNothing);
+    expect(find.text('Inicio'), findsOneWidget);
+    expect(find.text('Comprar'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('la barra inferior queda pegada al borde de la pantalla', (
+    tester,
+  ) async {
+    tester.view.physicalSize = const Size(360, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
+    await tester.pumpWidget(testApp());
+    await tester.pumpAndSettle();
+
+    final navigationRect = tester.getRect(find.byType(NavigationBar));
+    expect(navigationRect.top, greaterThan(600));
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('el productor ve la accion para publicar', (tester) async {
+    authViewModel.setRole(UserRole.producer);
+
+    await tester.pumpWidget(testApp());
+
+    expect(find.byTooltip('Publicar producto'), findsOneWidget);
+    expect(find.text('Inicio'), findsOneWidget);
+    expect(find.text('Comprar'), findsOneWidget);
+    expect(find.text('Mapa'), findsOneWidget);
+    expect(find.text('Chat'), findsOneWidget);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('el administrador no ve la accion para publicar', (tester) async {
+    authViewModel.setRole(UserRole.admin);
+
+    await tester.pumpWidget(testApp());
+
+    expect(find.byType(NavigationBar), findsOneWidget);
+    expect(find.text('Catalogo'), findsOneWidget);
+    expect(find.byTooltip('Publicar producto'), findsNothing);
   });
 
   testWidgets('silencia las animaciones de las ramas fuera de pantalla', (
@@ -121,7 +184,27 @@ void main() {
     }
   });
 
-  testWidgets('oculta al bajar y reaparece al subir por el contenido', (
+  testWidgets('la sala de chat conserva la identidad Agro en su encabezado', (
+    tester,
+  ) async {
+    router.go('/chat/room-1');
+    await tester.pumpWidget(testApp());
+    await tester.pumpAndSettle();
+
+    final appBar = tester.widget<AppBar>(
+      find.byKey(const Key('persistent-module-app-bar')),
+    );
+    expect(appBar.backgroundColor, AppColors.primary);
+    expect(appBar.foregroundColor, AppColors.surface);
+    expect(appBar.leading, isA<IconButton>());
+    expect((appBar.leading as IconButton).tooltip, 'Volver a conversaciones');
+    expect(find.byKey(const Key('agro-app-logo')), findsNothing);
+    expect(find.byTooltip('Volver a conversaciones'), findsOneWidget);
+    expect(find.byType(NavigationBar), findsNothing);
+    expect(tester.takeException(), isNull);
+  });
+
+  testWidgets('mantiene visible la navegacion al desplazar el contenido', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 640);
@@ -132,25 +215,9 @@ void main() {
     await tester.pumpWidget(testApp());
     expect(find.byType(NavigationBar), findsOneWidget);
 
-    await tester.drag(
-      find.byKey(const Key('home-scroll')),
-      const Offset(0, -320),
-    );
+    await tester.dragFrom(const Offset(180, 320), const Offset(0, -320));
     await tester.pumpAndSettle();
-    expect(
-      tester.getSize(find.byKey(const Key('navigation-bar-slot'))).height,
-      0,
-    );
-
-    await tester.drag(
-      find.byKey(const Key('home-scroll')),
-      const Offset(0, 240),
-    );
-    await tester.pumpAndSettle();
-    expect(
-      tester.getSize(find.byKey(const Key('navigation-bar-slot'))).height,
-      greaterThan(0),
-    );
+    expect(find.byType(NavigationBar), findsOneWidget);
   });
 
   testWidgets('mantiene navegables los cuatro destinos principales', (
@@ -178,16 +245,16 @@ void main() {
       of: find.byKey(const Key('home-scroll')),
       matching: find.byType(Scrollable),
     );
-    await tester.drag(homeList, const Offset(0, -300));
+    tester.state<ScrollableState>(homeList).position.jumpTo(300);
     await tester.pumpAndSettle();
     final homeScrollPosition = tester
         .state<ScrollableState>(homeList)
         .position
         .pixels;
 
-    await tester.dragFrom(const Offset(180, 320), const Offset(-120, 0));
+    await tester.tap(find.text('Comprar'));
     await tester.pumpAndSettle();
-    await tester.dragFrom(const Offset(60, 320), const Offset(120, 0));
+    await tester.tap(find.text('Inicio'));
     await tester.pumpAndSettle();
 
     expect(_currentPath(router), '/home');
@@ -197,9 +264,7 @@ void main() {
     );
   });
 
-  testWidgets('un deslizamiento a la izquierda avanza un modulo', (
-    tester,
-  ) async {
+  testWidgets('un gesto horizontal no cambia de modulo', (tester) async {
     tester.view.physicalSize = const Size(360, 640);
     tester.view.devicePixelRatio = 1;
     addTearDown(tester.view.resetPhysicalSize);
@@ -208,10 +273,10 @@ void main() {
     await tester.dragFrom(const Offset(180, 320), const Offset(-220, 0));
     await tester.pumpAndSettle();
 
-    expect(_currentPath(router), '/products');
+    expect(_currentPath(router), '/home');
   });
 
-  testWidgets('un deslizamiento a la derecha retrocede un modulo', (
+  testWidgets('un gesto hacia la derecha tampoco cambia de modulo', (
     tester,
   ) async {
     tester.view.physicalSize = const Size(360, 640);
@@ -224,7 +289,7 @@ void main() {
     await tester.dragFrom(const Offset(60, 320), const Offset(220, 0));
     await tester.pumpAndSettle();
 
-    expect(_currentPath(router), '/home');
+    expect(_currentPath(router), '/products');
   });
 
   testWidgets('el desplazamiento vertical o corto no cambia de modulo', (
@@ -303,39 +368,6 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(_currentPath(router), '/map');
-  });
-
-  testWidgets('la pagina sigue el dedo antes de soltar', (tester) async {
-    tester.view.physicalSize = const Size(360, 640);
-    tester.view.devicePixelRatio = 1;
-    addTearDown(tester.view.resetPhysicalSize);
-    addTearDown(tester.view.resetDevicePixelRatio);
-
-    await tester.pumpWidget(testApp());
-    final pageViewFinder = find.byKey(const Key('module-page-view'));
-    expect(pageViewFinder, findsOneWidget);
-    final controller = tester.widget<PageView>(pageViewFinder).controller!;
-    final gesture = await tester.startGesture(tester.getCenter(pageViewFinder));
-    for (var step = 0; step < 4; step++) {
-      await gesture.moveBy(const Offset(-20, 0));
-      await tester.pump(const Duration(milliseconds: 16));
-    }
-
-    expect(controller.page, greaterThan(0));
-    expect(controller.page, lessThan(0.5));
-    expect(_currentPath(router), '/home');
-
-    for (var step = 0; step < 6; step++) {
-      await gesture.moveBy(const Offset(-20, 0));
-      await tester.pump(const Duration(milliseconds: 16));
-    }
-    expect(controller.page, greaterThan(0.45));
-    expect(_currentPath(router), '/products');
-
-    await gesture.up();
-    await tester.pumpAndSettle();
-    expect(controller.page, closeTo(1, 0.01));
-    expect(tester.takeException(), isNull);
   });
 }
 

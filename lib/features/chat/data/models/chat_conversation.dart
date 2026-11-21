@@ -17,6 +17,7 @@ class ChatConversation {
     this.lastMessagePreview,
     this.lastMessageAt,
     this.lastMessageSenderId,
+    this.lastMessageContentType,
   }) : assert(interestedUserId != null || buyerId != null),
        interestedUserId = interestedUserId ?? buyerId ?? '';
   final String id;
@@ -35,6 +36,7 @@ class ChatConversation {
   final String? lastMessagePreview;
   final DateTime? lastMessageAt;
   final String? lastMessageSenderId;
+  final String? lastMessageContentType;
 
   ChatConversation withProducerAlias(String? alias) => ChatConversation(
     id: id,
@@ -51,6 +53,7 @@ class ChatConversation {
     lastMessagePreview: lastMessagePreview,
     lastMessageAt: lastMessageAt,
     lastMessageSenderId: lastMessageSenderId,
+    lastMessageContentType: lastMessageContentType,
   );
 
   String otherParticipantIdFor(String currentUserId) =>
@@ -79,6 +82,7 @@ class ChatConversation {
     lastMessagePreview: lastMessagePreview,
     lastMessageAt: lastMessageAt,
     lastMessageSenderId: lastMessageSenderId,
+    lastMessageContentType: lastMessageContentType,
   );
 
   factory ChatConversation.fromMap(Map<String, dynamic> row) {
@@ -102,6 +106,7 @@ class ChatConversation {
           ? null
           : DateTime.tryParse(latestMessage!['fecha_hora_envio'] as String),
       lastMessageSenderId: latestMessage?['id_remitente'] as String?,
+      lastMessageContentType: latestMessage?['tipo_contenido'] as String?,
     );
   }
 }

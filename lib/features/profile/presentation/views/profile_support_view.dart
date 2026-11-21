@@ -16,7 +16,7 @@ class ProfileSupportView extends StatelessWidget {
     ),
     (
       '¿Como cambio mi contrasena?',
-      'Entra a Mi perfil, abre Seguridad y confirma primero tu contrasena actual.',
+      'Abre el menu de cuenta desde el icono de usuario, selecciona Seguridad y confirma primero tu contrasena actual.',
     ),
     (
       '¿Para que sirve la zona publica?',
@@ -24,7 +24,7 @@ class ProfileSupportView extends StatelessWidget {
     ),
     (
       '¿Donde encuentro mis pedidos y avisos?',
-      'Abre Mi perfil. Alli puedes consultar tus pedidos y las notificaciones recibidas en Agro+.',
+      'Abre el menu de cuenta para consultar tus pedidos y las notificaciones recibidas en Agro+.',
     ),
   ];
 

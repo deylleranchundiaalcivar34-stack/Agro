@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../core/widgets/agro_logo.dart';
 import '../viewmodels/auth_viewmodel.dart';
 
 class LoginView extends StatefulWidget {
@@ -50,7 +51,7 @@ class _LoginViewState extends State<LoginView> {
       }
       return;
     }
-    context.go(auth.mfaRequired ? AppRoutes.mfaChallenge : AppRoutes.home);
+    context.go(AppRoutes.home);
   }
 
   void _showMessage(String message) =>
@@ -91,13 +92,12 @@ class _LoginViewState extends State<LoginView> {
                                 width: 72,
                                 height: 72,
                                 padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
+                                decoration: const BoxDecoration(
                                   color: AppColors.surface,
-                                  borderRadius: BorderRadius.circular(22),
+                                  shape: BoxShape.circle,
                                 ),
-                                child: Image.asset(
-                                  'assets/images/logotipo_oficial.png',
-                                  fit: BoxFit.contain,
+                                child: const AgroLogo(
+                                  size: 48,
                                   cacheWidth: 144,
                                   filterQuality: FilterQuality.medium,
                                 ),

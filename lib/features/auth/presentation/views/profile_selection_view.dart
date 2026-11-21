@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_durations.dart';
 import '../../../../core/constants/app_routes.dart';
+import '../../../../core/widgets/agro_logo.dart';
 import '../viewmodels/auth_viewmodel.dart';
 import '../viewmodels/profile_selection_viewmodel.dart';
 
@@ -100,7 +101,7 @@ class _ProfileSelectionContent extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Center(child: _buildSquircleLogo()),
+                  Center(child: _buildCircularLogo()),
                   const SizedBox(height: 20),
 
                   Text(
@@ -176,13 +177,13 @@ class _ProfileSelectionContent extends StatelessWidget {
     );
   }
 
-  Widget _buildSquircleLogo() {
+  Widget _buildCircularLogo() {
     return Container(
       width: 78,
       height: 78,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        color: AppColors.surface,
+        shape: BoxShape.circle,
         border: Border.all(
           color: AppColors.primary.withValues(alpha: 0.12),
           width: 1.5,
@@ -196,9 +197,8 @@ class _ProfileSelectionContent extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.all(14),
-      child: Image.asset(
-        'assets/images/logotipo_oficial.png',
-        fit: BoxFit.contain,
+      child: AgroLogo(
+        size: 50,
         errorBuilder: (context, error, stackTrace) =>
             const Icon(Icons.eco_rounded, size: 42, color: AppColors.primary),
       ),

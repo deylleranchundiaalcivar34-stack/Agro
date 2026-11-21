@@ -3,78 +3,104 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#197C4B" />
+    <meta name="theme-color" content="#2E7D32" />
     <meta name="referrer" content="no-referrer" />
-    <title>Agro+ | Nueva contrasena</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-      @keyframes subir { from { opacity: 0; transform: translateY(16px); } to { opacity: 1; transform: translateY(0); } }
-      .subir { animation: subir 360ms ease-out both; }
-    </style>
+    <meta name="description" content="Recupera de forma segura el acceso a tu cuenta de Agro+." />
+    <title>Recuperar contraseña | Agro+</title>
+    <link rel="icon" type="image/png" href="/assets/agro-logo.png" />
+    <link rel="stylesheet" href="/auth.css" />
   </head>
-  <body class="min-h-screen bg-[#F4F7F2] text-slate-800">
-    <main class="mx-auto flex min-h-screen max-w-md items-center px-5 py-10">
-      <section class="subir w-full rounded-3xl bg-white p-7 shadow-xl shadow-emerald-950/10 sm:p-9">
-        <div class="mb-7 flex items-center gap-3">
-          <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#197C4B] text-xl font-bold text-white">A+</div>
-          <div><p class="text-lg font-bold text-[#197C4B]">Agro+</p><p class="text-sm text-slate-500">Recuperar acceso</p></div>
+  <body>
+    <main class="auth-shell">
+      <aside class="brand-panel" aria-label="Agro+">
+        <div class="brand-lockup">
+          <span class="brand-mark"><img src="/assets/agro-logo.png" alt="" /></span>
+          <span class="brand-name">Agro<span>+</span></span>
         </div>
-
-        <div id="cargando">
-          <h1 class="text-2xl font-bold">Preparando recuperacion</h1>
-          <p class="mt-2 text-slate-600">Un momento, estamos preparando la pagina segura.</p>
-          <div class="mt-6 h-1.5 overflow-hidden rounded-full bg-emerald-100"><div class="h-full w-2/3 animate-pulse rounded-full bg-[#197C4B]"></div></div>
+        <div class="brand-copy">
+          <span class="eyebrow">CAMPO · COMUNIDAD · CONFIANZA</span>
+          <h1>Tu campo,<br />más cerca.</h1>
+          <p>Un espacio seguro para conectar a productores y compradores.</p>
         </div>
+        <div class="brand-decoration" aria-hidden="true"><span></span><span></span><span></span></div>
+        <p class="brand-footer">Agro+ · Conectando el campo ecuatoriano</p>
+      </aside>
 
-        <section id="confirmarEnlace" class="hidden">
-          <h1 class="text-2xl font-bold">Confirma tu solicitud</h1>
-          <p class="mt-2 text-slate-600">Pulsa el boton para validar el enlace y continuar con el cambio de contrasena.</p>
-          <p class="mt-3 text-sm text-slate-500">El enlace se valida solo cuando confirmas aqui.</p>
-          <button id="botonConfirmar" class="mt-6 w-full rounded-xl bg-[#197C4B] px-4 py-3 font-semibold text-white transition hover:bg-[#12663C] disabled:cursor-not-allowed disabled:opacity-60" type="button">Validar enlace y continuar</button>
-        </section>
+      <section class="auth-content" aria-label="Recuperar contraseña">
+        <div class="auth-card">
+          <div class="mobile-brand brand-lockup">
+            <span class="brand-mark"><img src="/assets/agro-logo.png" alt="" /></span>
+            <span class="brand-name">Agro<span>+</span></span>
+          </div>
 
-        <section id="solicitud" class="hidden">
-          <h1 class="text-2xl font-bold">Recupera tu acceso</h1>
-          <p class="mt-2 text-slate-600">Ingresa el correo de tu cuenta y te enviaremos un enlace para crear una contrasena nueva.</p>
-          <p class="mt-3 text-sm text-slate-500">El enlace incluye un paso de confirmacion para evitar que sea consumido automaticamente.</p>
-          <form id="formularioCorreo" class="mt-6" novalidate>
-            <label class="block text-sm font-semibold" for="correo">Correo electronico</label>
-            <input id="correo" type="email" required autocomplete="email" inputmode="email" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#197C4B] focus:ring-4 focus:ring-emerald-100" placeholder="tu@correo.com" />
-            <button id="botonCorreo" class="mt-6 w-full rounded-xl bg-[#197C4B] px-4 py-3 font-semibold text-white transition hover:bg-[#12663C] disabled:cursor-not-allowed disabled:opacity-60" type="submit">Enviar enlace de recuperacion</button>
+          <div id="cargando" class="auth-state">
+            <span class="state-icon state-icon--loading" aria-hidden="true"><span></span></span>
+            <p class="eyebrow">RECUPERACIÓN SEGURA</p>
+            <h1>Preparando la recuperación</h1>
+            <p class="intro">Estamos preparando el formulario para que puedas recuperar tu acceso.</p>
+            <div class="progress-track" aria-label="Cargando"><span></span></div>
+          </div>
+
+          <section id="confirmarEnlace" class="auth-state hidden" aria-labelledby="confirmTitle">
+            <span class="state-icon state-icon--shield" aria-hidden="true">✓</span>
+            <p class="eyebrow">UN PASO MÁS</p>
+            <h1 id="confirmTitle">Confirma tu solicitud</h1>
+            <p class="intro">Valida el enlace de recuperación para continuar con el cambio de contraseña.</p>
+            <p class="helper">Este paso protege tu cuenta y evita que el enlace se consuma al abrir el correo.</p>
+            <button id="botonConfirmar" class="button button-primary" type="button">Validar enlace</button>
+          </section>
+
+          <section id="solicitud" class="auth-state hidden" aria-labelledby="requestTitle">
+            <p class="eyebrow">RECUPERACIÓN SEGURA</p>
+            <h1 id="requestTitle">Recupera tu acceso</h1>
+            <p class="intro">Escribe el correo asociado a tu cuenta. Te enviaremos un enlace para crear una contraseña nueva.</p>
+            <form id="formularioCorreo" class="auth-form" novalidate>
+              <label for="correo">Correo electrónico</label>
+              <input id="correo" type="email" required autocomplete="email" inputmode="email" placeholder="tu@correo.com" />
+              <button id="botonCorreo" class="button button-primary" type="submit">Enviar enlace de recuperación</button>
+            </form>
+            <p class="helper">Si no ves el mensaje, revisa también la carpeta de correo no deseado.</p>
+          </section>
+
+          <section id="correoEnviado" class="auth-state hidden" aria-labelledby="sentTitle">
+            <span class="state-icon state-icon--success" aria-hidden="true">✓</span>
+            <p class="eyebrow">REVISA TU BANDEJA</p>
+            <h1 id="sentTitle">Revisa tu correo</h1>
+            <p class="intro">Si existe una cuenta asociada a ese correo, recibirás un enlace para continuar.</p>
+            <button id="reintentarCorreo" class="button button-secondary" type="button">Usar otro correo</button>
+          </section>
+
+          <p id="aviso" class="notice hidden" role="alert"></p>
+
+          <form id="formulario" class="auth-state auth-form hidden" novalidate>
+            <p class="eyebrow">NUEVA CONTRASEÑA</p>
+            <h1 id="passwordTitle">Crea una contraseña nueva</h1>
+            <p class="intro">Usa al menos 8 caracteres con mayúscula, minúscula, número y símbolo.</p>
+            <label for="contrasena">Nueva contraseña</label>
+            <input id="contrasena" type="password" minlength="8" required autocomplete="new-password" />
+            <label for="confirmar">Confirma la contraseña</label>
+            <input id="confirmar" type="password" minlength="8" required autocomplete="new-password" />
+            <button id="boton" class="button button-primary" type="submit">Guardar contraseña</button>
           </form>
-        </section>
 
-        <section id="correoEnviado" class="hidden">
-          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl text-[#197C4B]">✓</div>
-          <h1 class="mt-5 text-2xl font-bold">Revisa tu correo</h1>
-          <p class="mt-2 text-slate-600">Si existe una cuenta asociada a ese correo, recibiras un enlace. Al abrirlo, confirma la solicitud para continuar.</p>
-          <button id="reintentarCorreo" class="mt-6 w-full rounded-xl border border-slate-200 px-4 py-3 font-semibold text-slate-700" type="button">Usar otro correo</button>
-        </section>
+          <section id="exito" class="auth-state hidden" aria-labelledby="successTitle">
+            <span class="state-icon state-icon--success" aria-hidden="true">✓</span>
+            <p class="eyebrow">CUENTA ACTUALIZADA</p>
+            <h1 id="successTitle">Contraseña actualizada</h1>
+            <p class="intro">Tu contraseña se guardó de forma segura. Ya puedes volver a Agro+ e iniciar sesión.</p>
+            <a class="button button-primary" href="io.supabase.agro://auth/callback">Abrir Agro+</a>
+          </section>
 
-        <p id="aviso" class="hidden rounded-xl px-4 py-3 text-sm" role="alert"></p>
+          <section id="error" class="auth-state hidden" aria-labelledby="errorTitulo">
+            <span class="state-icon state-icon--error" aria-hidden="true">!</span>
+            <p class="eyebrow">ENLACE NO DISPONIBLE</p>
+            <h1 id="errorTitulo">No se pudo abrir el enlace</h1>
+            <p id="errorTexto" class="intro"></p>
+            <p class="helper helper--notice">Por seguridad, cada enlace se puede usar una sola vez y vence después de un tiempo.</p>
+            <button id="reiniciarDesdeError" class="button button-primary" type="button">Solicitar otro enlace</button>
+          </section>
 
-        <form id="formulario" class="hidden" novalidate>
-          <h1 class="text-2xl font-bold">Crea una contrasena nueva</h1>
-          <p class="mt-2 text-slate-600">La contrasena debe tener 8 caracteres, una mayuscula, una minuscula, un numero y un simbolo.</p>
-          <label class="mt-6 block text-sm font-semibold" for="contrasena">Nueva contrasena</label>
-          <input id="contrasena" type="password" minlength="8" required autocomplete="new-password" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#197C4B] focus:ring-4 focus:ring-emerald-100" />
-          <label class="mt-4 block text-sm font-semibold" for="confirmar">Confirmar contrasena</label>
-          <input id="confirmar" type="password" minlength="8" required autocomplete="new-password" class="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 outline-none transition focus:border-[#197C4B] focus:ring-4 focus:ring-emerald-100" />
-          <button id="boton" class="mt-6 w-full rounded-xl bg-[#197C4B] px-4 py-3 font-semibold text-white transition hover:bg-[#12663C] disabled:cursor-not-allowed disabled:opacity-60" type="submit">Guardar contrasena</button>
-        </form>
-
-        <div id="exito" class="hidden text-center">
-          <div class="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-emerald-100 text-3xl text-[#197C4B]">✓</div>
-          <h1 class="mt-5 text-2xl font-bold">Contrasena actualizada</h1>
-          <p class="mt-2 text-slate-600">Ya puedes volver a Agro+ e iniciar sesion con tu nueva contrasena.</p>
-          <a href="io.supabase.agro://auth/callback" class="mt-6 inline-block rounded-xl bg-[#197C4B] px-5 py-3 font-semibold text-white transition hover:bg-[#12663C]">Abrir Agro+</a>
-        </div>
-
-        <div id="error" class="hidden">
-          <h1 id="errorTitulo" class="text-2xl font-bold">No se pudo abrir el enlace</h1>
-          <p id="errorTexto" class="mt-2 text-slate-600"></p>
-          <p class="mt-5 rounded-xl bg-amber-50 p-4 text-sm text-amber-900">Por seguridad, cada enlace sirve una sola vez y vence pronto.</p>
-          <button id="reiniciarDesdeError" class="mt-5 w-full rounded-xl bg-[#197C4B] px-4 py-3 font-semibold text-white transition hover:bg-[#12663C]" type="button">Iniciar una nueva solicitud</button>
+          <p class="security-note"><span aria-hidden="true">●</span> Tus datos se procesan mediante una conexión segura.</p>
         </div>
       </section>
     </main>

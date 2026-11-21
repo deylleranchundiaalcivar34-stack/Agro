@@ -13,7 +13,7 @@ class ProfileRepository {
       'id_usuario, nombres, apellidos, correo_electronico, nombre_empresa, '
       'tipos_usuario(nombre_tipo)';
 
-  Future<UserProfile?> getCurrentProfile() async {
+  Future<UserProfile?> getCurrentProfile({bool includeAvatar = false}) async {
     final user = _supabaseService.currentUser;
     if (user == null) return null;
 
@@ -23,7 +23,22 @@ class ProfileRepository {
         .eq('id_usuario', user.id)
         .maybeSingle();
 
-    return data == null ? null : UserProfile.fromMap(data);
+    if (data == null) return null;
+
+    String? avatarUrl;
+    if (includeAvatar) {
+      try {
+        final publicProfile = await _supabaseService.client
+            .from('perfiles_contacto_publicos')
+            .select('avatar_url')
+            .eq('id_usuario', user.id)
+            .maybeSingle();
+        avatarUrl = publicProfile?['avatar_url'] as String?;
+      } catch (_) {
+        // An optional public avatar must not block a valid account sign-in.
+      }
+    }
+    return UserProfile.fromMap({...data, 'avatar_url': avatarUrl});
   }
 
   Future<UserProfile> updateCurrentRole(String role) async {

@@ -4,7 +4,8 @@ import 'package:flutter/material.dart';
 abstract final class AppDurations {
   static const Duration tapFeedback = Duration(milliseconds: 120);
   static const Duration stateChange = Duration(milliseconds: 180);
-  static const Duration routeTransition = Duration(milliseconds: 220);
+  static const Duration routeTransition = Duration(milliseconds: 180);
+  static const Duration accountTransition = Duration(milliseconds: 150);
 
   /// Resolves motion against the operating-system reduced-motion preference.
   static Duration resolve(BuildContext context, Duration duration) =>

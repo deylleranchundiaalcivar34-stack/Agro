@@ -5,8 +5,12 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/network/supabase_service.dart';
+import '../../../../core/widgets/agro_page_app_bar.dart';
 import '../../../map/data/models/public_producer_location.dart';
 import '../../../map/data/repositories/public_location_repository.dart';
+import '../../data/models/public_contact_profile.dart';
+import '../../data/repositories/public_contact_profile_repository.dart';
+import '../widgets/public_profile_avatar.dart';
 import '../../../products/data/models/agricultural_product.dart';
 import '../../../products/data/repositories/products_repository.dart';
 
@@ -34,8 +38,11 @@ class _PublicProducerProfileViewState extends State<PublicProducerProfileView> {
   late final ProductsRepository _products =
       widget.productsRepository ??
       ProductsRepository(supabaseService: SupabaseService());
+  late final PublicContactProfileRepository _contactProfiles =
+      PublicContactProfileRepository(supabaseService: SupabaseService());
 
   PublicProducerLocation? _location;
+  PublicContactProfile? _contactProfile;
   List<AgriculturalProduct> _productsForProducer = const [];
   bool _loading = true;
   String? _error;
@@ -55,11 +62,14 @@ class _PublicProducerProfileViewState extends State<PublicProducerProfileView> {
       final results = await Future.wait([
         _locations.getPublishedForProducer(widget.producerId),
         _products.getPublishedProductsForProducer(widget.producerId),
+        _contactProfiles.getMany([widget.producerId]),
       ]);
       if (!mounted) return;
+      final contactProfiles = results[2] as Map<String, PublicContactProfile>;
       setState(() {
         _location = results[0] as PublicProducerLocation?;
         _productsForProducer = results[1] as List<AgriculturalProduct>;
+        _contactProfile = contactProfiles[widget.producerId];
         _loading = false;
       });
     } catch (_) {
@@ -74,7 +84,7 @@ class _PublicProducerProfileViewState extends State<PublicProducerProfileView> {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.background,
-    appBar: AppBar(title: const Text('Perfil del productor')),
+    appBar: const AgroPageAppBar(title: 'Perfil del productor'),
     body: SafeArea(
       top: false,
       child: _loading
@@ -107,19 +117,12 @@ class _PublicProducerProfileViewState extends State<PublicProducerProfileView> {
             ),
             child: Row(
               children: [
-                CircleAvatar(
+                PublicProfileAvatar(
                   radius: 32,
+                  initial: location.alias,
+                  imageUrl: _contactProfile?.avatarUrl,
                   backgroundColor: AppColors.surface,
                   foregroundColor: AppColors.primaryDark,
-                  child: Text(
-                    location.alias.trim().isEmpty
-                        ? 'A'
-                        : location.alias.trim()[0].toUpperCase(),
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      color: AppColors.primaryDark,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

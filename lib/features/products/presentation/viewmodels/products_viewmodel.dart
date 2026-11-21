@@ -1,4 +1,4 @@
-// Estado compartido del modulo: catalogo, publicaciones, edicion e intereses de compradores.
+// Estado compartido del modulo: catalogo, publicaciones y edicion de productos.
 
 import 'dart:async';
 
@@ -353,29 +353,6 @@ class ProductsViewModel extends ChangeNotifier {
         debugPrintStack(stackTrace: stackTrace);
       }
       _errorMessage = 'No se pudo confirmar la actualizacion. Revisa la publicacion antes de reintentar.';
-      return false;
-    } finally {
-      _isSubmitting = false;
-      notifyListeners();
-    }
-  }
-
-  /// Registra la cantidad proyectada por el comprador y comunica el resultado a la vista.
-  Future<bool> registerInterest({
-    required String productId,
-    required double quantity,
-  }) async {
-    _isSubmitting = true;
-    _errorMessage = null;
-    notifyListeners();
-    try {
-      await _productsRepository.registerInterest(
-        productId: productId,
-        quantity: quantity,
-      );
-      return true;
-    } catch (_) {
-      _errorMessage = 'No se pudo registrar tu interes. Intenta de nuevo.';
       return false;
     } finally {
       _isSubmitting = false;

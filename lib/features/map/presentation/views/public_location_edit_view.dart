@@ -5,6 +5,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/network/supabase_service.dart';
 import '../../data/repositories/public_location_repository.dart';
+import '../../../profile/presentation/widgets/profile_subpage.dart';
 
 class PublicLocationEditView extends StatefulWidget {
   const PublicLocationEditView({
@@ -130,10 +131,9 @@ class _PublicLocationEditViewState extends State<PublicLocationEditView> {
   }
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-    backgroundColor: AppColors.background,
-    appBar: AppBar(title: const Text('Mi zona publica')),
-    body: _loading
+  Widget build(BuildContext context) => ProfileSubpage(
+    title: 'Mi zona publica',
+    child: _loading
         ? const Center(child: CircularProgressIndicator())
         : Column(
             children: [

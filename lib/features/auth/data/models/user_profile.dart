@@ -5,6 +5,7 @@ class UserProfile {
   final String email;
   final String role;
   final String companyName;
+  final String? avatarUrl;
 
   const UserProfile({
     required this.id,
@@ -13,7 +14,25 @@ class UserProfile {
     required this.email,
     required this.role,
     this.companyName = '',
+    this.avatarUrl,
   });
+
+  UserProfile copyWith({
+    String? firstName,
+    String? lastName,
+    String? email,
+    String? role,
+    String? companyName,
+    String? avatarUrl,
+  }) => UserProfile(
+    id: id,
+    firstName: firstName ?? this.firstName,
+    lastName: lastName ?? this.lastName,
+    email: email ?? this.email,
+    role: role ?? this.role,
+    companyName: companyName ?? this.companyName,
+    avatarUrl: avatarUrl ?? this.avatarUrl,
+  );
 
   String get fullName {
     final name = '$firstName $lastName'.trim();
@@ -35,6 +54,7 @@ class UserProfile {
       email: map['correo_electronico'] as String? ?? '',
       role: role ?? 'buyer',
       companyName: map['nombre_empresa'] as String? ?? '',
+      avatarUrl: map['avatar_url'] as String?,
     );
   }
 }

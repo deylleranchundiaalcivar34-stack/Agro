@@ -9,9 +9,14 @@ class PublicLocationRepository {
   static const table = 'ubicaciones_productores_publicas';
 
   Future<List<PublicProducerLocation>> listPublished() async {
-    final rows = await _service.client
+    var query = _service.client
         .from(table)
         .select('id_productor,alias_publico,nombre_lugar,latitud,longitud');
+    final userId = _service.currentUser?.id;
+    if (userId != null) {
+      query = query.neq('id_productor', userId);
+    }
+    final rows = await query;
     return (rows as List)
         .map(
           (row) => PublicProducerLocation.fromMap(row as Map<String, dynamic>),

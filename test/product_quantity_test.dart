@@ -379,6 +379,12 @@ void main() {
   testWidgets(
     'la tarjeta muestra preventa, cantidad y cosecha sin desbordar en movil',
     (tester) async {
+      final auth = AuthViewModel(
+        supabaseService: supabase,
+        profileRepository: ProfileRepository(supabaseService: supabase),
+      );
+      await auth.initialLoad;
+      addTearDown(auth.dispose);
       row['fotografias_producto'] = <Object>[];
       row['nombre_producto'] = 'Tomates de cosecha anunciada';
       row['cantidad_disponible'] = 99999999.99;
@@ -390,34 +396,37 @@ void main() {
       ]) {
         await tester.pumpWidget(
           MaterialApp(
-            home: Scaffold(
-              body: Align(
-                alignment: Alignment.topLeft,
-                child: MediaQuery(
-                  data: MediaQueryData(
-                    size: Size(width, 800),
-                    textScaler: TextScaler.linear(scale),
-                  ),
-                  // Medir y dibujar con el mismo contexto reproduce la altura real del grid.
-                  child: Builder(
-                    builder: (context) {
-                      final product = AgriculturalProduct.fromMap(row);
-                      final imageHeight = ProductCard.imageHeightFor(context);
-                      return SizedBox(
-                        width: width,
-                        height: ProductCard.heightFor(
-                          context,
-                          product,
+            home: ChangeNotifierProvider<AuthViewModel>.value(
+              value: auth,
+              child: Scaffold(
+                body: Align(
+                  alignment: Alignment.topLeft,
+                  child: MediaQuery(
+                    data: MediaQueryData(
+                      size: Size(width, 800),
+                      textScaler: TextScaler.linear(scale),
+                    ),
+                    // Medir y dibujar con el mismo contexto reproduce la altura real del grid.
+                    child: Builder(
+                      builder: (context) {
+                        final product = AgriculturalProduct.fromMap(row);
+                        final imageHeight = ProductCard.imageHeightFor(context);
+                        return SizedBox(
                           width: width,
-                          imageHeight: imageHeight,
-                        ),
-                        child: ProductCard(
-                          product: product,
-                          imageHeight: imageHeight,
-                          onTap: () {},
-                        ),
-                      );
-                    },
+                          height: ProductCard.heightFor(
+                            context,
+                            product,
+                            width: width,
+                            imageHeight: imageHeight,
+                          ),
+                          child: ProductCard(
+                            product: product,
+                            imageHeight: imageHeight,
+                            onTap: () {},
+                          ),
+                        );
+                      },
+                    ),
                   ),
                 ),
               ),

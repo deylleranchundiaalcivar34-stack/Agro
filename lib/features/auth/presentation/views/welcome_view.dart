@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
 import '../../../../core/widgets/agro_brand_background.dart';
+import '../../../../core/widgets/agro_logo.dart';
 
 class WelcomeView extends StatefulWidget {
   const WelcomeView({super.key});
@@ -276,14 +277,10 @@ class _BrandHeader extends StatelessWidget {
           color: AppColors.surface,
           shape: BoxShape.circle,
         ),
-        child: ClipOval(
-          child: Image.asset(
-            'assets/images/logotipo_oficial.png',
-            semanticLabel: 'Logo de Agro+',
-            fit: BoxFit.cover,
-            cacheWidth: 168,
-            filterQuality: FilterQuality.medium,
-          ),
+        child: const AgroLogo(
+          size: 72,
+          cacheWidth: 168,
+          filterQuality: FilterQuality.medium,
         ),
       );
       final brand = Column(

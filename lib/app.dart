@@ -6,6 +6,7 @@ import 'package:provider/provider.dart';
 
 import 'core/router/app_router.dart';
 import 'core/constants/app_routes.dart';
+import 'core/behavior/agro_scroll_behavior.dart';
 import 'core/theme/app_theme.dart';
 import 'features/auth/presentation/viewmodels/auth_viewmodel.dart';
 import 'features/profile/presentation/widgets/biometric_lock_gate.dart';
@@ -52,6 +53,7 @@ class _AgroAppState extends State<AgroApp> {
       title: 'Agro+',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
+      scrollBehavior: const AgroScrollBehavior(),
       routerConfig: _appRouter.router,
       builder: (context, child) =>
           BiometricLockGate(child: child ?? const SizedBox.shrink()),

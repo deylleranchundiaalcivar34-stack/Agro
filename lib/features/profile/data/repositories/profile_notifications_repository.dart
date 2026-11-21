@@ -12,7 +12,9 @@ class ProfileNotificationsRepository {
 
     final rows = await _supabaseService.client
         .from('alertas_notificaciones')
-        .select('id_notificacion,titulo,mensaje_cuerpo,leida')
+        .select(
+          'id_notificacion,titulo,mensaje_cuerpo,leida,referencia_tipo,referencia_id',
+        )
         .eq('id_usuario_receptor', user.id);
 
     return rows

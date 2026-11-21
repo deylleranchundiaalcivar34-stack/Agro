@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/agro_page_app_bar.dart';
 
 class ProfileSubpage extends StatelessWidget {
   const ProfileSubpage({
@@ -17,7 +18,11 @@ class ProfileSubpage extends StatelessWidget {
   @override
   Widget build(BuildContext context) => Scaffold(
     backgroundColor: AppColors.background,
-    appBar: AppBar(title: Text(title), actions: actions),
+    appBar: AgroPageAppBar(
+      title: title,
+      actions: actions,
+      logoKey: const Key('agro-subpage-logo'),
+    ),
     body: SafeArea(top: false, child: child),
   );
 }

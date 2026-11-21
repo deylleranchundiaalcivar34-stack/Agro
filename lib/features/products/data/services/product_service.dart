@@ -166,8 +166,10 @@ class ProductService {
         : await _storageService.subirImagen(image);
     final fields = product.toJson();
     fields['nombre_producto'] = product.nombreProducto.trim();
-    // La edicion no convierte una preventa en otra fase de comercializacion.
-    fields['id_fase_actual'] = existing.idFaseActual;
+    // La fase solo cambia mediante la transicion correspondiente; la edicion
+    // normal tampoco debe reasignar al productor propietario.
+    fields.remove('id_fase_actual');
+    fields.remove('id_productor');
     final response = await _client
         .from('productos')
         .update(fields)
@@ -177,8 +179,9 @@ class ProductService {
         .single();
 
     // Verificar la identidad devuelta antes de asociar una fotografia al registro editado.
-    if (response['id_producto'] != product.idProducto ||
-        response['id_productor'] != userId) {
+    // ProductModel normaliza IDs a String; Postgres puede devolver un ID numérico.
+    if (response['id_producto']?.toString() != product.idProducto ||
+        response['id_productor']?.toString() != userId) {
       throw const ProductEditException(
         'No se pudo confirmar la actualizacion. Revisa la publicacion antes de reintentar.',
       );

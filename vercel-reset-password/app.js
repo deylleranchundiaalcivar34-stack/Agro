@@ -1,5 +1,5 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
-import { resolveRecoveryCallback } from './recovery-callback.mjs';
+import { resolveRecoveryCallback } from '/recovery-callback.mjs';
 
 const show = (id) => document.getElementById(id).classList.remove('hidden');
 const hide = (id) => document.getElementById(id).classList.add('hidden');
@@ -17,11 +17,11 @@ let supabase = null;
 
 function mostrarAviso(texto, tipo = 'error') {
   aviso.textContent = texto;
-  aviso.className = `mt-4 rounded-xl px-4 py-3 text-sm ${tipo === 'error' ? 'bg-red-50 text-red-700' : 'bg-emerald-50 text-emerald-700'}`;
+  aviso.className = `notice${tipo === 'error' ? '' : ' notice--success'}`;
 }
 
 function esconderVistas() {
-  for (const id of ['cargando', 'solicitud', 'correoEnviado', 'formulario', 'exito', 'error']) {
+  for (const id of ['cargando', 'confirmarEnlace', 'solicitud', 'correoEnviado', 'formulario', 'exito', 'error']) {
     hide(id);
   }
   hide('aviso');
@@ -119,7 +119,7 @@ async function iniciar() {
       hide('aviso');
       try {
         const { error: requestError } = await supabase.auth.resetPasswordForEmail(email, {
-          redirectTo: window.location.origin,
+          redirectTo: new URL('/auth/reset-password', window.location.origin).toString(),
         });
         if (requestError) throw requestError;
         hide('solicitud');

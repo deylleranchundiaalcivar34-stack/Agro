@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../../../../core/app_constants.dart';
 import '../../../../core/network/supabase_service.dart';
 import '../../data/models/user_profile.dart';
 import '../../data/repositories/profile_repository.dart';
@@ -72,7 +73,6 @@ class AuthViewModel extends ChangeNotifier {
   UserRole _selectedRole = UserRole.buyer;
   User? _currentUser;
   UserProfile? _profile;
-  bool _mfaRequired = false;
 
   AuthStatus get status => _status;
   String? get errorMessage => _errorMessage;
@@ -83,7 +83,6 @@ class AuthViewModel extends ChangeNotifier {
   String get userInitial => _profile?.initial ?? 'A';
   bool get isLoading => _status == AuthStatus.loading;
   bool get isAuthenticated => _status == AuthStatus.authenticated;
-  bool get mfaRequired => _mfaRequired;
 
   void setRole(UserRole role) {
     _selectedRole = role;
@@ -98,7 +97,8 @@ class AuthViewModel extends ChangeNotifier {
 
     _setLoading();
     try {
-      _profile = await _profileRepository.updateCurrentRole(role.value);
+      _profile = (await _profileRepository.updateCurrentRole(role.value))
+          .copyWith(avatarUrl: _profile?.avatarUrl);
       _selectedRole = role;
       _setAuthenticated();
       return true;
@@ -148,7 +148,9 @@ class AuthViewModel extends ChangeNotifier {
       final response = await _supabaseService.client.auth.signUp(
         email: email.trim(),
         password: password,
-        emailRedirectTo: kIsWeb ? null : 'io.supabase.agro://auth/callback',
+        emailRedirectTo: kIsWeb
+            ? AppConstants.emailConfirmationUrl
+            : AppConstants.mobileAuthCallbackUrl,
         data: {
           'full_name': fullName.trim(),
           'role': role.value,
@@ -171,39 +173,6 @@ class AuthViewModel extends ChangeNotifier {
       _setError('Error de conexion. Verifica tu red.');
       return false;
     }
-  }
-
-  Future<AuthMFAEnrollResponse?> enrollTotp() async {
-    try {
-      return await _supabaseService.client.auth.mfa.enroll(
-        issuer: 'Agro+',
-        friendlyName: 'Google Authenticator',
-      );
-    } on AuthException catch (e) {
-      _setError(_mapAuthError(e.message));
-      return null;
-    }
-  }
-
-  Future<bool> verifyTotp(String factorId, String code) async {
-    try {
-      await _supabaseService.client.auth.mfa.challengeAndVerify(
-        factorId: factorId,
-        code: code,
-      );
-      _mfaRequired = false;
-      notifyListeners();
-      return true;
-    } on AuthException catch (e) {
-      _setError(_mapAuthError(e.message));
-      return false;
-    }
-  }
-
-  Future<bool> verifyCurrentTotp(String code) async {
-    final factors = await _supabaseService.client.auth.mfa.listFactors();
-    if (factors.totp.isEmpty) return false;
-    return verifyTotp(factors.totp.first.id, code);
   }
 
   Future<void> signOut() async {
@@ -275,11 +244,11 @@ class AuthViewModel extends ChangeNotifier {
     required String companyName,
   }) async {
     try {
-      _profile = await _profileRepository.updateCurrentData(
+      _profile = (await _profileRepository.updateCurrentData(
         firstName: firstName,
         lastName: lastName,
         companyName: companyName,
-      );
+      )).copyWith(avatarUrl: _profile?.avatarUrl);
       _errorMessage = null;
       notifyListeners();
       return true;
@@ -292,6 +261,13 @@ class AuthViewModel extends ChangeNotifier {
 
   void clearError() {
     _errorMessage = null;
+    notifyListeners();
+  }
+
+  void updateAvatarUrl(String? avatarUrl) {
+    final profile = _profile;
+    if (profile == null) return;
+    _profile = profile.copyWith(avatarUrl: avatarUrl);
     notifyListeners();
   }
 
@@ -312,7 +288,9 @@ class AuthViewModel extends ChangeNotifier {
     _setStatus(AuthStatus.loading);
 
     try {
-      final profile = await _profileRepository.getCurrentProfile();
+      final profile = await _profileRepository.getCurrentProfile(
+        includeAvatar: true,
+      );
       if (profile == null) {
         _setError('No se encontro el perfil de esta cuenta.');
         return;
@@ -320,11 +298,6 @@ class AuthViewModel extends ChangeNotifier {
 
       _profile = profile;
       _selectedRole = UserRoleExtension.fromValue(profile.role);
-      final aal = _supabaseService.client.auth.mfa
-          .getAuthenticatorAssuranceLevel();
-      _mfaRequired =
-          aal.currentLevel != AuthenticatorAssuranceLevels.aal2 &&
-          aal.nextLevel == AuthenticatorAssuranceLevels.aal2;
       _setAuthenticated();
     } catch (_) {
       _setError('No se pudo cargar tu perfil. Verifica tu conexion.');

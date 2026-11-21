@@ -7,7 +7,9 @@ import 'package:provider/provider.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../widgets/product_image_picker.dart';
+import '../widgets/product_scaffold.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/widgets/agro_page_app_bar.dart';
 import '../../../../core/widgets/skeleton_block.dart';
 import '../../data/models/agricultural_product.dart';
 import '../../data/models/product_quantity.dart';
@@ -200,15 +202,15 @@ class _ProductEditViewState extends State<ProductEditView> {
           (_product == null || auth.currentUser?.id == _product!.producerId),
     );
     if (!producer) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Editar publicacion')),
+      return ProductScaffold(
+        appBar: const AgroPageAppBar(title: 'Editar publicacion'),
         body: const Center(child: Text('Esta accion es para productores.')),
       );
     }
     // La edicion espera la carga inicial y ofrece reintento si no se pudo completar.
     if (_product == null && producer) {
-      return Scaffold(
-        appBar: AppBar(title: const Text('Editar publicacion')),
+      return ProductScaffold(
+        appBar: const AgroPageAppBar(title: 'Editar publicacion'),
         body: Center(
           child: _loadError == null
               ? ListView(
@@ -238,9 +240,9 @@ class _ProductEditViewState extends State<ProductEditView> {
     // Impide salir durante el guardado y bloquea la edicion simultanea de los campos.
     return PopScope(
       canPop: !context.watch<ProductsViewModel>().isSubmitting,
-      child: Scaffold(
+      child: ProductScaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('Editar publicacion')),
+        appBar: const AgroPageAppBar(title: 'Editar publicacion'),
         body: Consumer<ProductsViewModel>(
           builder: (context, vm, _) => SafeArea(
             child: AbsorbPointer(
@@ -256,6 +258,11 @@ class _ProductEditViewState extends State<ProductEditView> {
                       heading,
                       const SizedBox(height: 16),
                       // Cabecera compacta: foto actual o nueva y opcion para deshacer el cambio local.
+                      const ProductSectionHeading(
+                        'Fotografía',
+                        subtitle:
+                            'Opcional. Añade una imagen clara de tu producto.',
+                      ),
                       ProductImagePicker(
                         productName: _product!.name,
                         initialImageUrl: _product!.imagenUrl,
@@ -271,11 +278,13 @@ class _ProductEditViewState extends State<ProductEditView> {
                         style: Theme.of(context).textTheme.bodyMedium,
                       ),
                       const SizedBox(height: 24),
+                      const ProductSectionHeading('Información del producto'),
                       TextFormField(
                         controller: _name,
                         textCapitalization: TextCapitalization.words,
                         decoration: const InputDecoration(
                           labelText: 'Nombre del producto',
+                          helperText: 'Obligatorio',
                           hintText: 'Ej. Aguacate Hass',
                           prefixIcon: Icon(Icons.eco_outlined),
                         ),
@@ -289,6 +298,7 @@ class _ProductEditViewState extends State<ProductEditView> {
                         isExpanded: true,
                         decoration: const InputDecoration(
                           labelText: 'Categoria agricola',
+                          helperText: 'Obligatorio',
                           prefixIcon: Icon(Icons.category_outlined),
                         ),
                         items: vm.categories
@@ -307,6 +317,7 @@ class _ProductEditViewState extends State<ProductEditView> {
                       ),
                       const SizedBox(height: 16),
                       // Cantidad y unidad se validan juntas segun las reglas compartidas.
+                      const ProductSectionHeading('Disponibilidad y precio'),
                       ProductQuantityFields(
                         controller: _quantity,
                         unit: _unit,
@@ -322,6 +333,9 @@ class _ProductEditViewState extends State<ProductEditView> {
                         ),
                         decoration: const InputDecoration(
                           labelText: 'Precio unitario (USD)',
+                          helperText:
+                              'Obligatorio · Precio por unidad seleccionada',
+                          prefixIcon: Icon(Icons.payments_outlined),
                           hintText: '0.00',
                         ),
                         validator: _nonNegative,
@@ -348,6 +362,7 @@ class _ProductEditViewState extends State<ProductEditView> {
                         ),
                       const SizedBox(height: 16),
                       // La publicacion puede retirarse del catalogo conservando sus datos.
+                      const ProductSectionHeading('Publicación'),
                       SwitchListTile(
                         title: const Text('Visibilidad del producto'),
                         subtitle: Text(_published ? 'Visible' : 'Oculto'),
@@ -389,39 +404,34 @@ class _ProductEditViewState extends State<ProductEditView> {
           ),
         ),
         // Las acciones respetan el area segura y suben sobre el teclado cuando aparece.
-        bottomNavigationBar: Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.viewInsetsOf(context).bottom,
-          ),
-          child: Consumer<ProductsViewModel>(
-            builder: (context, vm, _) => SafeArea(
-              top: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    FilledButton.icon(
-                      onPressed: vm.isSubmitting || _isSelectingImage
-                          ? null
-                          : _submit,
-                      icon: vm.isSubmitting
-                          ? const SizedBox.square(
-                              dimension: 18,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            )
-                          : const Icon(Icons.save_outlined),
-                      label: Text(
-                        vm.isSubmitting ? 'Guardando...' : 'Guardar cambios',
-                      ),
+        bottomNavigationBar: Consumer<ProductsViewModel>(
+          builder: (context, vm, _) => SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 8),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  FilledButton.icon(
+                    onPressed: vm.isSubmitting || _isSelectingImage
+                        ? null
+                        : _submit,
+                    icon: vm.isSubmitting
+                        ? const SizedBox.square(
+                            dimension: 18,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        : const Icon(Icons.save_outlined),
+                    label: Text(
+                      vm.isSubmitting ? 'Guardando...' : 'Guardar cambios',
                     ),
-                    TextButton(
-                      onPressed: vm.isSubmitting ? null : () => context.pop(),
-                      child: const Text('Cancelar'),
-                    ),
-                  ],
-                ),
+                  ),
+                  TextButton(
+                    onPressed: vm.isSubmitting ? null : () => context.pop(),
+                    child: const Text('Cancelar'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -437,9 +447,9 @@ class _ProductEditViewState extends State<ProductEditView> {
     // Impide salir durante el guardado y bloquea la edicion simultanea de los campos.
     return PopScope(
       canPop: !vm.isSubmitting,
-      child: Scaffold(
+      child: ProductScaffold(
         backgroundColor: AppColors.background,
-        appBar: AppBar(title: const Text('Actualizar cantidad')),
+        appBar: const AgroPageAppBar(title: 'Actualizar cantidad'),
         body: SafeArea(
           child: AbsorbPointer(
             absorbing: vm.isSubmitting,
@@ -466,6 +476,7 @@ class _ProductEditViewState extends State<ProductEditView> {
                   if (product.harvestLabel != null)
                     Text('Cosecha estimada: ${product.harvestLabel}'),
                   const SizedBox(height: 24),
+                  const ProductSectionHeading('Disponibilidad y precio'),
                   ProductQuantityFields(
                     controller: _quantity,
                     unit: _unit,

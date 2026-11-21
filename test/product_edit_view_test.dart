@@ -302,6 +302,10 @@ void main() {
       'precarga, guarda el mismo ID, quita fecha y conserva la fotografia',
       (tester) async {
         await open(tester);
+        expect(find.text('Fotografía'), findsOneWidget);
+        expect(find.text('Información del producto'), findsOneWidget);
+        expect(find.text('Disponibilidad y precio'), findsOneWidget);
+        expect(find.text('Publicación'), findsOneWidget);
         expect(find.text('Cambiar fotografia'), findsOneWidget);
         expect(
           tester

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#2E7D32" />
+    <meta name="referrer" content="no-referrer" />
+    <meta name="description" content="Confirma tu correo y activa tu cuenta de Agro+." />
+    <title>Confirmar correo | Agro+</title>
+    <link rel="icon" type="image/png" href="/assets/agro-logo.png" />
+    <link rel="stylesheet" href="/auth.css" />
+  </head>
+  <body>
+    <main class="auth-shell">
+      <aside class="brand-panel" aria-label="Agro+">
+        <div class="brand-lockup">
+          <span class="brand-mark"><img src="/assets/agro-logo.png" alt="" /></span>
+          <span class="brand-name">Agro<span>+</span></span>
+        </div>
+        <div class="brand-copy">
+          <span class="eyebrow">CAMPO · COMUNIDAD · CONFIANZA</span>
+          <h1>Una comunidad<br />que crece contigo.</h1>
+          <p>Confirma tu correo para terminar de crear tu cuenta en Agro+.</p>
+        </div>
+        <div class="brand-decoration" aria-hidden="true"><span></span><span></span><span></span></div>
+        <p class="brand-footer">Agro+ · Conectando el campo ecuatoriano</p>
+      </aside>
+
+      <section class="auth-content" aria-live="polite" aria-atomic="true">
+        <div class="auth-card">
+          <div class="mobile-brand brand-lockup">
+            <span class="brand-mark"><img src="/assets/agro-logo.png" alt="" /></span>
+            <span class="brand-name">Agro<span>+</span></span>
+          </div>
+
+          <section id="cargando" class="auth-state">
+            <span class="state-icon state-icon--loading" aria-hidden="true"><span></span></span>
+            <p class="eyebrow">CUENTA AGRO+</p>
+            <h1>Confirmando tu correo</h1>
+            <p class="intro">Estamos verificando de forma segura el enlace que recibiste.</p>
+            <div class="progress-track" aria-label="Verificando"><span></span></div>
+          </section>
+
+          <section id="exito" class="auth-state hidden" aria-labelledby="successTitle">
+            <span class="state-icon state-icon--success" aria-hidden="true">✓</span>
+            <p class="eyebrow">CORREO VERIFICADO</p>
+            <h1 id="successTitle">¡Tu cuenta está lista!</h1>
+            <p class="intro">Tu correo quedó confirmado. Vuelve a Agro+ e inicia sesión para empezar.</p>
+            <a class="button button-primary" href="io.supabase.agro://auth/callback">Abrir Agro+</a>
+            <p class="helper">Si la aplicación no se abre, regresa a ella e inicia sesión con tu correo y contraseña.</p>
+          </section>
+
+          <section id="error" class="auth-state hidden" aria-labelledby="errorTitle">
+            <span class="state-icon state-icon--error" aria-hidden="true">!</span>
+            <p class="eyebrow">CONFIRMACIÓN NO COMPLETADA</p>
+            <h1 id="errorTitle">No pudimos confirmar el correo</h1>
+            <p id="errorText" class="intro">El enlace puede haber vencido o ya se utilizó.</p>
+            <p class="helper helper--notice">Vuelve a Agro+ e inicia sesión. Si tu cuenta aún no está confirmada, solicita un nuevo correo.</p>
+            <a class="button button-primary" href="io.supabase.agro://auth/callback">Volver a Agro+</a>
+          </section>
+
+          <p class="security-note"><span aria-hidden="true">●</span> Tus datos se procesan mediante una conexión segura.</p>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="/auth-confirm.js"></script>
+  </body>
+</html>

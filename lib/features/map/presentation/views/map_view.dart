@@ -516,7 +516,7 @@ class _MapViewState extends State<MapView> {
               ),
               if (canContact && contactProduct != null) ...[
                 const SizedBox(height: 12),
-                ContactProducerButton(productId: contactProduct.id),
+                ContactProducerButton(product: contactProduct),
               ],
             ],
           ),

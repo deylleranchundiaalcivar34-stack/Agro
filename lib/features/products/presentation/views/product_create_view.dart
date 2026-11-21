@@ -11,6 +11,7 @@ import '../../data/models/product_unit.dart';
 import '../widgets/product_quantity_fields.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/app_routes.dart';
+import '../../../../core/widgets/agro_page_app_bar.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../viewmodels/products_viewmodel.dart';
 
@@ -119,13 +120,13 @@ class _ProductCreateViewState extends State<ProductCreateView> {
     );
     if (!producer) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Publicar preventa')),
+        appBar: const AgroPageAppBar(title: 'Publicar preventa'),
         body: const Center(child: Text('Esta accion es para productores.')),
       );
     }
     return Scaffold(
       backgroundColor: AppColors.background,
-      appBar: AppBar(title: const Text('Publicar preventa')),
+      appBar: const AgroPageAppBar(title: 'Publicar preventa'),
       body: Consumer<ProductsViewModel>(
         builder: (context, vm, _) => SafeArea(
           child: Form(

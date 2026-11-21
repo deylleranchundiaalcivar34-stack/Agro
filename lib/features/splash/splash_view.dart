@@ -7,6 +7,7 @@ import '../../core/constants/app_colors.dart';
 import '../../core/constants/app_routes.dart';
 import '../../core/constants/app_strings.dart';
 import '../../core/widgets/agro_brand_background.dart';
+import '../../core/widgets/agro_logo.dart';
 import '../auth/presentation/viewmodels/auth_viewmodel.dart';
 
 class SplashView extends StatefulWidget {
@@ -46,17 +47,11 @@ class _SplashViewState extends State<SplashView> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      RepaintBoundary(
-                            child: ClipRRect(
-                              borderRadius: BorderRadius.circular(24),
-                              child: Image.asset(
-                                'assets/images/logotipo_oficial.png',
-                                width: 96,
-                                height: 96,
-                                fit: BoxFit.contain,
-                                cacheWidth: 192,
-                                filterQuality: FilterQuality.low,
-                              ),
+                      const RepaintBoundary(
+                            child: AgroLogo(
+                              size: 96,
+                              cacheWidth: 192,
+                              filterQuality: FilterQuality.low,
                             ),
                           )
                           .animate()
