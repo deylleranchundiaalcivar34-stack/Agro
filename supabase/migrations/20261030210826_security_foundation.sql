@@ -1,0 +1,5 @@
+-- Historical Supabase migration marker.
+-- Version 20261030210826 (security_foundation) is already applied to the
+-- production project. Supabase stores its version/name, not the original SQL,
+-- and the original script is absent from all accessible Git refs. Keep this
+-- file as an honest ledger entry; do not treat it as a fresh-database schema.

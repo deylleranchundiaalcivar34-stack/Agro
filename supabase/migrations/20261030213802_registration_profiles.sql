@@ -1,0 +1,4 @@
+-- Historical Supabase migration marker.
+-- Version 20261030213802 (registration_profiles) is already applied to
+-- production. Its original SQL is not present in Supabase's version ledger or
+-- accessible Git history. This marker preserves the version/name pairing.
