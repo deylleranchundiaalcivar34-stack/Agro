@@ -1,4 +1,0 @@
--- Historical Supabase migration marker.
--- Version 20261030211840 (phase0_preorders) is already applied to production.
--- Its original SQL is not present in Supabase's version ledger or accessible
--- Git history. This marker preserves the version/name pairing for previews.

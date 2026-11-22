@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../../core/network/supabase_service.dart';
 import '../models/contact_request.dart';
 
@@ -31,6 +33,7 @@ class ContactRequestsRepository {
         })
         .select(_select)
         .single();
+    _sendPush('contact_request', row['id_solicitud'] as String);
     return ContactRequest.fromMap(row);
   }
 
@@ -76,6 +79,22 @@ class ContactRequestsRepository {
       'respond_to_contact_request',
       params: {'p_solicitud': requestId, 'p_aceptar': accept},
     );
+    _sendPush('contact_response', requestId);
     return result as String?;
+  }
+
+  void _sendPush(String eventType, String referenceId) {
+    unawaited(_invokePush(eventType, referenceId));
+  }
+
+  Future<void> _invokePush(String eventType, String referenceId) async {
+    try {
+      await _service.client.functions.invoke(
+        'send-push',
+        body: {'event_type': eventType, 'reference_id': referenceId},
+      );
+    } catch (_) {
+      // El guardado de la solicitud no depende del servicio push.
+    }
   }
 }

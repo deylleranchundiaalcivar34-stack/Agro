@@ -1,0 +1,1538 @@
+{
+  "source": "Open Admin Data, Ecuador administrative divisions",
+  "sourceUrl": "https://raw.githubusercontent.com/open-admin-data/ecuador-administrative-divisions/master/data/all-flat.csv",
+  "license": "CC BY 4.0",
+  "sourceUpdatedAt": "2026-06-28",
+  "provinces": [
+    {
+      "code": "EC01",
+      "name": "Azuay",
+      "latitude": -2.964,
+      "longitude": -79.13,
+      "cantons": [
+        {
+          "code": "EC0101",
+          "name": "Cuenca",
+          "latitude": -2.821,
+          "longitude": -79.243
+        },
+        {
+          "code": "EC0102",
+          "name": "Girón",
+          "latitude": -3.189,
+          "longitude": -79.181
+        },
+        {
+          "code": "EC0103",
+          "name": "Gualaceo",
+          "latitude": -2.926,
+          "longitude": -78.778
+        },
+        {
+          "code": "EC0104",
+          "name": "Nabón",
+          "latitude": -3.334,
+          "longitude": -79.128
+        },
+        {
+          "code": "EC0105",
+          "name": "Paute",
+          "latitude": -2.762,
+          "longitude": -78.749
+        },
+        {
+          "code": "EC0106",
+          "name": "Pucará",
+          "latitude": -3.191,
+          "longitude": -79.548
+        },
+        {
+          "code": "EC0107",
+          "name": "San Fernando",
+          "latitude": -3.136,
+          "longitude": -79.256
+        },
+        {
+          "code": "EC0108",
+          "name": "Santa Isabel",
+          "latitude": -3.207,
+          "longitude": -79.359
+        },
+        {
+          "code": "EC0109",
+          "name": "Sígsig",
+          "latitude": -3.126,
+          "longitude": -78.874
+        },
+        {
+          "code": "EC0110",
+          "name": "Oña",
+          "latitude": -3.483,
+          "longitude": -79.145
+        },
+        {
+          "code": "EC0111",
+          "name": "Chordeleg",
+          "latitude": -2.976,
+          "longitude": -78.742
+        },
+        {
+          "code": "EC0112",
+          "name": "El Pan",
+          "latitude": -2.82,
+          "longitude": -78.656
+        },
+        {
+          "code": "EC0113",
+          "name": "Sevilla de Oro",
+          "latitude": -2.691,
+          "longitude": -78.574
+        },
+        {
+          "code": "EC0114",
+          "name": "Guachapala",
+          "latitude": -2.765,
+          "longitude": -78.694
+        },
+        {
+          "code": "EC0115",
+          "name": "Camilo Ponce enríquez",
+          "latitude": -2.978,
+          "longitude": -79.608
+        }
+      ]
+    },
+    {
+      "code": "EC02",
+      "name": "Bolívar",
+      "latitude": -1.619,
+      "longitude": -79.141,
+      "cantons": [
+        {
+          "code": "EC0201",
+          "name": "Guaranda",
+          "latitude": -1.405,
+          "longitude": -79.065
+        },
+        {
+          "code": "EC0202",
+          "name": "Chillanes",
+          "latitude": -2.035,
+          "longitude": -79.118
+        },
+        {
+          "code": "EC0203",
+          "name": "Chimbo",
+          "latitude": -1.675,
+          "longitude": -79.133
+        },
+        {
+          "code": "EC0204",
+          "name": "Echeandía",
+          "latitude": -1.456,
+          "longitude": -79.271
+        },
+        {
+          "code": "EC0205",
+          "name": "San Miguel",
+          "latitude": -1.792,
+          "longitude": -79.084
+        },
+        {
+          "code": "EC0206",
+          "name": "Caluma",
+          "latitude": -1.604,
+          "longitude": -79.223
+        },
+        {
+          "code": "EC0207",
+          "name": "Las Naves",
+          "latitude": -1.293,
+          "longitude": -79.312
+        }
+      ]
+    },
+    {
+      "code": "EC03",
+      "name": "Cañar",
+      "latitude": -2.539,
+      "longitude": -79.012,
+      "cantons": [
+        {
+          "code": "EC0301",
+          "name": "Azogues",
+          "latitude": -2.638,
+          "longitude": -78.77
+        },
+        {
+          "code": "EC0302",
+          "name": "Biblián",
+          "latitude": -2.683,
+          "longitude": -78.976
+        },
+        {
+          "code": "EC0303",
+          "name": "Cañar",
+          "latitude": -2.501,
+          "longitude": -79.06
+        },
+        {
+          "code": "EC0304",
+          "name": "La Troncal",
+          "latitude": -2.446,
+          "longitude": -79.378
+        },
+        {
+          "code": "EC0305",
+          "name": "El Tambo",
+          "latitude": -2.493,
+          "longitude": -78.92
+        },
+        {
+          "code": "EC0306",
+          "name": "Déleg",
+          "latitude": -2.76,
+          "longitude": -78.94
+        },
+        {
+          "code": "EC0307",
+          "name": "Suscal",
+          "latitude": -2.463,
+          "longitude": -79.063
+        }
+      ]
+    },
+    {
+      "code": "EC04",
+      "name": "Carchi",
+      "latitude": 0.832,
+      "longitude": -78.079,
+      "cantons": [
+        {
+          "code": "EC0401",
+          "name": "Tulcán",
+          "latitude": 0.906,
+          "longitude": -78.092
+        },
+        {
+          "code": "EC0402",
+          "name": "Bolívar",
+          "latitude": -0.924,
+          "longitude": -80.043
+        },
+        {
+          "code": "EC0403",
+          "name": "Espejo",
+          "latitude": 0.706,
+          "longitude": -78.042
+        },
+        {
+          "code": "EC0404",
+          "name": "Mira",
+          "latitude": 0.729,
+          "longitude": -78.212
+        },
+        {
+          "code": "EC0405",
+          "name": "Montúfar",
+          "latitude": 0.57,
+          "longitude": -77.803
+        },
+        {
+          "code": "EC0406",
+          "name": "San Pedro de Huaca",
+          "latitude": 0.62,
+          "longitude": -77.725
+        }
+      ]
+    },
+    {
+      "code": "EC05",
+      "name": "Cotopaxi",
+      "latitude": -0.83,
+      "longitude": -78.838,
+      "cantons": [
+        {
+          "code": "EC0501",
+          "name": "Latacunga",
+          "latitude": -0.811,
+          "longitude": -78.648
+        },
+        {
+          "code": "EC0502",
+          "name": "La Maná",
+          "latitude": -0.818,
+          "longitude": -79.139
+        },
+        {
+          "code": "EC0503",
+          "name": "Pangua",
+          "latitude": -1.114,
+          "longitude": -79.127
+        },
+        {
+          "code": "EC0504",
+          "name": "Pujilí",
+          "latitude": -1.002,
+          "longitude": -78.905
+        },
+        {
+          "code": "EC0505",
+          "name": "Salcedo",
+          "latitude": -1.07,
+          "longitude": -78.612
+        },
+        {
+          "code": "EC0506",
+          "name": "Saquisilí",
+          "latitude": -0.836,
+          "longitude": -78.739
+        },
+        {
+          "code": "EC0507",
+          "name": "Sigchos",
+          "latitude": -0.635,
+          "longitude": -78.934
+        }
+      ]
+    },
+    {
+      "code": "EC06",
+      "name": "Chimborazo",
+      "latitude": -2.005,
+      "longitude": -78.728,
+      "cantons": [
+        {
+          "code": "EC0601",
+          "name": "Riobamba",
+          "latitude": -1.717,
+          "longitude": -78.617
+        },
+        {
+          "code": "EC0602",
+          "name": "Alausí",
+          "latitude": -2.289,
+          "longitude": -78.779
+        },
+        {
+          "code": "EC0603",
+          "name": "Colta",
+          "latitude": -1.806,
+          "longitude": -78.832
+        },
+        {
+          "code": "EC0604",
+          "name": "Chambo",
+          "latitude": -1.743,
+          "longitude": -78.555
+        },
+        {
+          "code": "EC0605",
+          "name": "Chunchi",
+          "latitude": -2.327,
+          "longitude": -78.916
+        },
+        {
+          "code": "EC0606",
+          "name": "Guamote",
+          "latitude": -2.041,
+          "longitude": -78.643
+        },
+        {
+          "code": "EC0607",
+          "name": "Guano",
+          "latitude": -1.544,
+          "longitude": -78.641
+        },
+        {
+          "code": "EC0608",
+          "name": "Pallatanga",
+          "latitude": -2.016,
+          "longitude": -78.928
+        },
+        {
+          "code": "EC0609",
+          "name": "Penipe",
+          "latitude": -1.566,
+          "longitude": -78.456
+        },
+        {
+          "code": "EC0610",
+          "name": "Cumandá",
+          "latitude": -2.207,
+          "longitude": -79.108
+        }
+      ]
+    },
+    {
+      "code": "EC07",
+      "name": "El Oro",
+      "latitude": -3.534,
+      "longitude": -79.761,
+      "cantons": [
+        {
+          "code": "EC0701",
+          "name": "Machala",
+          "latitude": -3.313,
+          "longitude": -79.976
+        },
+        {
+          "code": "EC0702",
+          "name": "Arenillas",
+          "latitude": -3.581,
+          "longitude": -80.09
+        },
+        {
+          "code": "EC0703",
+          "name": "Atahualpa",
+          "latitude": -3.554,
+          "longitude": -79.734
+        },
+        {
+          "code": "EC0704",
+          "name": "Balsas",
+          "latitude": -3.78,
+          "longitude": -79.843
+        },
+        {
+          "code": "EC0705",
+          "name": "Chilla",
+          "latitude": -3.438,
+          "longitude": -79.627
+        },
+        {
+          "code": "EC0706",
+          "name": "El Guabo",
+          "latitude": -3.156,
+          "longitude": -79.798
+        },
+        {
+          "code": "EC0707",
+          "name": "Huaquillas",
+          "latitude": -3.457,
+          "longitude": -80.184
+        },
+        {
+          "code": "EC0708",
+          "name": "Marcabelí",
+          "latitude": -3.79,
+          "longitude": -79.93
+        },
+        {
+          "code": "EC0709",
+          "name": "Pasaje",
+          "latitude": -3.334,
+          "longitude": -79.711
+        },
+        {
+          "code": "EC0710",
+          "name": "Piñas",
+          "latitude": -3.703,
+          "longitude": -79.814
+        },
+        {
+          "code": "EC0711",
+          "name": "Portovelo",
+          "latitude": -3.741,
+          "longitude": -79.525
+        },
+        {
+          "code": "EC0712",
+          "name": "Santa Rosa",
+          "latitude": -3.479,
+          "longitude": -79.932
+        },
+        {
+          "code": "EC0713",
+          "name": "Zaruma",
+          "latitude": -3.544,
+          "longitude": -79.518
+        },
+        {
+          "code": "EC0714",
+          "name": "Las Lajas",
+          "latitude": -3.807,
+          "longitude": -80.077
+        }
+      ]
+    },
+    {
+      "code": "EC08",
+      "name": "Esmeraldas",
+      "latitude": 0.692,
+      "longitude": -79.205,
+      "cantons": [
+        {
+          "code": "EC0806",
+          "name": "Atacames",
+          "latitude": 0.788,
+          "longitude": -79.868
+        },
+        {
+          "code": "EC0809",
+          "name": "Borbón",
+          "latitude": 0.714135,
+          "longitude": -78.929095
+        },
+        {
+          "code": "EC0802",
+          "name": "Eloy Alfaro",
+          "latitude": 0.801,
+          "longitude": -78.943
+        },
+        {
+          "code": "EC0801",
+          "name": "Esmeraldas",
+          "latitude": 0.802,
+          "longitude": -79.614
+        },
+        {
+          "code": "EC0803",
+          "name": "Muisne",
+          "latitude": 0.54,
+          "longitude": -79.939
+        },
+        {
+          "code": "EC0804",
+          "name": "Quinindé",
+          "latitude": 0.286,
+          "longitude": -79.446
+        },
+        {
+          "code": "EC0807",
+          "name": "Rioverde",
+          "latitude": 0.872,
+          "longitude": -79.323
+        },
+        {
+          "code": "EC0805",
+          "name": "San Lorenzo",
+          "latitude": 1.123,
+          "longitude": -78.75
+        }
+      ]
+    },
+    {
+      "code": "EC09",
+      "name": "Guayas",
+      "latitude": -2.083,
+      "longitude": -79.838,
+      "cantons": [
+        {
+          "code": "EC0901",
+          "name": "Guayaquil",
+          "latitude": -2.328,
+          "longitude": -80.096
+        },
+        {
+          "code": "EC0902",
+          "name": "Alfredo Baquerizo Moreno (Juján)",
+          "latitude": -1.89055,
+          "longitude": -79.55712
+        },
+        {
+          "code": "EC0903",
+          "name": "Balao",
+          "latitude": -2.901,
+          "longitude": -79.748
+        },
+        {
+          "code": "EC0904",
+          "name": "Balzar",
+          "latitude": -1.277,
+          "longitude": -79.862
+        },
+        {
+          "code": "EC0905",
+          "name": "Colimes",
+          "latitude": -1.531,
+          "longitude": -80.073
+        },
+        {
+          "code": "EC0906",
+          "name": "Daule",
+          "latitude": -1.895,
+          "longitude": -79.971
+        },
+        {
+          "code": "EC0907",
+          "name": "Durán",
+          "latitude": -2.233,
+          "longitude": -79.771
+        },
+        {
+          "code": "EC0908",
+          "name": "El Empalme",
+          "latitude": -0.996,
+          "longitude": -79.647
+        },
+        {
+          "code": "EC0909",
+          "name": "El Triunfo",
+          "latitude": -2.302,
+          "longitude": -79.414
+        },
+        {
+          "code": "EC0910",
+          "name": "Milagro",
+          "latitude": -2.14,
+          "longitude": -79.562
+        },
+        {
+          "code": "EC0911",
+          "name": "Naranjal",
+          "latitude": -2.525,
+          "longitude": -79.658
+        },
+        {
+          "code": "EC0912",
+          "name": "Naranjito",
+          "latitude": -2.134,
+          "longitude": -79.383
+        },
+        {
+          "code": "EC0913",
+          "name": "Palestina",
+          "latitude": -1.635,
+          "longitude": -79.908
+        },
+        {
+          "code": "EC0914",
+          "name": "Pedro Carbo",
+          "latitude": -1.863,
+          "longitude": -80.293
+        },
+        {
+          "code": "EC0916",
+          "name": "Samborondón",
+          "latitude": -1.992,
+          "longitude": -79.776
+        },
+        {
+          "code": "EC0918",
+          "name": "Santa Lucía",
+          "latitude": -1.717,
+          "longitude": -80.036
+        },
+        {
+          "code": "EC0919",
+          "name": "Salitre",
+          "latitude": -1.799,
+          "longitude": -79.812
+        },
+        {
+          "code": "EC0920",
+          "name": "San Jacinto de Yaguachi",
+          "latitude": -2.185,
+          "longitude": -79.658
+        },
+        {
+          "code": "EC0921",
+          "name": "Playas",
+          "latitude": -2.572,
+          "longitude": -80.412
+        },
+        {
+          "code": "EC0922",
+          "name": "Simón Bolívar",
+          "latitude": -2.055,
+          "longitude": -79.377
+        },
+        {
+          "code": "EC0923",
+          "name": "Coronel Marcelino Maridueña",
+          "latitude": -2.21025,
+          "longitude": -79.43734
+        },
+        {
+          "code": "EC0924",
+          "name": "Lomas de Sargentillo",
+          "latitude": -1.844,
+          "longitude": -80.076
+        },
+        {
+          "code": "EC0925",
+          "name": "Nobol",
+          "latitude": -1.95,
+          "longitude": -80.035
+        },
+        {
+          "code": "EC0927",
+          "name": "General  Antonio Elizalde",
+          "latitude": -2.151,
+          "longitude": -79.203
+        },
+        {
+          "code": "EC0928",
+          "name": "Isidro Ayora",
+          "latitude": -1.926,
+          "longitude": -80.172
+        }
+      ]
+    },
+    {
+      "code": "EC10",
+      "name": "Imbabura",
+      "latitude": 0.395,
+      "longitude": -78.52,
+      "cantons": [
+        {
+          "code": "EC1001",
+          "name": "Ibarra",
+          "latitude": 0.563,
+          "longitude": -78.213
+        },
+        {
+          "code": "EC1002",
+          "name": "Antonio Ante",
+          "latitude": 0.344,
+          "longitude": -78.197
+        },
+        {
+          "code": "EC1003",
+          "name": "Cotacachi",
+          "latitude": 0.328,
+          "longitude": -78.596
+        },
+        {
+          "code": "EC1004",
+          "name": "Otavalo",
+          "latitude": 0.238,
+          "longitude": -78.383
+        },
+        {
+          "code": "EC1005",
+          "name": "Pimampiro",
+          "latitude": 0.29,
+          "longitude": -77.928
+        },
+        {
+          "code": "EC1006",
+          "name": "San Miguel de Urcuquí",
+          "latitude": 0.564,
+          "longitude": -78.296
+        }
+      ]
+    },
+    {
+      "code": "EC11",
+      "name": "Loja",
+      "latitude": -4.02,
+      "longitude": -79.636,
+      "cantons": [
+        {
+          "code": "EC1101",
+          "name": "Loja",
+          "latitude": -4.055,
+          "longitude": -79.276
+        },
+        {
+          "code": "EC1102",
+          "name": "Calvas",
+          "latitude": -4.345,
+          "longitude": -79.585
+        },
+        {
+          "code": "EC1103",
+          "name": "Catamayo",
+          "latitude": -3.975,
+          "longitude": -79.413
+        },
+        {
+          "code": "EC1104",
+          "name": "Celica",
+          "latitude": -4.185,
+          "longitude": -80.06
+        },
+        {
+          "code": "EC1105",
+          "name": "Chaguarpamba",
+          "latitude": -3.855,
+          "longitude": -79.672
+        },
+        {
+          "code": "EC1106",
+          "name": "Espíndola",
+          "latitude": -4.533,
+          "longitude": -79.429
+        },
+        {
+          "code": "EC1107",
+          "name": "Gonzanamá",
+          "latitude": -4.174,
+          "longitude": -79.468
+        },
+        {
+          "code": "EC1108",
+          "name": "Macará",
+          "latitude": -4.324,
+          "longitude": -79.945
+        },
+        {
+          "code": "EC1109",
+          "name": "Paltas",
+          "latitude": -4.008,
+          "longitude": -79.778
+        },
+        {
+          "code": "EC1110",
+          "name": "Puyango",
+          "latitude": -3.989,
+          "longitude": -80.108
+        },
+        {
+          "code": "EC1111",
+          "name": "Saraguro",
+          "latitude": -3.535,
+          "longitude": -79.301
+        },
+        {
+          "code": "EC1112",
+          "name": "Sozoranga",
+          "latitude": -4.279,
+          "longitude": -79.781
+        },
+        {
+          "code": "EC1113",
+          "name": "Zapotillo",
+          "latitude": -4.216,
+          "longitude": -80.302
+        },
+        {
+          "code": "EC1114",
+          "name": "Pindal",
+          "latitude": -4.086,
+          "longitude": -80.139
+        },
+        {
+          "code": "EC1115",
+          "name": "Quilanga",
+          "latitude": -4.349,
+          "longitude": -79.389
+        },
+        {
+          "code": "EC1116",
+          "name": "Olmedo",
+          "latitude": -1.367,
+          "longitude": -80.219
+        }
+      ]
+    },
+    {
+      "code": "EC12",
+      "name": "Los Ríos",
+      "latitude": -1.293,
+      "longitude": -79.425,
+      "cantons": [
+        {
+          "code": "EC1201",
+          "name": "Babahoyo",
+          "latitude": -1.871,
+          "longitude": -79.43
+        },
+        {
+          "code": "EC1202",
+          "name": "Baba",
+          "latitude": -1.648,
+          "longitude": -79.642
+        },
+        {
+          "code": "EC1203",
+          "name": "Montalvo",
+          "latitude": -1.814,
+          "longitude": -79.333
+        },
+        {
+          "code": "EC1204",
+          "name": "Puebloviejo",
+          "latitude": -1.555,
+          "longitude": -79.559
+        },
+        {
+          "code": "EC1205",
+          "name": "Quevedo",
+          "latitude": -1.058,
+          "longitude": -79.471
+        },
+        {
+          "code": "EC1206",
+          "name": "Urdaneta",
+          "latitude": -1.56,
+          "longitude": -79.382
+        },
+        {
+          "code": "EC1207",
+          "name": "Ventanas",
+          "latitude": -1.332,
+          "longitude": -79.419
+        },
+        {
+          "code": "EC1208",
+          "name": "Vinces",
+          "latitude": -1.498,
+          "longitude": -79.731
+        },
+        {
+          "code": "EC1209",
+          "name": "Palenque",
+          "latitude": -1.319,
+          "longitude": -79.744
+        },
+        {
+          "code": "EC1210",
+          "name": "Buena Fe",
+          "latitude": -0.735,
+          "longitude": -79.48
+        },
+        {
+          "code": "EC1211",
+          "name": "Valencia",
+          "latitude": -0.776,
+          "longitude": -79.332
+        },
+        {
+          "code": "EC1212",
+          "name": "Mocache",
+          "latitude": -1.196,
+          "longitude": -79.572
+        },
+        {
+          "code": "EC1213",
+          "name": "Quinsaloma",
+          "latitude": -1.136,
+          "longitude": -79.365
+        }
+      ]
+    },
+    {
+      "code": "EC13",
+      "name": "Manabí",
+      "latitude": -0.783,
+      "longitude": -80.142,
+      "cantons": [
+        {
+          "code": "EC1301",
+          "name": "Portoviejo",
+          "latitude": -1.019,
+          "longitude": -80.344
+        },
+        {
+          "code": "EC1302",
+          "name": "Bolívar",
+          "latitude": -0.924,
+          "longitude": -80.043
+        },
+        {
+          "code": "EC1303",
+          "name": "Chone",
+          "latitude": -0.425,
+          "longitude": -79.882
+        },
+        {
+          "code": "EC1304",
+          "name": "El Carmen",
+          "latitude": -0.335,
+          "longitude": -79.583
+        },
+        {
+          "code": "EC1305",
+          "name": "Flavio Alfaro",
+          "latitude": -0.344,
+          "longitude": -79.815
+        },
+        {
+          "code": "EC1306",
+          "name": "Jipijapa",
+          "latitude": -1.512,
+          "longitude": -80.589
+        },
+        {
+          "code": "EC1307",
+          "name": "Junín",
+          "latitude": -0.948,
+          "longitude": -80.177
+        },
+        {
+          "code": "EC1308",
+          "name": "Manta",
+          "latitude": -1.003,
+          "longitude": -80.759
+        },
+        {
+          "code": "EC1309",
+          "name": "Montecristi",
+          "latitude": -1.116,
+          "longitude": -80.663
+        },
+        {
+          "code": "EC1310",
+          "name": "Paján",
+          "latitude": -1.68,
+          "longitude": -80.39
+        },
+        {
+          "code": "EC1311",
+          "name": "Pichincha",
+          "latitude": -0.899,
+          "longitude": -79.871
+        },
+        {
+          "code": "EC1312",
+          "name": "Rocafuerte",
+          "latitude": -0.903,
+          "longitude": -80.392
+        },
+        {
+          "code": "EC1313",
+          "name": "Santa Ana",
+          "latitude": -1.201,
+          "longitude": -80.224
+        },
+        {
+          "code": "EC1314",
+          "name": "Sucre",
+          "latitude": -0.365,
+          "longitude": -80.211
+        },
+        {
+          "code": "EC1315",
+          "name": "Tosagua",
+          "latitude": -0.772,
+          "longitude": -80.264
+        },
+        {
+          "code": "EC1316",
+          "name": "24 de Mayo",
+          "latitude": -1.381,
+          "longitude": -80.365
+        },
+        {
+          "code": "EC1317",
+          "name": "Pedernales",
+          "latitude": 0.122,
+          "longitude": -79.86
+        },
+        {
+          "code": "EC1318",
+          "name": "Olmedo",
+          "latitude": -1.367,
+          "longitude": -80.219
+        },
+        {
+          "code": "EC1319",
+          "name": "Puerto López",
+          "latitude": -1.568,
+          "longitude": -80.75
+        },
+        {
+          "code": "EC1320",
+          "name": "Jama",
+          "latitude": -0.238,
+          "longitude": -80.214
+        },
+        {
+          "code": "EC1321",
+          "name": "Jaramijó",
+          "latitude": -0.97,
+          "longitude": -80.612
+        },
+        {
+          "code": "EC1322",
+          "name": "San Vicente",
+          "latitude": -0.457,
+          "longitude": -80.324
+        }
+      ]
+    },
+    {
+      "code": "EC14",
+      "name": "Morona Santiago",
+      "latitude": -2.556,
+      "longitude": -78.144,
+      "cantons": [
+        {
+          "code": "EC1402",
+          "name": "Gualaquiza",
+          "latitude": -3.359,
+          "longitude": -78.638
+        },
+        {
+          "code": "EC1407",
+          "name": "Huamboya",
+          "latitude": -1.988,
+          "longitude": -77.96
+        },
+        {
+          "code": "EC1403",
+          "name": "Limón Indanza",
+          "latitude": -3.065,
+          "longitude": -78.329
+        },
+        {
+          "code": "EC1410",
+          "name": "Logroño",
+          "latitude": -2.722,
+          "longitude": -78.058
+        },
+        {
+          "code": "EC1401",
+          "name": "Morona",
+          "latitude": -2.448,
+          "longitude": -77.972
+        },
+        {
+          "code": "EC1411",
+          "name": "Pablo Sexto",
+          "latitude": -1.855,
+          "longitude": -78.228
+        },
+        {
+          "code": "EC1404",
+          "name": "Palora",
+          "latitude": -1.686,
+          "longitude": -78.127
+        },
+        {
+          "code": "EC1408",
+          "name": "San Juan Bosco",
+          "latitude": -3.273,
+          "longitude": -78.347
+        },
+        {
+          "code": "EC1405",
+          "name": "Santiago",
+          "latitude": -2.742,
+          "longitude": -78.368
+        },
+        {
+          "code": "EC1413",
+          "name": "Sevilla Don Bosco",
+          "latitude": -2.49106,
+          "longitude": -77.89877
+        },
+        {
+          "code": "EC1406",
+          "name": "Sucúa",
+          "latitude": -2.511,
+          "longitude": -78.204
+        },
+        {
+          "code": "EC1409",
+          "name": "Taisha",
+          "latitude": -2.449,
+          "longitude": -77.558
+        },
+        {
+          "code": "EC1412",
+          "name": "Tiwintza",
+          "latitude": -2.929,
+          "longitude": -77.902
+        }
+      ]
+    },
+    {
+      "code": "EC15",
+      "name": "Napo",
+      "latitude": -0.63,
+      "longitude": -77.728,
+      "cantons": [
+        {
+          "code": "EC1501",
+          "name": "Tena",
+          "latitude": -0.963,
+          "longitude": -77.625
+        },
+        {
+          "code": "EC1503",
+          "name": "Archidona",
+          "latitude": -0.756,
+          "longitude": -77.94
+        },
+        {
+          "code": "EC1504",
+          "name": "El Chaco",
+          "latitude": -0.225,
+          "longitude": -77.646
+        },
+        {
+          "code": "EC1507",
+          "name": "Quijos",
+          "latitude": -0.468,
+          "longitude": -77.912
+        },
+        {
+          "code": "EC1509",
+          "name": "Carlos Julio Arosemena Tola",
+          "latitude": -1.17,
+          "longitude": -77.931
+        }
+      ]
+    },
+    {
+      "code": "EC16",
+      "name": "Pastaza",
+      "latitude": -1.557,
+      "longitude": -76.979,
+      "cantons": [
+        {
+          "code": "EC1601",
+          "name": "Pastaza",
+          "latitude": -1.619,
+          "longitude": -77.008
+        },
+        {
+          "code": "EC1602",
+          "name": "Mera",
+          "latitude": -1.419,
+          "longitude": -78.034
+        },
+        {
+          "code": "EC1603",
+          "name": "Santa Clara",
+          "latitude": -1.262,
+          "longitude": -77.849
+        },
+        {
+          "code": "EC1604",
+          "name": "Arajuno",
+          "latitude": -1.334,
+          "longitude": -76.718
+        }
+      ]
+    },
+    {
+      "code": "EC17",
+      "name": "Pichincha",
+      "latitude": -0.084,
+      "longitude": -78.623,
+      "cantons": [
+        {
+          "code": "EC1701",
+          "name": "Distrito Metropolitano de Quito",
+          "latitude": -0.082,
+          "longitude": -78.544
+        },
+        {
+          "code": "EC1702",
+          "name": "Cayambe",
+          "latitude": -0.008,
+          "longitude": -78.094
+        },
+        {
+          "code": "EC1703",
+          "name": "Mejía",
+          "latitude": -0.469,
+          "longitude": -78.663
+        },
+        {
+          "code": "EC1704",
+          "name": "Pedro Moncayo",
+          "latitude": 0.048,
+          "longitude": -78.286
+        },
+        {
+          "code": "EC1705",
+          "name": "Rumiñahui",
+          "latitude": -0.387,
+          "longitude": -78.447
+        },
+        {
+          "code": "EC1707",
+          "name": "San Miguel de los Bancos",
+          "latitude": -0.034,
+          "longitude": -78.94
+        },
+        {
+          "code": "EC1708",
+          "name": "Pedro Vicente Maldonado",
+          "latitude": 0.155,
+          "longitude": -79.059
+        },
+        {
+          "code": "EC1709",
+          "name": "Puerto Quito",
+          "latitude": 0.129,
+          "longitude": -79.243
+        }
+      ]
+    },
+    {
+      "code": "EC18",
+      "name": "Tungurahua",
+      "latitude": -1.272,
+      "longitude": -78.499,
+      "cantons": [
+        {
+          "code": "EC1801",
+          "name": "Ambato",
+          "latitude": -1.265,
+          "longitude": -78.707
+        },
+        {
+          "code": "EC1802",
+          "name": "Baños de Agua Santa",
+          "latitude": -1.338,
+          "longitude": -78.283
+        },
+        {
+          "code": "EC1803",
+          "name": "Cevallos",
+          "latitude": -1.349,
+          "longitude": -78.614
+        },
+        {
+          "code": "EC1804",
+          "name": "Mocha",
+          "latitude": -1.42,
+          "longitude": -78.691
+        },
+        {
+          "code": "EC1805",
+          "name": "Patate",
+          "latitude": -1.276,
+          "longitude": -78.438
+        },
+        {
+          "code": "EC1806",
+          "name": "Quero",
+          "latitude": -1.443,
+          "longitude": -78.619
+        },
+        {
+          "code": "EC1807",
+          "name": "San Pedro de Pelileo",
+          "latitude": -1.356,
+          "longitude": -78.533
+        },
+        {
+          "code": "EC1808",
+          "name": "Santiago de Píllaro",
+          "latitude": -1.122,
+          "longitude": -78.475
+        },
+        {
+          "code": "EC1809",
+          "name": "Tisaleo",
+          "latitude": -1.367,
+          "longitude": -78.686
+        }
+      ]
+    },
+    {
+      "code": "EC19",
+      "name": "Zamora Chinchipe",
+      "latitude": -4.185,
+      "longitude": -78.93,
+      "cantons": [
+        {
+          "code": "EC1901",
+          "name": "Zamora",
+          "latitude": -3.976,
+          "longitude": -78.991
+        },
+        {
+          "code": "EC1902",
+          "name": "Chinchipe",
+          "latitude": -4.845,
+          "longitude": -79.143
+        },
+        {
+          "code": "EC1903",
+          "name": "Nangaritza",
+          "latitude": -4.301,
+          "longitude": -78.732
+        },
+        {
+          "code": "EC1904",
+          "name": "Yacuambi",
+          "latitude": -3.607,
+          "longitude": -78.974
+        },
+        {
+          "code": "EC1905",
+          "name": "Yantzaza",
+          "latitude": -3.74,
+          "longitude": -78.647
+        },
+        {
+          "code": "EC1906",
+          "name": "El Pangui",
+          "latitude": -3.616,
+          "longitude": -78.529
+        },
+        {
+          "code": "EC1907",
+          "name": "Centinela del Cóndor",
+          "latitude": -3.943,
+          "longitude": -78.734
+        },
+        {
+          "code": "EC1908",
+          "name": "Palanda",
+          "latitude": -4.59,
+          "longitude": -79.095
+        },
+        {
+          "code": "EC1909",
+          "name": "Paquisha",
+          "latitude": -3.949,
+          "longitude": -78.606
+        }
+      ]
+    },
+    {
+      "code": "EC20",
+      "name": "Galápagos",
+      "latitude": -0.457,
+      "longitude": -91.215,
+      "cantons": [
+        {
+          "code": "EC2001",
+          "name": "San Cristóbal",
+          "latitude": -0.81,
+          "longitude": -89.423
+        },
+        {
+          "code": "EC2002",
+          "name": "Isabela",
+          "latitude": -0.52,
+          "longitude": -91.154
+        },
+        {
+          "code": "EC2003",
+          "name": "Santa Cruz",
+          "latitude": -0.638,
+          "longitude": -90.359
+        }
+      ]
+    },
+    {
+      "code": "EC21",
+      "name": "Sucumbíos",
+      "latitude": 0.001,
+      "longitude": -76.542,
+      "cantons": [
+        {
+          "code": "EC2101",
+          "name": "Lago Agrio",
+          "latitude": 0.125,
+          "longitude": -76.723
+        },
+        {
+          "code": "EC2102",
+          "name": "Gonzalo Pizarro",
+          "latitude": 0.12,
+          "longitude": -77.593
+        },
+        {
+          "code": "EC2103",
+          "name": "Putumayo",
+          "latitude": -0.014,
+          "longitude": -75.925
+        },
+        {
+          "code": "EC2104",
+          "name": "Shushufindi",
+          "latitude": -0.268,
+          "longitude": -76.518
+        },
+        {
+          "code": "EC2105",
+          "name": "Sucumbíos",
+          "latitude": 0.397,
+          "longitude": -77.609
+        },
+        {
+          "code": "EC2106",
+          "name": "Cascales",
+          "latitude": 0.204,
+          "longitude": -77.269
+        },
+        {
+          "code": "EC2107",
+          "name": "Cuyabeno",
+          "latitude": -0.279,
+          "longitude": -75.797
+        }
+      ]
+    },
+    {
+      "code": "EC22",
+      "name": "Orellana",
+      "latitude": -0.744,
+      "longitude": -76.46,
+      "cantons": [
+        {
+          "code": "EC2201",
+          "name": "Francisco de Orellana",
+          "latitude": -0.732,
+          "longitude": -76.754
+        },
+        {
+          "code": "EC2202",
+          "name": "Aguarico",
+          "latitude": -0.971,
+          "longitude": -76.07
+        },
+        {
+          "code": "EC2203",
+          "name": "La Joya de los Sachas",
+          "latitude": -0.266,
+          "longitude": -76.845
+        },
+        {
+          "code": "EC2204",
+          "name": "Loreto",
+          "latitude": -0.665,
+          "longitude": -77.372
+        }
+      ]
+    },
+    {
+      "code": "EC23",
+      "name": "Santo Domingo de los Tsáchilas",
+      "latitude": -0.253,
+      "longitude": -79.231,
+      "cantons": [
+        {
+          "code": "EC2301",
+          "name": "Santo Domingo",
+          "latitude": -0.266,
+          "longitude": -79.212
+        },
+        {
+          "code": "EC2302",
+          "name": "La Concordia",
+          "latitude": -0.036,
+          "longitude": -79.439
+        }
+      ]
+    },
+    {
+      "code": "EC24",
+      "name": "Santa Elena",
+      "latitude": -2.115,
+      "longitude": -80.578,
+      "cantons": [
+        {
+          "code": "EC2401",
+          "name": "Santa Elena",
+          "latitude": -2.045,
+          "longitude": -80.533
+        },
+        {
+          "code": "EC2402",
+          "name": "La Libertad",
+          "latitude": -2.249,
+          "longitude": -80.888
+        },
+        {
+          "code": "EC2403",
+          "name": "Salinas",
+          "latitude": -2.25,
+          "longitude": -80.925
+        }
+      ]
+    }
+  ]
+}

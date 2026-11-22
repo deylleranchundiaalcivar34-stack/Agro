@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import '../../../../core/network/supabase_service.dart';
 import '../models/profile_notification.dart';
 
@@ -20,6 +22,19 @@ class ProfileNotificationsRepository {
     return rows
         .map((row) => ProfileNotification.fromMap(row))
         .toList(growable: false);
+  }
+
+  Stream<List<ProfileNotification>> watchMine() {
+    final user = _supabaseService.currentUser;
+    if (user == null) return const Stream.empty();
+    return _supabaseService.client
+        .from('alertas_notificaciones')
+        .stream(primaryKey: ['id_notificacion'])
+        .eq('id_usuario_receptor', user.id)
+        .map(
+          (rows) =>
+              rows.map(ProfileNotification.fromMap).toList(growable: false),
+        );
   }
 
   Future<void> markAsRead(String notificationId) async {

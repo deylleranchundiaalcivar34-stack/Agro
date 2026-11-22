@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -23,11 +25,34 @@ class _ProfileNotificationsViewState extends State<ProfileNotificationsView> {
   List<ProfileNotification> _notifications = const [];
   bool _loading = true;
   String? _error;
+  StreamSubscription<List<ProfileNotification>>? _subscription;
 
   @override
   void initState() {
     super.initState();
-    _load();
+    _subscription = _repository.watchMine().listen(
+      (rows) {
+        if (!mounted) return;
+        setState(() {
+          _notifications = rows;
+          _loading = false;
+          _error = null;
+        });
+      },
+      onError: (_) {
+        if (!mounted) return;
+        setState(() {
+          _error = 'No pudimos cargar tus notificaciones.';
+          _loading = false;
+        });
+      },
+    );
+  }
+
+  @override
+  void dispose() {
+    _subscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _load() async {
@@ -134,6 +159,12 @@ class _ProfileNotificationsViewState extends State<ProfileNotificationsView> {
                       if (notification.referenceType == 'solicitud_contacto' &&
                           context.mounted) {
                         context.go(AppRoutes.contactRequests);
+                      } else if (notification.referenceType == 'chat' &&
+                          notification.referenceId != null &&
+                          context.mounted) {
+                        context.go(
+                          '${AppRoutes.chatList}/${notification.referenceId}',
+                        );
                       }
                     },
                     leading: Icon(

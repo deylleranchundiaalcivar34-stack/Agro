@@ -10,6 +10,7 @@ import '../../../../core/constants/app_routes.dart';
 import '../../../../core/network/supabase_service.dart';
 import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../../chat/presentation/widgets/contact_producer_button.dart';
+import '../../data/models/ecuador_administrative_catalog.dart';
 import '../../../products/data/models/agricultural_product.dart';
 import '../../../products/data/repositories/products_repository.dart';
 import '../../../main/presentation/views/main_navigation_view.dart';
@@ -197,6 +198,8 @@ class _MapViewState extends State<MapView> {
   late final _products =
       widget.productsRepository ??
       ProductsRepository(supabaseService: _service);
+  late final Future<List<EcuadorProvince>> _catalogFuture =
+      EcuadorAdministrativeCatalog.load();
   final _controller = MapController();
   final _searchController = TextEditingController();
   MapCamera? _mapCamera;
@@ -208,6 +211,8 @@ class _MapViewState extends State<MapView> {
   String? _error;
   String _query = '';
   String? _selectedCategory;
+  String? _selectedProvince;
+  String? _selectedCanton;
 
   @override
   void initState() {
@@ -359,8 +364,16 @@ class _MapViewState extends State<MapView> {
       _position,
       _radiusKm,
     );
+    final areaEntries = radiusEntries.where((entry) {
+      final provinceMatches =
+          _selectedProvince == null ||
+          entry.location.province == _selectedProvince;
+      final cantonMatches =
+          _selectedCanton == null || entry.location.canton == _selectedCanton;
+      return provinceMatches && cantonMatches;
+    });
     final query = _query.trim().toLowerCase();
-    final results = radiusEntries
+    final results = areaEntries
         .map((entry) {
           final producerMatches =
               entry.location.alias.toLowerCase().contains(query) ||
@@ -644,131 +657,275 @@ class _MapViewState extends State<MapView> {
       ),
       builder: (sheetContext) {
         var selectedCategory = _selectedCategory;
+        var selectedProvince = _selectedProvince;
+        var selectedCanton = _selectedCanton;
         var radiusKm = _radiusKm;
         return StatefulBuilder(
           builder: (context, setSheetState) => Padding(
             padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Center(
-                  child: Container(
-                    width: 38,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.divider,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 18),
-                Row(
+            child: ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.86,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: Text(
-                        'Filtrar productores',
-                        style: Theme.of(context).textTheme.titleLarge,
+                    Center(
+                      child: Container(
+                        width: 38,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: AppColors.divider,
+                          borderRadius: BorderRadius.circular(4),
+                        ),
                       ),
                     ),
-                    IconButton(
-                      tooltip: 'Cerrar filtros',
-                      onPressed: () => Navigator.pop(sheetContext),
-                      icon: const Icon(Icons.close),
+                    const SizedBox(height: 18),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Filtrar productores',
+                            style: Theme.of(context).textTheme.titleLarge,
+                          ),
+                        ),
+                        IconButton(
+                          tooltip: 'Cerrar filtros',
+                          onPressed: () => Navigator.pop(sheetContext),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'Ubicación',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    const SizedBox(height: 8),
+                    FutureBuilder<List<EcuadorProvince>>(
+                      future: _catalogFuture,
+                      builder: (context, snapshot) {
+                        if (snapshot.hasError) {
+                          return const Text(
+                            'No se pudo cargar el catálogo de provincias.',
+                            style: TextStyle(color: AppColors.error),
+                          );
+                        }
+                        if (!snapshot.hasData) {
+                          return const Padding(
+                            padding: EdgeInsets.symmetric(vertical: 12),
+                            child: LinearProgressIndicator(),
+                          );
+                        }
+                        final provinces = snapshot.data!;
+                        final selectedProvinceData = provinces
+                            .where(
+                              (province) => province.name == selectedProvince,
+                            )
+                            .firstOrNull;
+                        final cantons =
+                            selectedProvinceData?.cantons ?? const [];
+                        return Column(
+                          children: [
+                            DropdownButtonFormField<String?>(
+                              key: ValueKey('map-province-$selectedProvince'),
+                              initialValue: selectedProvince,
+                              isExpanded: true,
+                              menuMaxHeight: 224,
+                              decoration: const InputDecoration(
+                                labelText: 'Provincia',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              items: [
+                                const DropdownMenuItem<String?>(
+                                  value: null,
+                                  child: Text('Todas las provincias'),
+                                ),
+                                ...provinces.map(
+                                  (province) => DropdownMenuItem<String?>(
+                                    value: province.name,
+                                    child: Text(province.name),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                setSheetState(() {
+                                  selectedProvince = value;
+                                  selectedCanton = null;
+                                });
+                                setState(() {
+                                  _selectedProvince = value;
+                                  _selectedCanton = null;
+                                });
+                                _recenterMapToArea(provinces);
+                              },
+                            ),
+                            const SizedBox(height: 10),
+                            DropdownButtonFormField<String?>(
+                              key: ValueKey(
+                                'map-canton-$selectedProvince-$selectedCanton',
+                              ),
+                              initialValue: selectedCanton,
+                              isExpanded: true,
+                              menuMaxHeight: 224,
+                              decoration: const InputDecoration(
+                                labelText: 'Cantón / ciudad',
+                                border: OutlineInputBorder(),
+                                isDense: true,
+                              ),
+                              items: [
+                                DropdownMenuItem<String?>(
+                                  value: null,
+                                  child: Text(
+                                    selectedProvince == null
+                                        ? 'Todos los cantones'
+                                        : 'Todos los cantones de la provincia',
+                                  ),
+                                ),
+                                ...cantons.map(
+                                  (canton) => DropdownMenuItem<String?>(
+                                    value: canton.name,
+                                    child: Text(canton.name),
+                                  ),
+                                ),
+                              ],
+                              onChanged: selectedProvince == null
+                                  ? null
+                                  : (value) {
+                                      setSheetState(
+                                        () => selectedCanton = value,
+                                      );
+                                      setState(() => _selectedCanton = value);
+                                      _recenterMapToArea(
+                                        provinces,
+                                        cantonName: value,
+                                      );
+                                    },
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                    if (_categories.isNotEmpty) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        'Categoria de producto',
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          ChoiceChip(
+                            label: const Text('Todas'),
+                            selected: selectedCategory == null,
+                            onSelected: (_) {
+                              setSheetState(() => selectedCategory = null);
+                              setState(() => _selectedCategory = null);
+                            },
+                          ),
+                          ..._categories.map(
+                            (category) => ChoiceChip(
+                              label: Text(category),
+                              selected: selectedCategory == category,
+                              onSelected: (selected) {
+                                final value = selected ? category : null;
+                                setSheetState(() => selectedCategory = value);
+                                setState(() => _selectedCategory = value);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                    const SizedBox(height: 20),
+                    Text(
+                      'Distancia',
+                      style: Theme.of(context).textTheme.titleSmall,
+                    ),
+                    if (_position == null)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: Text(
+                          'Activa “Buscar cerca de mi” en el mapa para filtrar por distancia.',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      )
+                    else
+                      Row(
+                        children: [
+                          const Icon(Icons.radar, color: AppColors.primary),
+                          const SizedBox(width: 8),
+                          Text('${radiusKm.round()} km'),
+                          Expanded(
+                            child: Slider(
+                              value: radiusKm,
+                              min: 5,
+                              max: 100,
+                              divisions: 19,
+                              label: '${radiusKm.round()} km',
+                              onChanged: (value) {
+                                setSheetState(() => radiusKm = value);
+                                setState(() => _radiusKm = value);
+                              },
+                            ),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 12),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          setSheetState(() {
+                            selectedCategory = null;
+                            selectedProvince = null;
+                            selectedCanton = null;
+                            radiusKm = 20;
+                          });
+                          setState(() {
+                            _selectedCategory = null;
+                            _selectedProvince = null;
+                            _selectedCanton = null;
+                            _radiusKm = 20;
+                          });
+                        },
+                        icon: const Icon(Icons.restart_alt),
+                        label: const Text('Limpiar filtros'),
+                      ),
                     ),
                   ],
                 ),
-                if (_categories.isNotEmpty) ...[
-                  const SizedBox(height: 8),
-                  Text(
-                    'Categoria de producto',
-                    style: Theme.of(context).textTheme.titleSmall,
-                  ),
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      ChoiceChip(
-                        label: const Text('Todas'),
-                        selected: selectedCategory == null,
-                        onSelected: (_) {
-                          setSheetState(() => selectedCategory = null);
-                          setState(() => _selectedCategory = null);
-                        },
-                      ),
-                      ..._categories.map(
-                        (category) => ChoiceChip(
-                          label: Text(category),
-                          selected: selectedCategory == category,
-                          onSelected: (selected) {
-                            final value = selected ? category : null;
-                            setSheetState(() => selectedCategory = value);
-                            setState(() => _selectedCategory = value);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-                const SizedBox(height: 20),
-                Text(
-                  'Distancia',
-                  style: Theme.of(context).textTheme.titleSmall,
-                ),
-                if (_position == null)
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Text(
-                      'Activa “Buscar cerca de mi” en el mapa para filtrar por distancia.',
-                      style: Theme.of(context).textTheme.bodyMedium,
-                    ),
-                  )
-                else
-                  Row(
-                    children: [
-                      const Icon(Icons.radar, color: AppColors.primary),
-                      const SizedBox(width: 8),
-                      Text('${radiusKm.round()} km'),
-                      Expanded(
-                        child: Slider(
-                          value: radiusKm,
-                          min: 5,
-                          max: 100,
-                          divisions: 19,
-                          label: '${radiusKm.round()} km',
-                          onChanged: (value) {
-                            setSheetState(() => radiusKm = value);
-                            setState(() => _radiusKm = value);
-                          },
-                        ),
-                      ),
-                    ],
-                  ),
-                const SizedBox(height: 12),
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton.icon(
-                    onPressed: () {
-                      setSheetState(() {
-                        selectedCategory = null;
-                        radiusKm = 20;
-                      });
-                      setState(() {
-                        _selectedCategory = null;
-                        _radiusKm = 20;
-                      });
-                    },
-                    icon: const Icon(Icons.restart_alt),
-                    label: const Text('Limpiar filtros'),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         );
       },
     );
+  }
+
+  void _recenterMapToArea(
+    List<EcuadorProvince> provinces, {
+    String? cantonName,
+  }) {
+    if (_mapCamera == null) return;
+    final province = provinces
+        .where((item) => item.name == _selectedProvince)
+        .firstOrNull;
+    if (province == null) return;
+    if (cantonName != null) {
+      final canton = province.cantons
+          .where((item) => item.name == cantonName)
+          .firstOrNull;
+      if (canton != null) {
+        _controller.move(LatLng(canton.latitude, canton.longitude), 10.5);
+        return;
+      }
+    }
+    _controller.move(LatLng(province.latitude, province.longitude), 7.2);
   }
 
   Widget _buildResultsSheet(
@@ -923,12 +1080,17 @@ class _MapViewState extends State<MapView> {
                     textAlign: TextAlign.center,
                     style: Theme.of(context).textTheme.bodyMedium,
                   ),
-                  if (_query.isNotEmpty || _selectedCategory != null)
+                  if (_query.isNotEmpty ||
+                      _selectedCategory != null ||
+                      _selectedProvince != null ||
+                      _selectedCanton != null)
                     TextButton(
                       onPressed: () => setState(() {
                         _query = '';
                         _searchController.clear();
                         _selectedCategory = null;
+                        _selectedProvince = null;
+                        _selectedCanton = null;
                       }),
                       child: const Text('Quitar busqueda y filtros'),
                     ),
@@ -1067,7 +1229,10 @@ class _MapViewState extends State<MapView> {
                         tooltip: 'Filtrar productores',
                         onPressed: _showFilters,
                         icon: Badge(
-                          isLabelVisible: _selectedCategory != null,
+                          isLabelVisible:
+                              _selectedCategory != null ||
+                              _selectedProvince != null ||
+                              _selectedCanton != null,
                           child: const Icon(Icons.tune_rounded),
                         ),
                       ),

@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../../../../core/app_constants.dart';
 import '../../../../core/network/supabase_service.dart';
+import '../../../../core/notifications/push_notifications_service.dart';
 import '../../data/models/user_profile.dart';
 import '../../data/repositories/profile_repository.dart';
 
@@ -177,6 +178,7 @@ class AuthViewModel extends ChangeNotifier {
 
   Future<void> signOut() async {
     try {
+      await PushNotificationsService.instance.unregisterCurrentDevice();
       await _supabaseService.client.auth.signOut();
       _currentUser = null;
       _profile = null;

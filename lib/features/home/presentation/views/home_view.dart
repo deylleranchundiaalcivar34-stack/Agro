@@ -11,6 +11,7 @@ import '../../../auth/presentation/viewmodels/auth_viewmodel.dart';
 import '../../../products/data/models/agricultural_product.dart';
 import '../../../products/presentation/viewmodels/products_viewmodel.dart';
 import '../../../products/presentation/widgets/product_card.dart';
+import '../../../weather/presentation/widgets/weather_summary_card.dart';
 import '../viewmodels/home_viewmodel.dart';
 
 class HomeView extends StatelessWidget {
@@ -115,6 +116,10 @@ class _HomeViewContentState extends State<_HomeViewContent> {
               _buildHeader(context, auth, isProducer: isProducer),
               const SizedBox(height: 20),
               _buildMarketplaceHero(context, isProducer: isProducer),
+              if (isProducer) ...[
+                const SizedBox(height: 16),
+                const WeatherSummaryCard(),
+              ],
               const SizedBox(height: 20),
               _buildSearchField(),
               const SizedBox(height: 24),

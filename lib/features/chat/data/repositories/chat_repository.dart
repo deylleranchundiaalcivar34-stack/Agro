@@ -310,6 +310,7 @@ class ChatRepository {
           .select(_messageSelect)
           .single();
       final persisted = ChatMessage.fromMap(row);
+      _sendPush(persisted.id);
       final cached = [...cachedMessages(chatId), persisted]
         ..sort((a, b) => a.sentAt.compareTo(b.sentAt));
       _rememberMessages(chatId, cached);
@@ -352,6 +353,7 @@ class ChatRepository {
           .single();
       final persisted = await _decodeMessages([row])
           .then((items) => items.single);
+      _sendPush(persisted.id);
       final cached = [...cachedMessages(chatId), persisted]
         ..sort((a, b) => a.sentAt.compareTo(b.sentAt));
       _rememberMessages(chatId, cached);
@@ -368,6 +370,21 @@ class ChatRepository {
         throw ChatFailure(error.message);
       }
       throw const ChatFailure('No se pudo enviar la imagen. Intenta de nuevo.');
+    }
+  }
+
+  void _sendPush(String messageId) {
+    unawaited(_invokePush(messageId));
+  }
+
+  Future<void> _invokePush(String messageId) async {
+    try {
+      await _service.client.functions.invoke(
+        'send-push',
+        body: {'event_type': 'message', 'reference_id': messageId},
+      );
+    } catch (_) {
+      // El mensaje ya se guardo; un error push no debe ocultarlo.
     }
   }
 

@@ -11,7 +11,9 @@ class PublicLocationRepository {
   Future<List<PublicProducerLocation>> listPublished() async {
     var query = _service.client
         .from(table)
-        .select('id_productor,alias_publico,nombre_lugar,latitud,longitud');
+        .select(
+          'id_productor,alias_publico,nombre_lugar,provincia,canton,latitud,longitud',
+        );
     final userId = _service.currentUser?.id;
     if (userId != null) {
       query = query.neq('id_productor', userId);
@@ -31,7 +33,9 @@ class PublicLocationRepository {
     if (producerId.trim().isEmpty) return null;
     final row = await _service.client
         .from(table)
-        .select('id_productor,alias_publico,nombre_lugar,latitud,longitud')
+        .select(
+          'id_productor,alias_publico,nombre_lugar,provincia,canton,latitud,longitud',
+        )
         .eq('id_productor', producerId)
         .maybeSingle();
     return row == null ? null : PublicProducerLocation.fromMap(row);
@@ -40,7 +44,9 @@ class PublicLocationRepository {
   Future<PublicProducerLocation?> getMine() async {
     final row = await _service.client
         .from(table)
-        .select('id_productor,alias_publico,nombre_lugar,latitud,longitud')
+        .select(
+          'id_productor,alias_publico,nombre_lugar,provincia,canton,latitud,longitud',
+        )
         .eq('id_productor', _requireUser())
         .maybeSingle();
     return row == null ? null : PublicProducerLocation.fromMap(row);
@@ -51,18 +57,51 @@ class PublicLocationRepository {
     required String placeName,
     required double latitude,
     required double longitude,
+  }) => _saveMine(
+    alias: alias,
+    placeName: placeName,
+    latitude: latitude,
+    longitude: longitude,
+  );
+
+  Future<PublicProducerLocation> saveMineWithAdministrativeArea({
+    required String alias,
+    required String province,
+    required String canton,
+    required double latitude,
+    required double longitude,
+  }) => _saveMine(
+    alias: alias,
+    placeName: '${canton.trim()}, ${province.trim()}',
+    province: province,
+    canton: canton,
+    latitude: latitude,
+    longitude: longitude,
+  );
+
+  Future<PublicProducerLocation> _saveMine({
+    required String alias,
+    required String placeName,
+    String? province,
+    String? canton,
+    required double latitude,
+    required double longitude,
   }) async {
     final location = PublicProducerLocation.manual(
       producerId: _requireUser(),
       alias: alias,
       placeName: placeName,
+      province: province,
+      canton: canton,
       latitude: latitude,
       longitude: longitude,
     );
     final row = await _service.client
         .from(table)
         .upsert(location.toMap(), onConflict: 'id_productor')
-        .select('id_productor,alias_publico,nombre_lugar,latitud,longitud')
+        .select(
+          'id_productor,alias_publico,nombre_lugar,provincia,canton,latitud,longitud',
+        )
         .single();
     return PublicProducerLocation.fromMap(row);
   }

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:provider/provider.dart';
@@ -16,9 +18,18 @@ import 'features/splash/splash_view.dart';
 import 'features/profile/data/services/local_biometric_lock.dart';
 import 'features/favorites/data/repositories/favorites_repository.dart';
 import 'features/favorites/presentation/viewmodels/favorites_viewmodel.dart';
+import 'core/notifications/push_notifications_service.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+    try {
+      await Firebase.initializeApp();
+      FirebaseMessaging.onBackgroundMessage(agroFcmBackgroundHandler);
+    } catch (error) {
+      debugPrint('Agro+ inicia sin Firebase Push: $error');
+    }
+  }
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: AppColors.primary,
