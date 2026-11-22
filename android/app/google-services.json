@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "783280764387",
+    "project_id": "agro-notificaciones",
+    "storage_bucket": "agro-notificaciones.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:783280764387:android:a7f15c8eaae2befb415cd6",
+        "android_client_info": {
+          "package_name": "com.agro.app.proyecto_agro"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAaGuRm5EoegYjtbF2tu-qYSz9k50WWZZo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

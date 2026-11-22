@@ -60,4 +60,3 @@ app.*.map.json
 .widget_preview/
 
 # Configuracion local de Firebase para Android
-/android/app/google-services.json
