@@ -1,0 +1,33 @@
+name: Verificación de Flutter
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: verificar-flutter-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analisis:
+    name: Analizar el proyecto
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descargar el repositorio
+        uses: actions/checkout@v7
+
+      - name: Preparar Flutter estable
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+
+      - name: Descargar dependencias
+        run: flutter pub get
+
+      - name: Analizar el código
+        run: flutter analyze

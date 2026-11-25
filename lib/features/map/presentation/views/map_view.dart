@@ -16,6 +16,8 @@ import '../../../products/data/repositories/products_repository.dart';
 import '../../../main/presentation/views/main_navigation_view.dart';
 import '../../data/models/public_producer_location.dart';
 import '../../data/repositories/public_location_repository.dart';
+import '../../data/models/route_preview.dart';
+import '../../data/repositories/route_preview_repository.dart';
 
 class ProducerMapEntry {
   const ProducerMapEntry(this.location, this.products);
@@ -201,11 +203,15 @@ class _MapViewState extends State<MapView> {
   late final Future<List<EcuadorProvince>> _catalogFuture =
       EcuadorAdministrativeCatalog.load();
   final _controller = MapController();
+  final _routes = RoutePreviewRepository();
   final _searchController = TextEditingController();
   MapCamera? _mapCamera;
   int _clusterZoomLevel = 8;
   List<ProducerMapEntry> _entries = const [];
   LatLng? _position;
+  RoutePreview? _activeRoute;
+  String? _routeDestination;
+  bool _routeLoading = false;
   double _radiusKm = 20;
   bool _loading = true;
   String? _error;
@@ -329,6 +335,163 @@ class _MapViewState extends State<MapView> {
     }
   }
 
+  Future<void> _traceRoute(ProducerMapEntry entry) async {
+    if (_routeLoading) return;
+    final accepted = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        icon: const Icon(Icons.route_outlined),
+        title: const Text('Calcular ruta al productor'),
+        content: const Text(
+          'Para estimar el recorrido, se enviará tu ubicación actual y la zona '
+          'pública aproximada del productor a OpenRouteService. No guardaremos '
+          'tu ubicación. El tiempo es estimado y no incluye tráfico en vivo.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          FilledButton.icon(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            icon: const Icon(Icons.route),
+            label: const Text('Compartir y calcular'),
+          ),
+        ],
+      ),
+    );
+    if (accepted != true || !mounted) return;
+
+    setState(() => _routeLoading = true);
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        throw Exception(
+          'Activa la ubicación del dispositivo para calcular la ruta.',
+        );
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw Exception(
+          'Necesitamos permiso de ubicación para calcular la ruta.',
+        );
+      }
+      final currentPosition = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.medium,
+          timeLimit: Duration(seconds: 12),
+        ),
+      );
+      final origin = LatLng(
+        currentPosition.latitude,
+        currentPosition.longitude,
+      );
+      final route = await _routes.calculate(
+        originLatitude: origin.latitude,
+        originLongitude: origin.longitude,
+        destinationLatitude: entry.location.latitude,
+        destinationLongitude: entry.location.longitude,
+      );
+      if (!mounted) return;
+      setState(() {
+        _position = origin;
+        _activeRoute = route;
+        _routeDestination = entry.location.alias;
+        _routeLoading = false;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || route.points.isEmpty) return;
+        _controller.fitCamera(
+          CameraFit.coordinates(
+            coordinates: route.points,
+            padding: const EdgeInsets.fromLTRB(48, 150, 48, 190),
+            maxZoom: 15,
+          ),
+        );
+      });
+    } catch (error) {
+      if (!mounted) return;
+      setState(() => _routeLoading = false);
+      final message = error.toString().replaceFirst('Exception: ', '');
+      _notice(message);
+    }
+  }
+
+  void _closeRoute() {
+    setState(() {
+      _activeRoute = null;
+      _routeDestination = null;
+      _routeLoading = false;
+    });
+  }
+
+  Widget _buildRouteCard() {
+    final route = _activeRoute!;
+    final distanceText = route.distanceKilometers < 1
+        ? '${route.distanceMeters.round()} m'
+        : '${route.distanceKilometers.toStringAsFixed(1)} km';
+    final minutes = route.durationMinutes;
+    final durationText = minutes < 60
+        ? '$minutes min'
+        : '${minutes ~/ 60} h ${minutes % 60} min';
+    return Positioned(
+      left: 16,
+      right: 16,
+      bottom: 12,
+      child: SafeArea(
+        top: false,
+        child: Card(
+          elevation: 10,
+          color: AppColors.surface,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 8, 12),
+            child: Row(
+              children: [
+                const CircleAvatar(
+                  backgroundColor: AppColors.primarySurface,
+                  child: Icon(Icons.route, color: AppColors.primary),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Ruta a ${_routeDestination ?? 'productor'}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.titleSmall,
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '$distanceText · $durationText estimados',
+                        style: Theme.of(context).textTheme.bodyMedium,
+                      ),
+                      Text(
+                        'Hasta su zona pública aproximada · sin tráfico en vivo',
+                        maxLines: 2,
+                        style: Theme.of(context).textTheme.bodySmall,
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Cerrar ruta',
+                  onPressed: _closeRoute,
+                  icon: const Icon(Icons.close),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _notice(
     String message, {
     String? actionLabel,
@@ -417,6 +580,10 @@ class _MapViewState extends State<MapView> {
         (auth.selectedRole == UserRole.buyer ||
             auth.selectedRole == UserRole.producer) &&
         entry.location.producerId != userId;
+    final canTraceRoute =
+        (auth.selectedRole == UserRole.buyer ||
+            auth.selectedRole == UserRole.producer) &&
+        entry.location.producerId != userId;
     final contactProduct = entry.products
         .where((product) => product.producerId != userId)
         .firstOrNull;
@@ -471,6 +638,19 @@ class _MapViewState extends State<MapView> {
                 Text(
                   'Aproximadamente ${_distanceKm(point).toStringAsFixed(1)} km de ti',
                   style: Theme.of(context).textTheme.bodySmall,
+                ),
+              ],
+              if (canTraceRoute) ...[
+                const SizedBox(height: 16),
+                OutlinedButton.icon(
+                  onPressed: _routeLoading
+                      ? null
+                      : () {
+                          Navigator.pop(sheetContext);
+                          _traceRoute(entry);
+                        },
+                  icon: const Icon(Icons.directions),
+                  label: const Text('Ver ruta y tiempo estimado'),
                 ),
               ],
               const SizedBox(height: 20),
@@ -1164,9 +1344,46 @@ class _MapViewState extends State<MapView> {
                     ),
                   ],
                 ),
+              if (_activeRoute != null)
+                PolylineLayer(
+                  polylines: [
+                    Polyline(
+                      points: _activeRoute!.points,
+                      strokeWidth: 7,
+                      color: AppColors.primaryDark.withValues(alpha: 0.22),
+                    ),
+                    Polyline(
+                      points: _activeRoute!.points,
+                      strokeWidth: 4,
+                      color: AppColors.primary,
+                    ),
+                  ],
+                ),
               MarkerLayer(
                 markers: [
                   ..._producerMarkers(visible),
+                  if (_activeRoute != null && _activeRoute!.points.isNotEmpty)
+                    Marker(
+                      point: _activeRoute!.points.first,
+                      width: 48,
+                      height: 48,
+                      child: const Icon(
+                        Icons.my_location,
+                        color: AppColors.info,
+                        size: 38,
+                      ),
+                    ),
+                  if (_activeRoute != null && _activeRoute!.points.isNotEmpty)
+                    Marker(
+                      point: _activeRoute!.points.last,
+                      width: 52,
+                      height: 52,
+                      child: const Icon(
+                        Icons.location_on,
+                        color: AppColors.primary,
+                        size: 44,
+                      ),
+                    ),
                   if (_position != null)
                     Marker(
                       point: _position!,
@@ -1244,7 +1461,10 @@ class _MapViewState extends State<MapView> {
           ),
           Positioned(
             right: 16,
-            bottom: 16 + MediaQuery.sizeOf(context).height * 0.22,
+            bottom:
+                16 +
+                MediaQuery.sizeOf(context).height *
+                    (_activeRoute == null ? 0.22 : 0.04),
             child: SafeArea(
               top: false,
               child: FloatingActionButton.small(
@@ -1258,7 +1478,36 @@ class _MapViewState extends State<MapView> {
               ),
             ),
           ),
-          _buildResultsSheet(visible),
+          if (_activeRoute == null) _buildResultsSheet(visible),
+          if (_activeRoute != null) _buildRouteCard(),
+          if (_routeLoading)
+            Positioned.fill(
+              child: ColoredBox(
+                color: Colors.black26,
+                child: Center(
+                  child: Card(
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          ),
+                          const SizedBox(width: 12),
+                          Text('Calculando ruta...'),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
         ],
       ),
     );
